@@ -26,7 +26,7 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 
 ## Works with your phone and computer
 
-- **Install** as an app from the browser (Add to Home Screen / Install app).
+- **Save as an app** with one tap where the browser allows it, with step-by-step help for iPhone, Android, Chrome, Edge, Safari and Firefox.
 - **Share to Briefly** from the phone’s gallery or a PDF viewer (Android share target).
 - **Open PDFs with Briefly** from the file manager on desktop (file handler).
 - **Take a photo** straight from the camera.
@@ -90,6 +90,10 @@ Security headers come from [`web/_headers`](web/_headers).
 ## Credits
 
 Tesseract.js (Apache-2.0), pdf.js (Apache-2.0), Bergamot translator and models (MPL-2.0). Example letters are made up.
+
+## Support
+
+Briefly is free and has no ads. If it helped you, you can [buy me a coffee](https://buymeacoffee.com/adi.shukla41).
 
 ## License
 

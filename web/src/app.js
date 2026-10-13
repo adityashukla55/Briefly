@@ -2,6 +2,7 @@ import { analyze } from './analyze.js';
 import { makeIcs } from './calendar.js';
 import { describeDaysLeft, formatEuro, formatWhen } from './format.js';
 import { isSupported, readFiles } from './read.js';
+import { detectPlatform, installHelp } from './install.js';
 import { buildReplies } from './replies.js';
 import { SAMPLES, sampleText } from './samples.js';
 import { buildSteps } from './steps.js';
@@ -386,25 +387,91 @@ function setupStart() {
   });
 }
 
+const GLYPHS = {
+  share: 'M12 3v12M12 3 8 7m4-4 4 4M6 11H5v10h14V11h-1',
+  menu: 'M12 5.5v.01M12 12v.01M12 18.5v.01',
+  install: 'M4 5h16v11H4zM9 20h6M12 8v5m0 0-2.5-2.5M12 13l2.5-2.5',
+};
+
+function glyph(name) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('class', 'glyph');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', GLYPHS[name]);
+  if (name === 'menu') path.setAttribute('stroke-width', '3.2');
+  svg.append(path);
+  return svg;
+}
+
+function renderHelp(help) {
+  return [
+    h('p', { class: 'save-help-title' }, `${help.title}:`),
+    h('ol', { class: 'save-steps' }, help.steps.map((step) => h('li', {}, step.map((part) => {
+      if (typeof part === 'string') return part;
+      if (part.icon) return glyph(part.icon);
+      return h('strong', {}, part.strong);
+    })))),
+    help.note ? h('p', { class: 'save-note' }, help.note) : null,
+  ].filter(Boolean);
+}
+
 function setupInstall() {
   let deferred = null;
-  const button = $('#install');
+  const header = $('#install');
+  const button = $('#save-button');
+  const help = $('#save-help');
+  const dialog = $('#save-dialog');
+  const platform = detectPlatform({ userAgent: navigator.userAgent, platform: navigator.platform, maxTouchPoints: navigator.maxTouchPoints });
+  const steps = installHelp(platform);
+  help.replaceChildren(...renderHelp(steps));
+  $('#save-dialog-help').replaceChildren(...renderHelp(steps));
+
+  const installed = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+  const refresh = () => {
+    const done = installed();
+    header.hidden = done;
+    button.hidden = done || !deferred;
+    help.hidden = done || Boolean(deferred);
+    $('#save-done').hidden = !done;
+  };
+
+  const promptInstall = async () => {
+    if (!deferred) return false;
+    const event = deferred;
+    deferred = null;
+    event.prompt();
+    const choice = await event.userChoice.catch(() => null);
+    if (choice?.outcome === 'accepted') toast('Briefly is being saved as an app');
+    refresh();
+    return true;
+  };
+
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferred = event;
-    button.hidden = false;
+    refresh();
   });
-  button.addEventListener('click', async () => {
-    if (!deferred) return;
-    deferred.prompt();
-    await deferred.userChoice.catch(() => null);
+
+  window.addEventListener('appinstalled', () => {
     deferred = null;
-    button.hidden = true;
+    refresh();
+    toast('Saved! Open Briefly from your home screen or apps.');
   });
-  window.addEventListener('appinstalled', () => { button.hidden = true; });
-  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  $('#ios-hint').hidden = !(iOS && !standalone);
+
+  button.addEventListener('click', promptInstall);
+  header.addEventListener('click', async () => {
+    if (await promptInstall()) return;
+    dialog.showModal();
+  });
+  $('#save-dialog-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  refresh();
 }
 
 async function takeSharedFiles() {

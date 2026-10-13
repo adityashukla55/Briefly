@@ -1,4 +1,4 @@
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-1';
 const SHARE_CACHE = 'briefly-share';
@@ -14,6 +14,7 @@ const SHELL = [
   '/src/calendar.js',
   '/src/dates.js',
   '/src/format.js',
+  '/src/install.js',
   '/src/knowledge.js',
   '/src/read.js',
   '/src/replies.js',
