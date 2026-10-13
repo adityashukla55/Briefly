@@ -1,10 +1,12 @@
 import { analyze } from './analyze.js';
+import { ReadError, friendlyError, missingFeatures } from './errors.js';
 import { makeIcs } from './calendar.js';
-import { describeDaysLeft, formatEuro, formatWhen } from './format.js';
+import { describeDaysLeft, formatMoney, formatWhen } from './format.js';
 import { isSupported, readFiles } from './read.js';
 import { detectPlatform, installHelp } from './install.js';
 import { buildReplies } from './replies.js';
-import { SAMPLES, sampleText } from './samples.js';
+import { COUNTRIES, countryById, detectLanguage, languageOf } from './countries/index.js';
+import { LANGUAGES } from './languages/index.js';
 import { buildSteps } from './steps.js';
 import { isTranslatorCached, prepareTranslator, translateText, translatorSize } from './translate.js';
 
@@ -28,6 +30,56 @@ function h(tag, props = {}, ...children) {
 
 const views = { start: $('#start'), working: $('#working'), result: $('#result') };
 let current = null;
+
+const COUNTRY_KEY = 'briefly-country';
+
+function guessCountry() {
+  const fromUrl = new URLSearchParams(location.search).get('country');
+  if (fromUrl && COUNTRIES.some((country) => country.id === fromUrl)) return fromUrl;
+  try {
+    const saved = localStorage.getItem(COUNTRY_KEY);
+    if (saved && COUNTRIES.some((country) => country.id === saved)) return saved;
+  } catch {}
+  const locale = (navigator.language || 'de').toLowerCase();
+  if (locale.startsWith('de-at')) return 'at';
+  if (locale.startsWith('de-ch') || locale.startsWith('gsw')) return 'ch';
+  const language = locale.slice(0, 2);
+  return ['fr', 'es', 'it'].includes(language) ? language : 'de';
+}
+
+let selectedCountry = guessCountry();
+
+function selectCountry(id) {
+  selectedCountry = id;
+  try {
+    localStorage.setItem(COUNTRY_KEY, id);
+  } catch {}
+  renderCountryPicker();
+  renderSamples();
+}
+
+function renderCountryPicker() {
+  $('#countries').replaceChildren(...COUNTRIES.map((country) => h('button', {
+    class: `country${country.id === selectedCountry ? ' selected' : ''}`,
+    type: 'button',
+    'aria-pressed': String(country.id === selectedCountry),
+    onclick: () => selectCountry(country.id),
+  }, h('span', { class: 'flag', 'aria-hidden': 'true' }, country.flag), country.name)));
+}
+
+function renderSamples() {
+  const country = countryById(selectedCountry);
+  $('#samples').replaceChildren(...country.samples.map((sample) => h('button', {
+    class: 'chip',
+    type: 'button',
+    onclick: () => showResult(sample.build(todayLocal()), 'sample', country.id),
+  }, `${country.flag} ${sample.title}`, h('span', {}, sample.subtitle))));
+}
+
+function todayLocal() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
 
 function show(name) {
   for (const [key, view] of Object.entries(views)) view.hidden = key !== name;
@@ -76,25 +128,42 @@ function setWorking(label, progress = null) {
 async function processFiles(fileList) {
   const files = [...fileList].filter(isSupported);
   if (!files.length) {
-    toast('Please choose a photo (JPG, PNG) or a PDF.');
+    showStartError(friendlyError(new ReadError('This file type isn’t supported', 'Use a photo (JPG, PNG, WebP) or a PDF. You can also paste the text of the letter.')));
     return;
   }
   show('working');
   setWorking('Reading your letter');
   try {
-    const text = await readFiles(files, setWorking);
-    if (text.replace(/\s/g, '').length < 20) throw new Error('We couldn’t find text in this file. Try a sharper photo in good light, with the whole page visible.');
+    const country = countryById(selectedCountry);
+    let { text, usedOcr } = await readFiles(files, { language: languageOf(country).ocr, onProgress: setWorking });
+    const detected = detectLanguage(text);
+    if (usedOcr && detected && detected.id !== country.language) {
+      setWorking(`This looks like ${LANGUAGES[detected.id].name}. Reading it again`);
+      ({ text } = await readFiles(files, { language: LANGUAGES[detected.id].ocr, onProgress: setWorking }));
+    }
+    if (text.replace(/\s/g, '').length < 20) throw new ReadError('We couldn’t find any text', 'Try a sharper photo in good light, with the whole page flat and visible. Handwritten letters can’t be read.');
     showResult(text, 'file');
   } catch (error) {
     console.error(error);
     show('start');
-    showStartError(error.message || 'Something went wrong while reading the file.');
+    showStartError(friendlyError(error, 'read'));
   }
 }
 
-function showStartError(message) {
+function errorBox(problem, props = {}) {
+  return h('div', { class: 'notice error problem', role: 'alert', ...props },
+    h('p', { class: 'problem-title' }, problem.title),
+    h('p', {}, problem.message),
+    problem.details ? h('details', { class: 'problem-details' },
+      h('summary', {}, 'Technical details'),
+      h('p', {}, problem.details),
+      h('p', {}, h('a', { href: 'https://github.com/adityashukla55/Briefly/issues', target: '_blank', rel: 'noopener' }, 'Report this problem'), ' — please include the details above and your browser.')) : null);
+}
+
+function showStartError(problem) {
   $('#start-error')?.remove();
-  $('#dropzone').before(h('p', { id: 'start-error', class: 'notice error', role: 'alert' }, message));
+  $('#dropzone').before(errorBox(problem, { id: 'start-error' }));
+  $('#start-error').scrollIntoView({ block: 'center' });
 }
 
 function urgencyText(urgency) {
@@ -113,7 +182,7 @@ function dateTone(date) {
 
 function calendarButton(result, date) {
   if (!date.iso) return null;
-  const sender = result.sender?.german ?? 'Letter';
+  const sender = result.sender?.local ?? 'Letter';
   const title = date.type === 'appointment' ? `Appointment: ${sender}` : `${date.label}: ${sender}`;
   const steps = buildSteps(result).slice(0, 3).map((step) => `• ${step.text}`).join('\n');
   return h('button', {
@@ -137,7 +206,7 @@ function dateFact(result, date) {
     h('span', { class: 'fact-label' }, date.label),
     h('span', { class: 'fact-value' }, when ?? '—'),
     h('span', { class: `fact-note ${tone}` }, note),
-    date.estimated && date.iso ? h('span', { class: 'fact-note' }, `Estimated: ${date.period} from about 4 days after the letter date, when a posted letter usually counts as delivered.`) : null,
+    date.estimated && date.iso ? h('span', { class: 'fact-note' }, `Estimated: ${date.period}, counted from about ${result.country.deliveryDays} days after the letter date. ${result.country.deliveryNote}`) : null,
     calendarButton(result, date));
 }
 
@@ -147,13 +216,13 @@ function moneyFacts(result) {
   if (toPay) {
     facts.push(h('div', { class: 'card fact money-pay' },
       h('span', { class: 'fact-label' }, 'To pay'),
-      h('span', { class: 'fact-value' }, `${formatEuro(toPay.amount)}${toPay.monthly ? ' / month' : ''}`),
+      h('span', { class: 'fact-value' }, `${formatMoney(toPay)}${toPay.monthly ? ' / month' : ''}`),
       h('span', { class: 'fact-note' }, `Written in the letter as ${toPay.source.replace(/ /g, '\u00a0')}`)));
   }
   if (toGet) {
     facts.push(h('div', { class: 'card fact money-get' },
       h('span', { class: 'fact-label' }, toGet.role === 'benefit' ? 'You get' : 'Money back for you'),
-      h('span', { class: 'fact-value' }, `${formatEuro(toGet.amount)}${toGet.monthly ? ' / month' : ''}`),
+      h('span', { class: 'fact-value' }, `${formatMoney(toGet)}${toGet.monthly ? ' / month' : ''}`),
       h('span', { class: 'fact-note' }, `Written in the letter as ${toGet.source.replace(/ /g, '\u00a0')}`)));
   }
   return facts;
@@ -169,10 +238,12 @@ function row(label, value, { code = false, copyable = true } = {}) {
 function summaryCard(result) {
   const { sender, kind } = result;
   return h('div', { class: `card summary urgency-${result.urgency}` },
-    h('p', { class: 'summary-from' }, sender ? `From: ${sender.name}${sender.german === sender.name ? '' : ` (${sender.german})`}` : 'Sender not recognised'),
+    h('div', { class: 'summary-top' },
+      h('p', { class: 'summary-from' }, sender ? `From: ${sender.name}${sender.local === sender.name ? '' : ` (${sender.local})`}` : 'Sender not recognised'),
+      countrySwitcher(result)),
     h('h1', { class: 'summary-title', tabindex: '-1' },
       kind ? kind.name : 'Letter',
-      kind ? h('span', { class: 'german' }, ` · ${kind.german}`) : null),
+      kind ? h('span', { class: 'local' }, ` · ${kind.local}`) : null),
     kind ? h('p', {}, kind.about) : h('p', {}, 'We couldn’t tell exactly what kind of letter this is. The dates, amounts and translation below can still help.'),
     sender ? h('p', { class: 'muted small' }, sender.about) : null,
     h('span', { class: `badge ${result.urgency}` }, urgencyText(result.urgency)));
@@ -197,7 +268,7 @@ function paymentCard(result) {
       row('IBAN', payment.iban, { code: true }),
       payment.bic ? row('BIC', payment.bic, { code: true }) : null,
       payment.reference ? row('Reference', payment.reference) : null,
-      result.money.toPay ? row('Amount', result.money.toPay.amount.toFixed(2).replace('.', ',')) : null));
+      result.money.toPay ? row('Amount', result.money.toPay.amount.toFixed(2).replace('.', result.country.decimal)) : null));
 }
 
 function referencesCard(result) {
@@ -206,7 +277,7 @@ function referencesCard(result) {
   return h('div', { class: 'card' },
     h('h2', {}, 'Your reference numbers'),
     h('p', { class: 'muted small' }, 'Write these on every reply and use them when you call.'),
-    h('dl', { class: 'rows' }, list.map((reference) => row(`${reference.name} (${reference.german})`, reference.value, { code: true }))));
+    h('dl', { class: 'rows' }, list.map((reference) => row(`${reference.name} (${reference.local})`, reference.value, { code: true }))));
 }
 
 function termsCard(result) {
@@ -217,6 +288,7 @@ function termsCard(result) {
 }
 
 function translationCard(result) {
+  const language = languageOf(result.country);
   const body = h('div', { class: 'translation' });
   const status = h('p', { class: 'muted small' });
   const card = h('div', { class: 'card' }, h('h2', {}, 'The whole letter in English'), body);
@@ -225,32 +297,32 @@ function translationCard(result) {
     body.replaceChildren(status);
     try {
       status.textContent = 'Preparing the translator…';
-      await prepareTranslator((progress) => { status.textContent = `Downloading the translator… ${Math.round(progress * 100)}%`; });
+      await prepareTranslator(result.country, (progress) => { status.textContent = `Downloading the translator… ${Math.round(progress * 100)}%`; });
       status.textContent = 'Translating…';
-      const paragraphs = await translateText(result.text, (done, total) => { status.textContent = `Translating… ${done} of ${total}`; });
-      const showGerman = h('input', { type: 'checkbox', id: 'show-german' });
+      const paragraphs = await translateText(result.text, result.country, (done, total) => { status.textContent = `Translating… ${done} of ${total}`; });
+      const showOriginal = h('input', { type: 'checkbox', id: 'show-original' });
       const list = h('div', {}, paragraphs.map((paragraph) => h('div', {},
         h('p', {}, paragraph.english),
-        h('p', { class: 'german', hidden: true, lang: 'de' }, paragraph.german))));
-      showGerman.addEventListener('change', () => {
-        for (const german of list.querySelectorAll('.german')) german.hidden = !showGerman.checked;
+        h('p', { class: 'original', hidden: true, lang: language.id }, paragraph.original))));
+      showOriginal.addEventListener('change', () => {
+        for (const original of list.querySelectorAll('.original')) original.hidden = !showOriginal.checked;
       });
       body.replaceChildren(
-        h('p', { class: 'muted small' }, 'Machine translation made on your device. It can contain mistakes — dates and amounts above come straight from the German text.'),
-        h('p', { class: 'translation-actions' }, showGerman, h('label', { for: 'show-german' }, 'Show German under each part')),
+        h('p', { class: 'muted small' }, `Machine translation made on your device. It can contain mistakes — dates and amounts above come straight from the ${language.name} text.`),
+        h('p', { class: 'translation-actions' }, showOriginal, h('label', { for: 'show-original' }, `Show the ${language.name} under each part`)),
         list);
     } catch (error) {
       console.error(error);
-      body.replaceChildren(h('p', { class: 'notice error' }, error.message || 'Translation failed.'), h('button', { class: 'button secondary', type: 'button', onclick: run }, 'Try again'));
+      body.replaceChildren(errorBox(friendlyError(error, 'translate')), h('button', { class: 'button secondary', type: 'button', onclick: run }, 'Try again'));
     }
   };
 
   (async () => {
-    if (await isTranslatorCached()) {
+    if (await isTranslatorCached(result.country)) {
       run();
       return;
     }
-    const size = await translatorSize().catch(() => 0);
+    const size = await translatorSize(result.country).catch(() => 0);
     body.replaceChildren(
       h('p', {}, 'Translate the full letter on your device. The translator downloads once', size ? ` (${Math.round(size / 1_000_000)} MB)` : '', ' and then works offline.'),
       h('button', { class: 'button secondary', type: 'button', onclick: run }, 'Translate the whole letter'));
@@ -263,44 +335,58 @@ function repliesCard(result) {
   const replies = buildReplies(result);
   if (!replies.length) return null;
   return h('div', { class: 'card' },
-    h('h2', {}, 'Ready-made replies in German'),
+    h('h2', {}, `Ready-made replies in ${languageOf(result.country).name}`),
     h('p', { class: 'muted small' }, 'Fill in the parts in [brackets], print, sign and send by post. Keep a copy.'),
     replies.map((reply) => h('details', { class: 'reply' },
       h('summary', {}, reply.title),
       h('p', {}, reply.when),
       h('p', { class: 'muted small' }, h('strong', {}, 'What it says: '), reply.english),
-      h('pre', { class: 'letter', lang: 'de' }, reply.german),
+      h('pre', { class: 'letter', lang: result.country.language }, reply.local),
       h('div', { class: 'reply-actions' },
-        h('button', { class: 'button secondary small', type: 'button', onclick: () => copy(reply.german, 'Letter copied') }, 'Copy letter'),
-        h('button', { class: 'button ghost small', type: 'button', onclick: () => download(`briefly-${reply.id}.txt`, reply.german, 'text/plain;charset=utf-8') }, 'Download')))));
+        h('button', { class: 'button secondary small', type: 'button', onclick: () => copy(reply.local, 'Letter copied') }, 'Copy letter'),
+        h('button', { class: 'button ghost small', type: 'button', onclick: () => download(`briefly-${reply.id}.txt`, reply.local, 'text/plain;charset=utf-8') }, 'Download')))));
 }
 
 function sourceCard(result) {
-  const area = h('textarea', { rows: 10, spellcheck: 'false', lang: 'de' });
+  const area = h('textarea', { rows: 10, spellcheck: 'false', lang: result.country.language });
   area.value = result.text;
   return h('div', { class: 'card' },
     h('details', { class: 'source' },
       h('summary', {}, 'Text we read from your letter'),
-      h('p', { class: 'muted small' }, 'Photos can have reading mistakes. Fix a wrong date or amount here and check again.'),
+      h('p', { class: 'muted small' }, 'Photos can have reading mistakes. Fix a wrong date or amount here and check again. You can also copy or save the text.'),
       area,
-      h('button', { class: 'button secondary', type: 'button', onclick: () => showResult(area.value, current?.source ?? 'edit') }, 'Check again')));
+      h('div', { class: 'reply-actions' },
+        h('button', { class: 'button secondary', type: 'button', onclick: () => showResult(area.value, current?.source ?? 'edit', result.country.id) }, 'Check again'),
+        h('button', { class: 'button ghost', type: 'button', onclick: () => copy(area.value, 'Text copied') }, 'Copy text'),
+        h('button', { class: 'button ghost', type: 'button', onclick: () => download('briefly-letter.txt', area.value, 'text/plain;charset=utf-8') }, 'Save as text file'))));
 }
 
 function summaryText(result) {
-  const lines = [`${result.kind?.name ?? 'Letter'}${result.sender ? ` from ${result.sender.name} (${result.sender.german})` : ''}`];
+  const lines = [`${result.kind?.name ?? 'Letter'}${result.sender ? ` from ${result.sender.name} (${result.sender.local})` : ''}`];
   for (const date of result.dates.filter((item) => item.iso)) lines.push(`${date.label}: ${formatWhen(date)}${date.estimated ? ' (estimated)' : ''}`);
-  if (result.money.toPay) lines.push(`To pay: ${formatEuro(result.money.toPay.amount)}`);
-  if (result.money.toGet) lines.push(`You get: ${formatEuro(result.money.toGet.amount)}`);
+  if (result.money.toPay) lines.push(`To pay: ${formatMoney(result.money.toPay)}`);
+  if (result.money.toGet) lines.push(`You get: ${formatMoney(result.money.toGet)}`);
   lines.push('', ...buildSteps(result).map((step) => `• ${step.text}`), '', 'Made with Briefly');
   return lines.join('\n');
 }
 
-function showResult(text, source) {
-  const result = analyze(text);
+function countrySwitcher(result) {
+  const select = h('select', {
+    class: 'country-select',
+    'aria-label': 'Country of the letter',
+    onchange: (event) => showResult(result.text, current?.source ?? 'edit', event.target.value),
+  }, COUNTRIES.map((country) => h('option', { value: country.id, selected: country.id === result.country.id }, `${country.flag} ${country.name}`)));
+  return h('label', { class: 'summary-country' }, 'Letter from ', select);
+}
+
+function showResult(text, source, countryId = null) {
+  const result = analyze(text, countryId ? { country: countryId } : { preferred: selectedCountry });
   current = { result, source };
   const facts = [...result.dates.map((date) => dateFact(result, date)), ...moneyFacts(result)];
+  const switched = !countryId && result.country.id !== selectedCountry;
   $('#result-body').replaceChildren(...[
     source === 'sample' ? h('p', { class: 'notice' }, 'This is a made-up example letter. Try it with your own letter next.') : null,
+    switched ? h('p', { class: 'notice' }, `This letter looks like it’s from ${result.country.name}, so Briefly used the ${result.country.adjective} rules. Wrong? Change the country below.`) : null,
     summaryCard(result),
     facts.length ? h('div', { class: 'facts' }, facts) : null,
     stepsCard(result),
@@ -317,11 +403,8 @@ function showResult(text, source) {
 }
 
 function setupStart() {
-  const chips = $('#samples');
-  for (const sample of SAMPLES) {
-    chips.append(h('button', { class: 'chip', type: 'button', onclick: () => showResult(sampleText(sample.id), 'sample') },
-      sample.title, h('span', {}, sample.subtitle)));
-  }
+  renderCountryPicker();
+  renderSamples();
 
   for (const input of [$('#files'), $('#camera')]) {
     input.addEventListener('change', () => {
@@ -509,6 +592,18 @@ function registerServiceWorker() {
   navigator.serviceWorker.register('/sw.js').catch((error) => console.warn('Offline mode unavailable', error));
 }
 
+function checkSupport() {
+  const missing = missingFeatures();
+  if (!missing.length) return;
+  $('#dropzone').before(errorBox({
+    title: 'This browser can’t run Briefly',
+    message: `It is missing ${missing.join(', ')}. Please update your browser, or open Briefly in the latest Chrome, Edge, Firefox or Safari.`,
+    details: null,
+  }));
+}
+
+document.documentElement.classList.add('ready');
+checkSupport();
 setupStart();
 setupInstall();
 setupLaunchQueue();

@@ -524,6 +524,108 @@ details.source textarea { margin: 12px 0 10px; font-family: var(--mono); font-si
   cursor: pointer;
 }
 
+.problem { text-align: left; }
+.problem p { margin: 0 0 6px; }
+.problem-title { font-weight: 700; font-size: 17px; }
+.problem-details { margin-top: 8px; color: var(--ink-2); font-size: 14px; }
+.problem-details summary { cursor: pointer; }
+.problem-details p { margin: 6px 0 0; overflow-wrap: anywhere; font-family: var(--mono); font-size: 13px; }
+.problem-details p:last-child { font-family: var(--font); }
+
+.works { margin-top: 30px; }
+.works h2 { font-size: 20px; letter-spacing: -0.01em; text-transform: none; color: var(--ink); margin: 0 0 12px; }
+.works-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.works-head { margin: 0 0 8px; font-weight: 700; }
+.works-head.yes { color: var(--good); }
+.works-head.no { color: var(--urgent); }
+.works-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.works-list li { position: relative; padding-left: 26px; color: var(--ink-2); }
+.works-list li::before { position: absolute; left: 0; top: 0; font-weight: 800; }
+.works-list.yes li::before { content: "✓"; color: var(--good); }
+.works-list.no li::before { content: "✕"; color: var(--urgent); }
+.works-note { margin: 14px 0 0; font-size: 14px; color: var(--ink-3); }
+
+.boot-warning {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  margin: 0 auto;
+  max-width: 560px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--urgent-bg);
+  color: var(--urgent);
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  visibility: hidden;
+  animation: boot-show 0s linear 8s forwards;
+}
+
+html.ready .boot-warning { display: none; }
+
+@keyframes boot-show { to { visibility: visible; } }
+
+.country-picker { margin: 0 0 14px; }
+.country-title { margin: 0 0 8px; font-weight: 650; }
+.countries { display: flex; flex-wrap: wrap; gap: 8px; }
+.country {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: inherit;
+  font: 600 15px/1.2 var(--font);
+  cursor: pointer;
+}
+.country .flag { font-size: 18px; line-height: 1; }
+.country.selected { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.country:hover:not(.selected) { border-color: var(--ink-3); }
+
+.summary-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.summary-country { color: var(--ink-3); font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.country-select {
+  font: 600 14px/1.2 var(--font);
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 8px;
+}
+.summary-title .local { font-weight: 500; color: var(--ink-3); font-size: 18px; }
+.translation .original { color: var(--ink-3); font-size: 14px; border-left: 3px solid var(--line); padding-left: 10px; }
+
+.prose { line-height: 1.65; }
+.prose h1 { font-size: clamp(28px, 5.5vw, 40px); line-height: 1.15; letter-spacing: -0.02em; margin: 18px 0 12px; }
+.prose h2 { font-size: 22px; letter-spacing: -0.01em; margin: 34px 0 10px; }
+.prose h3 { font-size: 17px; margin: 22px 0 6px; }
+.prose p, .prose li, .prose dd { color: var(--ink-2); }
+.prose ul { padding-left: 22px; display: grid; gap: 6px; }
+.prose a { color: var(--ink); text-decoration-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+.prose a:hover { text-decoration-color: currentColor; }
+.prose .link-list a { font-weight: 650; }
+.prose .terms { gap: 14px; }
+.prose pre.letter { font-size: 13px; }
+.crumbs { margin: 6px 0 0; font-size: 14px; color: var(--ink-3); }
+.crumbs a { color: var(--ink-3); }
+
+.page-cta {
+  margin: 24px 0;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--good-bg);
+  border: 1px solid color-mix(in srgb, var(--good) 25%, transparent);
+}
+.page-cta-title { margin: 0 0 4px; font-weight: 750; font-size: 18px; color: var(--ink) !important; }
+.page-cta p { margin: 0 0 12px; }
+.page-cta .button { text-decoration: none; color: var(--accent-ink); }
+
+.footer a { color: var(--ink-2); }
+
 @media (max-width: 520px) {
   .promises { gap: 8px; }
   .promises li { padding: 12px 10px; }

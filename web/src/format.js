@@ -1,9 +1,15 @@
 import { formatDate } from './dates.js';
 
-const euro = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' });
+const formatters = new Map();
+
+export function formatMoney(value, currency = value?.currency ?? 'EUR') {
+  const amount = typeof value === 'number' ? value : value.amount;
+  if (!formatters.has(currency)) formatters.set(currency, new Intl.NumberFormat('en-IE', { style: 'currency', currency }));
+  return formatters.get(currency).format(amount);
+}
 
 export function formatEuro(amount) {
-  return euro.format(amount);
+  return formatMoney(amount, 'EUR');
 }
 
 export function formatWhen(date) {

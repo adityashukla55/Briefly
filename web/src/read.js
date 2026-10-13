@@ -1,3 +1,6 @@
+import './polyfills.js';
+import { ReadError } from './errors.js';
+
 const vendor = (path) => new URL(`../vendor/${path}`, import.meta.url).href;
 
 const MAX_PDF_PAGES = 8;
@@ -5,54 +8,99 @@ const MAX_SIDE = 3000;
 const MIN_WIDTH = 1600;
 
 let ocrWorker = null;
+let ocrLanguage = null;
 let reportProgress = () => {};
 
 const OCR_STEPS = {
   'loading tesseract core': 'Starting the text reader',
   'initializing tesseract': 'Starting the text reader',
-  'loading language traineddata': 'Loading German',
+  'loading language traineddata': 'Loading the language',
   'initializing api': 'Starting the text reader',
   'recognizing text': 'Reading the text',
 };
 
-async function getOcr() {
+async function getOcr(language) {
+  if (ocrWorker && ocrLanguage !== language) {
+    const worker = await ocrWorker;
+    await worker.reinitialize(language, 1);
+    ocrLanguage = language;
+  }
   if (!ocrWorker) {
-    const { default: Tesseract } = await import(vendor('tesseract/tesseract.esm.min.js'));
-    const { createWorker } = Tesseract;
-    ocrWorker = createWorker('deu', 1, {
-      workerPath: vendor('tesseract/worker.min.js'),
-      corePath: vendor('tesseract-core/'),
-      langPath: vendor('lang'),
-      workerBlobURL: false,
-      cacheMethod: 'none',
-      logger: (message) => {
-        const label = OCR_STEPS[message.status];
-        if (label) reportProgress(label, message.progress);
-      },
-    }).catch((error) => {
+    ocrLanguage = language;
+    ocrWorker = (async () => {
+      const { default: Tesseract } = await import(vendor('tesseract/tesseract.esm.min.js'));
+      return Tesseract.createWorker(language, 1, {
+        workerPath: vendor('tesseract/worker.min.js'),
+        corePath: vendor('tesseract-core/'),
+        langPath: vendor('lang'),
+        workerBlobURL: false,
+        cacheMethod: 'none',
+        logger: (message) => {
+          const label = OCR_STEPS[message.status];
+          if (label) reportProgress(label, message.progress);
+        },
+      });
+    })().catch((error) => {
       ocrWorker = null;
+      ocrLanguage = null;
       throw error;
     });
   }
   return ocrWorker;
 }
 
-async function prepareImage(source) {
-  const bitmap = source instanceof Blob ? await createImageBitmap(source, { imageOrientation: 'from-image' }) : source;
-  let scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
-  if (bitmap.width * scale < MIN_WIDTH) scale = Math.min(MIN_WIDTH / bitmap.width, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+function isHeic(file) {
+  return /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+}
+
+async function loadWithImageElement(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    return image;
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+}
+
+async function decodeImage(file) {
+  const attempts = [
+    () => createImageBitmap(file, { imageOrientation: 'from-image' }),
+    () => createImageBitmap(file),
+    () => loadWithImageElement(file),
+  ];
+  for (const attempt of attempts) {
+    try {
+      const image = await attempt();
+      if (image.width && image.height) return image;
+    } catch {}
+  }
+  if (isHeic(file)) {
+    throw new ReadError('This photo format isn’t supported here', 'HEIC photos from iPhone only open in Safari. Take a screenshot of the photo and use that, or set the camera to “Most Compatible” (Settings → Camera → Formats).');
+  }
+  throw new ReadError('We couldn’t open this photo', 'The file may be damaged or in a format the browser can’t show. Try a JPG or PNG, or take a screenshot of the letter.');
+}
+
+async function prepareImage(file) {
+  const image = await decodeImage(file);
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  let scale = Math.min(1, MAX_SIDE / Math.max(width, height));
+  if (width * scale < MIN_WIDTH) scale = Math.min(MIN_WIDTH / width, MAX_SIDE / Math.max(width, height));
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
   const context = canvas.getContext('2d', { willReadFrequently: true });
-  context.filter = 'grayscale(1) contrast(1.15)';
-  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  if (bitmap.close) bitmap.close();
+  if ('filter' in context) context.filter = 'grayscale(1) contrast(1.15)';
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (image.close) image.close();
   return canvas;
 }
 
-async function recognize(canvas) {
-  const worker = await getOcr();
+async function recognize(canvas, language) {
+  const worker = await getOcr(language);
   const { data } = await worker.recognize(canvas, { rotateAuto: true });
   return data.text;
 }
@@ -62,7 +110,7 @@ let pdfjs = null;
 async function getPdfjs() {
   if (!pdfjs) {
     pdfjs = await import(vendor('pdfjs/pdf.min.mjs'));
-    pdfjs.GlobalWorkerOptions.workerSrc = vendor('pdfjs/pdf.worker.min.mjs');
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL('./pdf-worker.js', import.meta.url).href;
   }
   return pdfjs;
 }
@@ -71,7 +119,7 @@ function pageText(content) {
   return content.items.map((item) => `${item.str ?? ''}${item.hasEOL ? '\n' : ''}`).join('').replace(/[ \t]+\n/g, '\n');
 }
 
-async function readPdf(file, onStep) {
+async function openPdf(file) {
   const lib = await getPdfjs();
   const task = lib.getDocument({
     data: new Uint8Array(await file.arrayBuffer()),
@@ -81,54 +129,71 @@ async function readPdf(file, onStep) {
     iccUrl: vendor('pdfjs/iccs/'),
     isEvalSupported: false,
   });
-  const doc = await task.promise;
-  const count = Math.min(doc.numPages, MAX_PDF_PAGES);
-  const pages = [];
-  for (let number = 1; number <= count; number += 1) {
-    const page = await doc.getPage(number);
-    pages.push({ page, number, text: pageText(await page.getTextContent()) });
-  }
-  const hasTextLayer = pages.some(({ text }) => text.replace(/\s/g, '').length >= 60);
-  const texts = [];
-  for (const { page, number, text } of pages) {
-    if (hasTextLayer) {
-      texts.push(text);
-      continue;
+  try {
+    return { task, doc: await task.promise };
+  } catch (error) {
+    task.destroy();
+    if (error?.name === 'PasswordException') {
+      throw new ReadError('This PDF is locked with a password', 'Open it, save a copy without the password, or take a screenshot of each page and use those.');
     }
-    onStep(`Reading page ${number} of ${count}`);
-    const viewport = page.getViewport({ scale: 2.5 });
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-    await page.render({ canvas, viewport }).promise;
-    texts.push(await recognize(canvas));
+    if (error?.name === 'InvalidPDFException') {
+      throw new ReadError('This PDF looks damaged', 'Try opening it and saving it again, or take a photo of the letter instead.');
+    }
+    throw error;
   }
-  await task.destroy();
-  return texts.join('\n\n');
+}
+
+async function readPdf(file, onStep, language) {
+  const { task, doc } = await openPdf(file);
+  try {
+    const count = Math.min(doc.numPages, MAX_PDF_PAGES);
+    const pages = [];
+    for (let number = 1; number <= count; number += 1) {
+      const page = await doc.getPage(number);
+      pages.push({ page, number, text: pageText(await page.getTextContent()) });
+    }
+    const hasTextLayer = pages.some(({ text }) => text.replace(/\s/g, '').length >= 60);
+    const texts = [];
+    for (const { page, number, text } of pages) {
+      if (hasTextLayer) {
+        texts.push(text);
+        continue;
+      }
+      onStep(`Reading page ${number} of ${count}`);
+      const viewport = page.getViewport({ scale: 2.5 });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      await page.render({ canvas, viewport }).promise;
+      texts.push(await recognize(canvas, language));
+    }
+    return texts.join('\n\n');
+  } finally {
+    await task.destroy();
+  }
 }
 
 export function isSupported(file) {
-  return file.type === 'application/pdf' || file.type.startsWith('image/') || file.type === 'text/plain' || /\.(pdf|png|jpe?g|webp|txt)$/i.test(file.name);
+  return file.type === 'application/pdf' || file.type.startsWith('image/') || file.type === 'text/plain' || /\.(pdf|png|jpe?g|webp|heic|heif|txt)$/i.test(file.name);
 }
 
-export async function readFiles(files, onProgress = () => {}) {
+export async function readFiles(files, { language = 'deu', onProgress = () => {} } = {}) {
   const texts = [];
+  let usedOcr = false;
   const list = [...files];
   for (const [position, file] of list.entries()) {
     const prefix = list.length > 1 ? `File ${position + 1} of ${list.length}: ` : '';
     reportProgress = (label, progress) => onProgress(`${prefix}${label}`, progress);
-    if (/heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name)) {
-      throw new Error('HEIC photos can’t be opened in the browser. On iPhone, take a screenshot of the photo or set the camera to “Most Compatible”.');
-    }
     if (file.type === 'text/plain' || /\.txt$/i.test(file.name)) {
       texts.push(await file.text());
     } else if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
       onProgress(`${prefix}Opening the PDF`, null);
-      texts.push(await readPdf(file, (label) => onProgress(`${prefix}${label}`, null)));
+      texts.push(await readPdf(file, (label) => { usedOcr = true; onProgress(`${prefix}${label}`, null); }, language));
     } else {
+      usedOcr = true;
       onProgress(`${prefix}Preparing the photo`, null);
-      texts.push(await recognize(await prepareImage(file)));
+      texts.push(await recognize(await prepareImage(file), language));
     }
   }
-  return texts.join('\n\n').trim();
+  return { text: texts.join('\n\n').trim(), usedOcr };
 }

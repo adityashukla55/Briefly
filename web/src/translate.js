@@ -1,39 +1,46 @@
+import { amountPattern } from './analyze.js';
+import { languageOf } from './countries/index.js';
 import { formatShortDate, toIso } from './dates.js';
 
 const vendor = (path) => new URL(`../vendor/${path}`, import.meta.url).href;
 
-const AMOUNT = /(?:(€|EUR|Euro)\s?)?(?<![\d.,])(\d{1,3}(?:\.\d{3})+|\d+),(\d{2})(?!\d)(?:\s?(€|EUR\b|Euro\b))?/g;
-const UNTIL_DATE = /\bbis (?:zum |spätestens )?(\d{1,2}\.\d{1,2}\.\d{2,4})/g;
-const EURO_OUT = /€(\d+)\.(\d{2})\b/g;
-const DATE_OUT = /(?<![\d.])(\d{1,2})\.(\d{1,2})\.(\d{4})(?!\d)/g;
+const MONEY_OUT = /(?<![\w.])(€|EUR ?|CHF ?)(\d+)(?:\.(\d{2}))?(?!\d)/g;
+const MONEY_OUT_AFTER = /(?<![\w.])(\d+)(?:\.(\d{2}))? ?(EUR|CHF)\b/g;
+const DATE_OUT = /(?<![\d.\/])(\d{1,2})([./])(\d{1,2})\2(\d{4})(?!\d)/g;
 
-export function beforeTranslation(line) {
-  return line
-    .replace(/[·•]/g, '-')
-    .replace(/§§?\s*/g, 'Paragraf ')
-    .replace(AMOUNT, (match, before, whole, cents, after) => (before || after ? `€${whole.replace(/\./g, '')}.${cents}` : match))
-    .replace(UNTIL_DATE, (match, date, offset, text) => (/vom\s+\S+\s*$/.test(text.slice(Math.max(0, offset - 25), offset)) ? match : `spätestens am ${date}`));
+export function beforeTranslation(line, country) {
+  const language = languageOf(country);
+  let out = line.replace(/[·•]/g, '-');
+  for (const [pattern, replace] of language.rewrite) out = out.replace(new RegExp(pattern.source, pattern.flags), replace);
+  return out.replace(amountPattern(country), (match, before, whole, cents, after) => {
+    if (!before && !after) return match;
+    const symbol = country.currency === 'CHF' ? 'CHF ' : 'EUR ';
+    const digits = whole.replace(/\D/g, '');
+    return cents && /^\d{2}$/.test(cents) ? `${symbol}${digits}.${cents}` : `${symbol}${digits}`;
+  });
 }
 
 export function afterTranslation(english) {
   return english
-    .replace(EURO_OUT, (match, whole, cents) => `€${Number(whole).toLocaleString('en-IE')}.${cents}`)
-    .replace(DATE_OUT, (match, day, month, year) => {
+    .replace(MONEY_OUT_AFTER, (match, whole, cents, code) => `${code} ${whole}${cents ? `.${cents}` : ''}`)
+    .replace(MONEY_OUT, (match, symbol, whole, cents) => `${symbol.trim() === 'CHF' ? 'CHF ' : '€'}${Number(whole).toLocaleString('en-IE')}${cents ? `.${cents}` : ''}`)
+    .replace(DATE_OUT, (match, day, separator, month, year) => {
       const iso = toIso(Number(year), Number(month), Number(day));
       return iso ? formatShortDate(iso) : match;
     });
 }
 
 let translator = null;
-let ready = null;
+const downloads = new Map();
+let registry = null;
 
-async function modelFiles() {
-  const registry = await (await fetch(vendor('models/registry.json'))).json();
-  return Object.values(registry.deen);
+async function modelFiles(pair) {
+  registry ??= await (await fetch(vendor('models/registry.json'))).json();
+  return Object.values(registry[pair]);
 }
 
-async function download(onProgress) {
-  const files = await modelFiles();
+async function download(pair, onProgress) {
+  const files = await modelFiles(pair);
   const total = files.reduce((sum, file) => sum + file.size, 0);
   let loaded = 0;
   for (const file of files) {
@@ -49,38 +56,41 @@ async function download(onProgress) {
   }
 }
 
-export async function translatorSize() {
-  const files = await modelFiles();
+export async function translatorSize(country) {
+  const files = await modelFiles(languageOf(country).model);
   return files.reduce((sum, file) => sum + file.size, 0);
 }
 
-export async function isTranslatorCached() {
+export async function isTranslatorCached(country) {
   if (!('caches' in self)) return false;
-  const files = await modelFiles().catch(() => []);
+  const files = await modelFiles(languageOf(country).model).catch(() => []);
   if (!files.length) return false;
   const hits = await Promise.all(files.map((file) => caches.match(file.name)));
   return hits.every(Boolean);
 }
 
-export function prepareTranslator(onProgress = () => {}) {
-  if (!ready) {
-    ready = (async () => {
-      await download(onProgress);
-      const { BatchTranslator } = await import(vendor('bergamot/translator.js'));
-      translator = new BatchTranslator({
-        registryUrl: vendor('models/registry.json'),
-        pivotLanguage: null,
-        downloadTimeout: 0,
-        workers: 1,
-        batchSize: 4,
-      });
+export function prepareTranslator(country, onProgress = () => {}) {
+  const pair = languageOf(country).model;
+  if (!downloads.has(pair)) {
+    downloads.set(pair, (async () => {
+      await download(pair, onProgress);
+      if (!translator) {
+        const { BatchTranslator } = await import(vendor('bergamot/translator.js'));
+        translator = new BatchTranslator({
+          registryUrl: vendor('models/registry.json'),
+          pivotLanguage: null,
+          downloadTimeout: 0,
+          workers: 1,
+          batchSize: 4,
+        });
+      }
       return translator;
     })().catch((error) => {
-      ready = null;
+      downloads.delete(pair);
       throw error;
-    });
+    }));
   }
-  return ready;
+  return downloads.get(pair);
 }
 
 export function toParagraphs(text) {
@@ -92,7 +102,7 @@ export function toParagraphs(text) {
       .filter(Boolean)
       .reduce((lines, line) => {
         const previous = lines[lines.length - 1];
-        const keepBreak = !previous || /^[-•*]\s/.test(line) || /:$/.test(previous) || previous.length < 45 || /^[A-ZÄÖÜ][^.!?]{0,40}$/.test(line);
+        const keepBreak = !previous || /^[-•*]\s/.test(line) || /:$/.test(previous) || previous.length < 45 || /^\p{Lu}[^.!?]{0,40}$/u.test(line);
         if (keepBreak) lines.push(line);
         else lines[lines.length - 1] = `${previous} ${line}`;
         return lines;
@@ -101,39 +111,37 @@ export function toParagraphs(text) {
     .filter(Boolean);
 }
 
-const SALUTATION = /^(?:sehr geehrte|guten tag|hallo|liebe[rs]?\b)/i;
-
 export function shouldTranslate(paragraphIndex, line, greetingIndex) {
   if (!/\p{L}{2,}/u.test(line)) return false;
   if (greetingIndex < 0 || paragraphIndex >= greetingIndex - 1) return true;
   return line.includes(':');
 }
 
-export function fixedPhrase(line) {
+export function fixedPhrase(line, language) {
   const trimmed = line.trim();
-  if (/^sehr geehrte damen und herren,?$/i.test(trimmed)) return 'Dear Sir or Madam,';
-  const named = trimmed.match(/^sehr geehrte(r)?\s+(frau|herr)\s+(.+?)(,?)$/i);
-  if (named) return `Dear ${named[2].toLowerCase() === 'frau' ? 'Ms' : 'Mr'} ${named[3]}${named[4]}`;
-  if (/^mit freundlichen grüßen,?$/i.test(trimmed)) return 'Kind regards';
-  if (/^im auftrag$/i.test(trimmed)) return 'On behalf of the office';
+  for (const [pattern, render] of language.fixedPhrases) {
+    const match = trimmed.match(pattern);
+    if (match) return render(match);
+  }
   return null;
 }
 
-export async function translateText(text, onParagraph = () => {}) {
-  const engine = await prepareTranslator();
+export async function translateText(text, country, onParagraph = () => {}) {
+  const language = languageOf(country);
+  const engine = await prepareTranslator(country);
   const paragraphs = toParagraphs(text);
-  const greetingIndex = paragraphs.findIndex((paragraph) => SALUTATION.test(paragraph));
+  const greetingIndex = paragraphs.findIndex((paragraph) => language.greeting.test(paragraph));
   const results = new Array(paragraphs.length).fill(null);
   await Promise.all(paragraphs.map(async (paragraph, index) => {
     const lines = paragraph.split('\n');
     const translated = await Promise.all(lines.map(async (line) => {
-      const fixed = fixedPhrase(line);
+      const fixed = fixedPhrase(line, language);
       if (fixed) return fixed;
       if (!shouldTranslate(index, line, greetingIndex)) return line;
-      const response = await engine.translate({ from: 'de', to: 'en', text: beforeTranslation(line), html: false });
+      const response = await engine.translate({ from: language.id, to: 'en', text: beforeTranslation(line, country), html: false });
       return afterTranslation(response.target.text);
     }));
-    results[index] = { german: paragraph, english: translated.join('\n') };
+    results[index] = { original: paragraph, english: translated.join('\n') };
     onParagraph(results.filter(Boolean).length, paragraphs.length);
   }));
   return results;

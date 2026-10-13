@@ -1,15 +1,11 @@
-import { GLOSSARY, KINDS, REFERENCE_LABELS, SENDERS } from './knowledge.js';
+import { countryById, detectCountry, languageOf } from './countries/index.js';
 import { addDays, addPeriod, daysBetween, describePeriod, findDates, findPeriods, todayIso } from './dates.js';
-
-export const DELIVERY_DAYS = 4;
-
-const KIND_WEIGHT = { bescheid: 0.4, rechnung: 0.6 };
 
 export function normalize(text) {
   return text
     .replace(/\r\n?/g, '\n')
-    .replace(/[   ]/g, ' ')
-    .replace(/[‐‑‒]/g, '-')
+    .replace(/[\u00A0\u2007\u202F]/g, ' ')
+    .replace(/[\u2010\u2011\u2012]/g, '-')
     .replace(/(\p{L})-\n(\p{Ll})/gu, '$1$2')
     .replace(/[ \t]+/g, ' ')
     .replace(/ *\n */g, '\n')
@@ -34,68 +30,82 @@ function score(text, patterns) {
   return patterns.reduce((sum, pattern) => sum + countMatches(text, pattern) + 2 * countMatches(head, pattern), 0);
 }
 
-export function detectSender(text) {
-  let best = null;
-  for (const sender of SENDERS) {
-    const points = score(text, sender.patterns);
-    if (points > (best?.points ?? 0)) best = { sender, points };
+function best(text, items) {
+  let top = null;
+  for (const item of items) {
+    const points = score(text, item.patterns) * (item.weight ?? 1);
+    if (points > (top?.points ?? 0)) top = { item, points };
   }
-  if (!best) return null;
-  const { id, name, german, about } = best.sender;
-  return { id, name, german, about };
+  return top?.item ?? null;
 }
 
-export function detectKind(text) {
-  let best = null;
-  for (const kind of KINDS) {
-    const points = score(text, kind.patterns) * (KIND_WEIGHT[kind.id] ?? 1);
-    if (points > (best?.points ?? 0)) best = { kind, points };
-  }
-  if (!best) return null;
-  const { id, name, german, about, urgency } = best.kind;
-  return { id, name, german, about, urgency };
+export function detectSender(text, country) {
+  const sender = best(text, country.senders);
+  if (!sender) return null;
+  const { id, slug, name, local, about } = sender;
+  return { id, slug, name, local, about };
+}
+
+export function detectKind(text, country) {
+  const kind = best(text, country.kinds);
+  if (!kind) return null;
+  const { id, type, name, local, about, urgency, steps, objection, extendable, instalments } = kind;
+  return { id, type, name, local, about, urgency, steps: steps ?? [], objection: objection ?? true, extendable: extendable ?? true, instalments: instalments ?? true };
 }
 
 function contextBefore(text, index, size = 90) {
-  const slice = text.slice(Math.max(0, index - size), index);
-  return slice.split(/\n\s*\n/).pop().toLowerCase();
+  return text.slice(Math.max(0, index - size), index).split(/\n\s*\n/).pop().toLowerCase();
 }
 
 function contextAfter(text, end, size = 50) {
   return text.slice(end, end + size).toLowerCase();
 }
 
-export function classifyDate(text, date) {
+export function classifyDate(text, date, language) {
+  const { context } = language;
   const before = contextBefore(text, date.index);
   const after = contextAfter(text, date.end);
-  if (/(?:vom|von)\s+[\d.\s]+\s*(?:bis|-)\s*(?:zum\s*)?$/.test(before)) return 'mention';
-  if (/(?:\bvom|\bvon|\bseit|geboren am|geb\.|\bstand|\bstichtag)\s*:?\s*$/.test(before)) return 'mention';
-  if (/(?:\bab dem|\bab)\s*$/.test(before)) return 'start';
-  if (/(?:zahl|überweis|ueberweis|begleich|fällig|faellig|zahlungsfrist|gutgeschrieben|abgebucht|eingegangen)[^\n]{0,70}$/.test(before)
-    || /^[^\n]{0,30}(?:zu zahlen|zu überweisen|zu begleichen|gutgeschrieben|eingegangen sein)/.test(after)) return 'payment';
-  if (date.time || /(?:termin|einladung|erscheinen|vorsprache|vorsprechen|gespräch|laden wir|kommen sie)[^\n]{0,80}$/.test(before)) return 'appointment';
-  if (/(?:bis zum|bis spätestens|bis spaetestens|spätestens|spaetestens|\bbis|frist|einreichen|vorlegen|zurücksenden|nachreichen|vorzulegen|einzureichen)\s*(?:zum|am|den|bis)?\s*:?\s*$/.test(before)) return 'deadline';
+  if (context.range.test(before)) return 'mention';
+  if (context.mention.test(before)) return 'mention';
+  if (date.time && !context.payment.test(before)) return 'appointment';
+  if (context.start.test(before)) return 'start';
+  if (context.payment.test(before) || context.paymentAfter.test(after)) return 'payment';
+  if (date.time || context.appointment.test(before)) return 'appointment';
+  if (context.deadline.test(before)) return 'deadline';
   return 'other';
 }
 
-export function findLetterDate(text, dates, today = todayIso()) {
+export function findLetterDate(text, dates, language, today = todayIso()) {
   const limit = headOf(text).length;
   const candidates = dates.filter((date) => date.index < limit && date.type === 'other' && daysBetween(today, date.iso) <= 7);
-  const labelled = candidates.find((date) => /(?:datum|den|,)\s*:?\s*$/.test(contextBefore(text, date.index, 30)) || /(?:^|\n)\s*$/.test(text.slice(Math.max(0, date.index - 2), date.index)));
+  const labelled = candidates.find((date) => language.context.letterDate.test(contextBefore(text, date.index, 40)) || /(?:^|\n)\s*$/.test(text.slice(Math.max(0, date.index - 2), date.index)));
   return (labelled ?? candidates[0])?.iso ?? null;
 }
 
-function periodPurpose(text, period) {
+function sentenceAround(text, start, end) {
+  const before = text.slice(0, start);
+  const boundary = /[.!?;]\s+(?=\p{Lu})|\n\s*\n/gu;
+  let from = 0;
+  for (const match of before.matchAll(boundary)) from = match.index + match[0].length;
+  boundary.lastIndex = 0;
+  const rest = text.slice(end);
+  const next = rest.search(/[.!?;]\s+(?=\p{Lu})|\n\s*\n|[.!?;]?\s*$/u);
+  return text.slice(from, end + (next < 0 ? rest.length : next)).toLowerCase();
+}
+
+function periodPurpose(text, period, language) {
+  if (language.context.paymentAfter.test(text.slice(period.end, period.end + 40).toLowerCase())) return 'payment';
+  const sentence = sentenceAround(text, period.index, period.end);
+  if (language.context.objection.test(sentence)) return 'objection';
+  if (language.context.paymentNear.test(sentence)) return 'payment';
   const around = text.slice(Math.max(0, period.index - 250), period.end + 150).toLowerCase();
-  if (/widerspruch|einspruch|klage|rechtsbehelf/.test(around)) return 'objection';
-  if (/zahl|überweis|begleich/.test(around)) return 'payment';
+  if (language.context.objection.test(around)) return 'objection';
+  if (language.context.paymentNear.test(around)) return 'payment';
   return 'deadline';
 }
 
-export function objectionTerm(text) {
-  if (/einspruch/i.test(text)) return 'Einspruch';
-  if (/widerspruch/i.test(text)) return 'Widerspruch';
-  return null;
+export function objectionTerm(text, country) {
+  return country.objection.find((entry) => entry.pattern.test(text))?.word ?? null;
 }
 
 const DATE_LABELS = {
@@ -105,9 +115,12 @@ const DATE_LABELS = {
   start: 'Starts',
 };
 
-export function findImportantDates(text, today = todayIso()) {
-  const dates = findDates(text).map((date) => ({ ...date, type: classifyDate(text, date) }));
-  const letterDate = findLetterDate(text, dates, today);
+const FROM_LETTER_DATE = /^(?:datum|ausfertigung|date|fecha|data)$/;
+
+export function findImportantDates(text, country, today = todayIso()) {
+  const language = languageOf(country);
+  const dates = findDates(text, language).map((date) => ({ ...date, type: classifyDate(text, date, language) }));
+  const letterDate = findLetterDate(text, dates, language, today);
   const important = [];
 
   for (const date of dates) {
@@ -124,14 +137,14 @@ export function findImportantDates(text, today = todayIso()) {
     });
   }
 
-  const term = objectionTerm(text);
+  const term = objectionTerm(text, country);
   const seenPurposes = new Set();
-  for (const period of findPeriods(text)) {
-    const purpose = periodPurpose(text, period);
+  for (const period of findPeriods(text, language)) {
+    const purpose = periodPurpose(text, period, language);
     if (seenPurposes.has(purpose)) continue;
     if (purpose !== 'objection' && important.some((item) => item.type === purpose)) continue;
     seenPurposes.add(purpose);
-    const base = letterDate ? (period.from === 'datum' ? letterDate : addDays(letterDate, DELIVERY_DAYS)) : null;
+    const base = letterDate ? (FROM_LETTER_DATE.test(period.from ?? '') ? letterDate : addDays(letterDate, country.deliveryDays)) : null;
     const iso = base ? addPeriod(base, period) : null;
     important.push({
       type: purpose,
@@ -149,17 +162,35 @@ export function findImportantDates(text, today = todayIso()) {
   return { letterDate, dates: important };
 }
 
-const AMOUNT = /(?:(€|EUR|Euro)\s?)?(?<![\d.,])(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{2}|-{1,2}))?(?!\d)(?:\s?(€|EUR\b|Euro\b))?/g;
+const CURRENCY = {
+  EUR: { words: '€|EUR\\b|Euros?\\b', symbol: '€' },
+  CHF: { words: 'CHF|SFr\\.?|Fr\\.|Franken\\b', symbol: 'CHF' },
+};
+
+const amountCache = new Map();
+
+export function amountPattern(country) {
+  const key = `${country.currency}${country.decimal}${country.thousands ?? ''}`;
+  if (!amountCache.has(key)) {
+    const currency = CURRENCY[country.currency].words;
+    const thousands = country.thousands ?? (country.decimal === ',' ? '.' : '\'’');
+    const group = `[${thousands.replace(/[\]\\^-]/g, '\\$&')}]`;
+    const decimal = country.decimal === ',' ? ',' : '\\.';
+    amountCache.set(key, new RegExp(`(?:(${currency})\\s?)?(?<![\\d.,'’])(\\d{1,3}(?:${group}\\d{3})+|\\d+)(?:${decimal}(\\d{2}|-{1,2}|–))?(?!\\d)(?:\\s?(${currency})(?!\\s?\\d))?`, 'gi'));
+  }
+  return amountCache.get(key);
+}
 
 export function parseAmount(intPart, decimals) {
-  const whole = Number(intPart.replace(/\./g, ''));
+  const whole = Number(intPart.replace(/\D/g, ''));
   const cents = decimals && /^\d{2}$/.test(decimals) ? Number(decimals) / 100 : 0;
   return Math.round((whole + cents) * 100) / 100;
 }
 
-export function findMoney(text, kindId = null) {
+export function findMoney(text, country, kind = null) {
+  const { money } = languageOf(country);
   const items = [];
-  for (const match of text.matchAll(AMOUNT)) {
+  for (const match of text.matchAll(amountPattern(country))) {
     if (!match[1] && !match[4]) continue;
     const amount = parseAmount(match[2], match[3]);
     if (!amount) continue;
@@ -167,20 +198,22 @@ export function findMoney(text, kindId = null) {
     const after = contextAfter(text, match.index + match[0].length, 40);
     const around = `${before} ${after}`;
     let role = 'other';
-    if (/zu erstatten|zurückzuzahlen|zurückzahlen|rückforderung|überzahl|erstattungsbetrag/.test(around) || (kindId === 'rueckforderung' && /erstatt/.test(around))) role = 'pay';
-    else if (/erstattung|erstatte|guthaben|auszahl|überweisen wir|zahlen wir|erhalten sie|gutschrift|zu ihren gunsten/.test(around)) role = 'refund';
-    else if (kindId === 'bewilligung' && /monatlich|pro monat|im monat|je monat|mtl\.|leistung|bürgergeld|anspruch/.test(around)) role = 'benefit';
-    else if (/zahl|überweis|begleich|nachzahlung|offen|rückstand|forderung|fällig|mahngebühr|säumnis|bußgeld|bussgeld|verwarnungsgeld|gesamt|summe|betrag|beitrag|kosten|gebühr|zinsen/.test(around)) role = 'pay';
+    if (money.repay.test(around) || (kind?.type === 'repayment' && money.repayKind.test(around))) role = 'pay';
+    else if (money.refund.test(around)) role = 'refund';
+    else if (kind?.type === 'approval' && money.benefit.test(around)) role = 'benefit';
+    else if (money.pay.test(around)) role = 'pay';
     items.push({
       amount,
+      currency: country.currency,
       role,
-      monthly: /monatlich|pro monat|im monat|je monat|mtl\./.test(around),
-      total: /(?:gesamtbetrag|gesamtforderung|insgesamt|summe|zu zahlender betrag|noch zu zahlen|offener betrag|nachzahlung|gesamt)[^\n]{0,25}$/.test(before),
+      monthly: money.monthly.test(around),
+      total: money.total.test(before),
       source: match[0].trim(),
       index: match.index,
     });
   }
-  const unique = items.filter((item, i) => items.findIndex((other) => other.amount === item.amount && other.role === item.role) === i);
+  const unique = items.filter((item, i) => items.findIndex((other) => other.amount === item.amount && other.role === item.role) === i)
+    .map((item) => ({ ...item, total: items.some((other) => other.amount === item.amount && other.role === item.role && other.total) }));
   const pick = (role) => {
     const list = unique.filter((item) => item.role === role);
     return list.find((item) => item.total) ?? list.sort((a, b) => b.amount - a.amount)[0] ?? null;
@@ -188,10 +221,11 @@ export function findMoney(text, kindId = null) {
   return { items: unique, toPay: pick('pay'), toGet: pick('refund') ?? pick('benefit') };
 }
 
-export function isValidIban(raw) {
+export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21 }) {
   const iban = raw.replace(/\s/g, '').toUpperCase();
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
-  if (iban.startsWith('DE') && iban.length !== 22) return false;
+  const expected = lengths[iban.slice(0, 2)];
+  if (expected && iban.length !== expected) return false;
   let remainder = 0;
   for (const char of iban.slice(4) + iban.slice(0, 4)) {
     const value = /[A-Z]/.test(char) ? char.charCodeAt(0) - 55 : Number(char);
@@ -204,29 +238,30 @@ export function formatIban(raw) {
   return raw.replace(/\s/g, '').toUpperCase().replace(/(.{4})/g, '$1 ').trim();
 }
 
-export function findPayment(text) {
+export function findPayment(text, country) {
+  const language = languageOf(country);
   let iban = null;
   for (const match of text.matchAll(/\b([A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{4}){2,7}(?:[ ]?[A-Z0-9]{1,3})?)\b/g)) {
     const candidate = match[1];
-    const variants = [candidate, candidate.replace(/[ ]?[A-Z0-9]{1,3}$/, '')];
-    const valid = variants.find(isValidIban);
+    const variants = [candidate, candidate.replace(/[ ]?[A-Z0-9]{1,3}$/, ''), candidate.replace(/[ ]?[A-Z0-9]{4}$/, '')];
+    const valid = variants.find((variant) => isValidIban(variant));
     if (valid) { iban = formatIban(valid); break; }
   }
   if (!iban) return null;
-  const bic = text.match(/\bBIC\s*:?\s*([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/)?.[1] ?? null;
-  const recipient = text.match(/(?:zahlungsempfänger|empfänger|kontoinhaber)\s*:?\s*([^\n]{3,70})/i)?.[1].trim() ?? null;
-  const reference = text.match(/(?:verwendungszweck|zahlungsreferenz|kassenzeichen)\s*:?\s*([^\n]{3,70})/i)?.[1].trim() ?? null;
+  const bic = text.match(/\b(?:BIC|SWIFT)(?:\/SWIFT)?\s*:?\s*([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/)?.[1] ?? null;
+  const recipient = text.match(language.payment.recipient)?.[1].trim() ?? null;
+  const reference = text.match(language.payment.reference)?.[1].trim() ?? null;
   return { iban, bic, recipient, reference };
 }
 
 function takeValue(rest) {
-  const cleaned = rest.replace(/^[\s:.\-–#]*(?:nr\.?|nummer)?[\s:.\-–#]*/i, '');
+  const cleaned = rest.replace(/^[\s:.\-–#°]*(?:nr\.?|nummer|no\.?|n[°º.]\.?|núm\.?|num\.?)?[\s:.\-–#°]*/i, '');
   const kept = [];
   for (const raw of cleaned.split(/\s+/)) {
     const token = raw.replace(/[,;]$/, '');
     if (!token) break;
-    if (/^\d{1,2}\.\d{1,2}\.\d{2,4}$/.test(token)) break;
-    const looksLikeCode = /^[A-Za-zÄÖÜäöü0-9][A-Za-zÄÖÜäöü0-9/\-.]*$/.test(token) && (/\d/.test(token) || /^[A-ZÄÖÜ]{1,5}$/.test(token));
+    if (/^\d{1,2}[./]\d{1,2}[./]\d{2,4}$/.test(token)) break;
+    const looksLikeCode = /^[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9/\-.]*$/.test(token) && (/\d/.test(token) || /^[A-ZÄÖÜ]{1,5}$/.test(token));
     if (!looksLikeCode) break;
     kept.push(token);
     if (raw !== token) break;
@@ -235,27 +270,27 @@ function takeValue(rest) {
   return (value.match(/\d/g)?.length ?? 0) >= 3 ? value : null;
 }
 
-export function findReferences(text) {
+export function findReferences(text, country) {
   const found = [];
-  for (const label of REFERENCE_LABELS) {
-    for (const match of text.matchAll(label.pattern)) {
-      const rest = text.slice(match.index + match[0].length, match.index + match[0].length + 70).split('\n')[0];
-      const value = takeValue(rest);
+  for (const label of country.references) {
+    for (const match of text.matchAll(globalize(label.pattern))) {
+      const lines = text.slice(match.index + match[0].length, match.index + match[0].length + 140).split('\n');
+      const value = takeValue(lines[0]) ?? (/^[\s:.\-–#°]*$/.test(lines[0]) && lines[1] ? takeValue(lines[1]) : null);
       if (value && !found.some((item) => item.value === value)) {
-        found.push({ name: label.name, german: label.german, value });
+        found.push({ name: label.name, local: label.local, value, payment: Boolean(label.payment) });
       }
     }
   }
   return found;
 }
 
-export function findTerms(text, limit = 14) {
-  return GLOSSARY
+export function findTerms(text, country, limit = 14) {
+  return country.glossary
     .map((entry) => ({ ...entry, index: text.search(entry.pattern) }))
     .filter((entry) => entry.index >= 0)
     .sort((a, b) => a.index - b.index)
     .slice(0, limit)
-    .map(({ term, meaning }) => ({ term, meaning }));
+    .map(({ term, meaning, slug }) => ({ term, meaning, slug }));
 }
 
 export function decideUrgency(kind, dates) {
@@ -266,16 +301,17 @@ export function decideUrgency(kind, dates) {
   return upcoming.length ? 'medium' : 'low';
 }
 
-export function analyze(rawText, { today = todayIso() } = {}) {
+export function analyze(rawText, { today = todayIso(), country: countryId = null, preferred = 'de' } = {}) {
   const text = normalize(rawText);
-  const sender = detectSender(text);
-  const kind = detectKind(text);
-  const { letterDate, dates } = findImportantDates(text, today);
-  const money = findMoney(text, kind?.id);
-  const payment = findPayment(text);
-  const references = findReferences(text);
-  const terms = findTerms(text);
-  const objection = objectionTerm(text);
+  const country = countryId ? countryById(countryId) : detectCountry(text, preferred);
+  const sender = detectSender(text, country);
+  const kind = detectKind(text, country);
+  const { letterDate, dates } = findImportantDates(text, country, today);
+  const money = findMoney(text, country, kind);
+  const payment = findPayment(text, country);
+  const references = findReferences(text, country);
+  const terms = findTerms(text, country);
+  const objection = objectionTerm(text, country);
   const urgency = decideUrgency(kind, dates);
-  return { text, today, sender, kind, letterDate, dates, money, payment, references, terms, objection, urgency };
+  return { text, today, country, sender, kind, letterDate, dates, money, payment, references, terms, objection, urgency };
 }

@@ -1,30 +1,3 @@
-const MONTHS = {
-  januar: 1, jänner: 1, jan: 1,
-  februar: 2, feb: 2,
-  märz: 3, maerz: 3, mär: 3, mrz: 3,
-  april: 4, apr: 4,
-  mai: 5,
-  juni: 6, jun: 6,
-  juli: 7, jul: 7,
-  august: 8, aug: 8,
-  september: 9, sept: 9, sep: 9,
-  oktober: 10, okt: 10,
-  november: 11, nov: 11,
-  dezember: 12, dez: 12,
-};
-
-const NUMBER_WORDS = {
-  ein: 1, eine: 1, einer: 1, eines: 1, einem: 1, einen: 1,
-  zwei: 2, drei: 3, vier: 4, fünf: 5, fuenf: 5, sechs: 6, sieben: 7, acht: 8,
-  neun: 9, zehn: 10, elf: 11, zwölf: 12, zwoelf: 12, vierzehn: 14,
-  einundzwanzig: 21, dreißig: 30, dreissig: 30,
-};
-
-const NUMERIC_DATE = /(?<![\d.])(\d{1,2})\s?\.\s?(\d{1,2})\s?\.\s?(\d{4}|\d{2})(?![\d])/g;
-const MONTH_NAMES = Object.keys(MONTHS).sort((a, b) => b.length - a.length).join('|');
-const WRITTEN_DATE = new RegExp(`(?<![\\d])(\\d{1,2})\\.?\\s*(${MONTH_NAMES})\\.?\\s+(\\d{4})(?!\\d)`, 'giu');
-const TIME_AFTER = /^[\s,]*(?:um|ab|,)?\s*(\d{1,2})(?:[:.](\d{2}))?\s*Uhr/i;
-
 export function toIso(year, month, day) {
   if (year < 100) year += 2000;
   if (month < 1 || month > 12 || day < 1 || day > 31) return null;
@@ -47,6 +20,16 @@ export function addDays(iso, days) {
   const date = fromIso(iso);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
+}
+
+export function addWorkdays(iso, days) {
+  let date = iso;
+  let left = days;
+  while (left > 0) {
+    date = addDays(date, 1);
+    if (![0, 6].includes(fromIso(date).getUTCDay())) left -= 1;
+  }
+  return date;
 }
 
 export function addMonths(iso, months) {
@@ -73,25 +56,38 @@ export function formatShortDate(iso) {
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(fromIso(iso));
 }
 
-export function formatGermanDate(iso) {
+export function formatLocalDate(iso, separator = '.') {
   const [y, m, d] = iso.split('-');
-  return `${d}.${m}.${y}`;
+  return `${d}${separator}${m}${separator}${y}`;
 }
 
-export function findDates(text) {
+export const formatGermanDate = (iso) => formatLocalDate(iso, '.');
+
+const NUMERIC_DATE = /(?<![\d.\/])(\d{1,2})\s?([./])\s?(\d{1,2})\s?\2\s?(\d{4}|\d{2})(?![\d])/g;
+const writtenCache = new WeakMap();
+
+function writtenPattern(language) {
+  if (!writtenCache.has(language)) {
+    const names = Object.keys(language.months).sort((a, b) => b.length - a.length).join('|');
+    writtenCache.set(language, new RegExp(`(?<![\\d])(\\d{1,2})(?:er|º|°)?\\.?\\s*(?:de\\s+)?(${names})\\.?\\s+(?:de\\s+|del\\s+)?(\\d{4})(?!\\d)`, 'giu'));
+  }
+  return writtenCache.get(language);
+}
+
+export function findDates(text, language) {
   const found = [];
   for (const match of text.matchAll(NUMERIC_DATE)) {
-    const iso = toIso(Number(match[3]), Number(match[2]), Number(match[1]));
+    const iso = toIso(Number(match[4]), Number(match[3]), Number(match[1]));
     if (iso) found.push({ iso, index: match.index, end: match.index + match[0].length, raw: match[0] });
   }
-  for (const match of text.matchAll(WRITTEN_DATE)) {
-    const month = MONTHS[match[2].toLowerCase()];
+  for (const match of text.matchAll(writtenPattern(language))) {
+    const month = language.months[match[2].toLowerCase()];
     const iso = toIso(Number(match[3]), month, Number(match[1]));
     if (iso) found.push({ iso, index: match.index, end: match.index + match[0].length, raw: match[0] });
   }
   found.sort((a, b) => a.index - b.index);
   for (const date of found) {
-    const time = text.slice(date.end, date.end + 30).match(TIME_AFTER);
+    const time = text.slice(date.end, date.end + 40).match(language.time);
     if (time && Number(time[1]) < 24) {
       date.time = `${time[1].padStart(2, '0')}:${time[2] ?? '00'}`;
     }
@@ -99,25 +95,31 @@ export function findDates(text) {
   return found;
 }
 
-export function parseNumberWord(word) {
+export function parseNumberWord(word, language) {
   if (!word) return null;
   if (/^\d+$/.test(word)) return Number(word);
-  return NUMBER_WORDS[word.toLowerCase()] ?? null;
+  return language.numberWords[word.toLowerCase()] ?? null;
 }
 
-const PERIOD = /(?:innerhalb|binnen)\s+(?:von\s+)?(?:(\d+|[a-zäöüß]+)\s+)?(Monats?|Monaten|Wochen?|Tagen?|Tage)\b(?:\s+(?:nach|ab|seit)\s+(?:der\s+|dem\s+|ihrer\s+|seiner\s+)?(Bekanntgabe|Zustellung|Zugang|Erhalt|Eingang|Datum))?/giu;
+function unitOf(word, qualifier, language) {
+  const lower = word.toLowerCase();
+  if (language.units.month.test(lower)) return 'month';
+  if (language.units.week.test(lower)) return 'week';
+  if (language.units.workday.test(lower) || (qualifier && language.units.workday.test(qualifier.toLowerCase()))) return 'workday';
+  if (qualifier && language.units.calendar?.test(qualifier.toLowerCase())) return 'day';
+  return language.units.defaultDay ?? 'day';
+}
 
-export function findPeriods(text) {
+export function findPeriods(text, language) {
   const periods = [];
-  for (const match of text.matchAll(PERIOD)) {
-    const amount = match[1] ? parseNumberWord(match[1]) : 1;
+  for (const match of text.matchAll(new RegExp(language.period.source, language.period.flags))) {
+    const { amount: amountWord, unit: unitWord, qualifier, from } = match.groups;
+    const amount = amountWord ? parseNumberWord(amountWord, language) : 1;
     if (!amount) continue;
-    const unitWord = match[2].toLowerCase();
-    const unit = unitWord.startsWith('monat') ? 'month' : unitWord.startsWith('woche') ? 'week' : 'day';
     periods.push({
       amount,
-      unit,
-      from: match[3] ? match[3].toLowerCase() : null,
+      unit: unitOf(unitWord, qualifier, language),
+      from: from ? from.toLowerCase() : null,
       index: match.index,
       end: match.index + match[0].length,
       raw: match[0],
@@ -129,10 +131,11 @@ export function findPeriods(text) {
 export function addPeriod(iso, period) {
   if (period.unit === 'month') return addMonths(iso, period.amount);
   if (period.unit === 'week') return addDays(iso, period.amount * 7);
+  if (period.unit === 'workday') return addWorkdays(iso, period.amount);
   return addDays(iso, period.amount);
 }
 
 export function describePeriod(period) {
-  const unit = period.unit === 'month' ? 'month' : period.unit === 'week' ? 'week' : 'day';
+  const unit = { month: 'month', week: 'week', workday: 'working day', day: 'day' }[period.unit];
   return `${period.amount} ${unit}${period.amount === 1 ? '' : 's'}`;
 }

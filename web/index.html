@@ -3,18 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Briefly – German letters, explained</title>
-  <meta name="description" content="Take a photo of a German official letter and understand it in plain English: deadlines, amounts and what to do next. Free, private, works offline.">
+  <title>Briefly – official letters, explained in English</title>
+  <meta name="description" content="Take a photo of an official letter from Germany, Austria, Switzerland, France, Spain or Italy and understand it in plain English: deadlines, amounts and what to do next. Free, private, works offline.">
   <meta name="theme-color" content="#1f2a44">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
   <link rel="icon" href="/icons/icon-32.png" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
-  <meta property="og:title" content="Briefly – German letters, explained">
-  <meta property="og:description" content="Understand German official letters in plain English. Your letter never leaves your device.">
+  <meta property="og:title" content="Briefly – official letters, explained in English">
+  <meta property="og:description" content="Understand official letters from Germany, Austria, Switzerland, France, Spain and Italy in plain English. Your letter never leaves your device.">
   <meta property="og:image" content="/icons/icon-512.png">
+  <link rel="canonical" href="https://brieflyapp.pages.dev/">
   <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Briefly","url":"https://brieflyapp.pages.dev/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Understand official letters from Germany, Austria, Switzerland, France, Spain and Italy in plain English. Reads photos and PDFs, finds deadlines and amounts, and translates — all on your device."}</script>
   <script type="module" src="/src/app.js"></script>
 </head>
 <body>
@@ -32,8 +34,8 @@
   <main id="main">
     <section id="start" class="view">
       <div class="hero">
-        <h1>Got a German letter?<br>Understand it in a minute.</h1>
-        <p class="lead">Take a photo or open a PDF. Briefly finds the deadline, the amount and what you need to do — in plain English.</p>
+        <h1>Got an official letter?<br>Understand it in a minute.</h1>
+        <p class="lead">Take a photo or open a PDF of a letter from an office, landlord or company. Briefly finds the deadline, the amount and what you need to do — in plain English.</p>
       </div>
 
       <ul class="promises" aria-label="Our promise to you">
@@ -59,6 +61,11 @@
           <span>Even without internet, after your first visit.</span>
         </li>
       </ul>
+
+      <div class="country-picker">
+        <p class="country-title" id="country-title">Where is the letter from?</p>
+        <div id="countries" class="countries" role="group" aria-labelledby="country-title"></div>
+      </div>
 
       <div id="dropzone" class="dropzone" tabindex="-1">
         <svg class="drop-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="11" width="36" height="26" rx="4"/><path d="M9 15l15 11 15-11"/></svg>
@@ -94,9 +101,34 @@
 
       <ol class="how">
         <li><span><strong>Read.</strong> Text recognition runs right here in your browser.</span></li>
-        <li><span><strong>Understand.</strong> Briefly finds who wrote, what they want, deadlines and money.</span></li>
+        <li><span><strong>Understand.</strong> Briefly knows the offices, deadlines and rules of each country, and finds who wrote, what they want and the money.</span></li>
         <li><span><strong>Act.</strong> A checklist, a calendar reminder and ready-made German replies.</span></li>
       </ol>
+
+      <section class="card works" aria-labelledby="works-title">
+        <h2 id="works-title">What works</h2>
+        <div class="works-grid">
+          <div>
+            <p class="works-head yes">Works</p>
+            <ul class="works-list yes">
+              <li>Photos (JPG, PNG, WebP) and PDFs, up to 8 pages</li>
+              <li>Typed letters from Germany, Austria, Switzerland (German), France, Spain and Italy</li>
+              <li>The latest Chrome, Edge, Firefox and Safari, on phones and computers</li>
+              <li>Offline, after your first visit</li>
+            </ul>
+          </div>
+          <div>
+            <p class="works-head no">Doesn’t work (yet)</p>
+            <ul class="works-list no">
+              <li>Handwritten letters, or letters from other countries</li>
+              <li>Password-protected PDFs</li>
+              <li>HEIC photos outside Safari — take a screenshot instead</li>
+              <li>Old browsers that haven’t been updated for years</li>
+            </ul>
+          </div>
+        </div>
+        <p class="works-note">The first time you read a photo, Briefly downloads its text reader (about 6 MB). The translator for each language is an extra 20–26 MB, only if you use it. Everything stays on your device.</p>
+      </section>
 
       <section id="save" class="card save" aria-labelledby="save-title">
         <div class="save-head">
@@ -135,7 +167,9 @@
 
   <footer class="footer">
     <p><strong>Not legal advice.</strong> Briefly helps you understand a letter. Always check the original, and ask the sender or a free advice centre if you are unsure.</p>
-    <p>Nothing is saved. Close the page and your letter is gone. <a href="https://github.com/adityashukla55/Briefly">Open source</a></p>
+    <p>Nothing is saved. Close the page and your letter is gone. <a href="/privacy/">Privacy</a> · <a href="https://github.com/adityashukla55/Briefly">Open source</a></p>
+    <p><strong>Letters from:</strong> <a href="/germany/">🇩🇪 Germany</a> · <a href="/austria/">🇦🇹 Austria</a> · <a href="/switzerland/">🇨🇭 Switzerland</a> · <a href="/france/">🇫🇷 France</a> · <a href="/spain/">🇪🇸 Spain</a> · <a href="/italy/">🇮🇹 Italy</a></p>
+    <p><strong>Tools:</strong> <a href="/scan-document-to-text-offline/">Scan to text offline</a> · <a href="/translate-german-letter-to-english/">Translate German letters</a> · <a href="/translate-french-letter-to-english/">Translate French letters</a> · <a href="/translate-spanish-letter-to-english/">Translate Spanish letters</a> · <a href="/translate-italian-letter-to-english/">Translate Italian letters</a> · <a href="/official-letter-deadline-calculator/">Deadline calculator</a></p>
     <div class="support">
       <p>Briefly is free and has no ads. If it helped you, you can buy me a coffee.</p>
       <a class="coffee" href="https://buymeacoffee.com/adi.shukla41" target="_blank" rel="noopener">
@@ -156,6 +190,8 @@
     </div>
     <div id="save-dialog-help"></div>
   </dialog>
+
+  <p class="boot-warning" role="status">Still loading? Your browser may be too old for Briefly. Please update it, or open Briefly in the latest Chrome, Edge, Firefox or Safari.</p>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>

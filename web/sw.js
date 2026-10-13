@@ -1,6 +1,6 @@
-const VERSION = '1.1.1';
+const VERSION = '2.0.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
-const VENDOR_CACHE = 'briefly-vendor-1';
+const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
 
 const SHELL = [
@@ -9,16 +9,29 @@ const SHELL = [
   '/manifest.json',
   '/icons/icon.svg',
   '/icons/icon-192.png',
-  '/src/app.js',
   '/src/analyze.js',
+  '/src/app.js',
   '/src/calendar.js',
+  '/src/countries/at.js',
+  '/src/countries/ch.js',
+  '/src/countries/de.js',
+  '/src/countries/es.js',
+  '/src/countries/fr.js',
+  '/src/countries/index.js',
+  '/src/countries/it.js',
   '/src/dates.js',
+  '/src/errors.js',
   '/src/format.js',
   '/src/install.js',
-  '/src/knowledge.js',
+  '/src/languages/de.js',
+  '/src/languages/es.js',
+  '/src/languages/fr.js',
+  '/src/languages/index.js',
+  '/src/languages/it.js',
+  '/src/pdf-worker.js',
+  '/src/polyfills.js',
   '/src/read.js',
   '/src/replies.js',
-  '/src/samples.js',
   '/src/steps.js',
   '/src/translate.js',
 ];

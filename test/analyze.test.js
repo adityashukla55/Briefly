@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyze, isValidIban } from '../web/src/analyze.js';
+
+const sampleText = (id, today) => countrySample('de', id, today);
 import { makeIcs } from '../web/src/calendar.js';
 import { buildReplies } from '../web/src/replies.js';
-import { sampleText } from '../web/src/samples.js';
+import { sampleText as countrySample } from '../web/src/countries/index.js';
 import { buildSteps } from '../web/src/steps.js';
 
 const TODAY = '2026-10-13';
@@ -94,6 +96,6 @@ test('calendar file has an all-day event with a reminder', () => {
 test('objection reply uses Einspruch for the tax office', () => {
   const result = analyze(sampleText('tax', TODAY), { today: TODAY });
   const reply = buildReplies(result).find((item) => item.id === 'objection');
-  assert.match(reply.german, /hiermit lege ich Einspruch gegen Ihren Bescheid vom 10\.10\.2026 ein/);
-  assert.match(reply.german, /Steuernummer: 214\/123\/45678/);
+  assert.match(reply.local, /hiermit lege ich Einspruch gegen Ihren Bescheid vom 10\.10\.2026 ein/);
+  assert.match(reply.local, /Steuernummer: 214\/123\/45678/);
 });

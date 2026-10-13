@@ -8,11 +8,29 @@ const modules = join(root, 'node_modules');
 const vendor = join(root, 'web', 'vendor');
 const cache = join(root, '.cache', 'models');
 
-const MODEL_HOST = 'https://bergamot.s3.amazonaws.com/models/deen/';
-const MODEL_FILES = {
-  model: { file: 'model.deen.intgemm.alphas.bin', sha256: '1980225d00dc5645491777accff5b3c9d20b92eff67a25135f1cf8fe2ed8fb8f' },
-  lex: { file: 'lex.50.50.deen.s2t.bin', sha256: '2f7c0f7bbce97ae5b52454074a892ba7b7610fb98e3c5d341e4ca79f0850c4de' },
-  vocab: { file: 'vocab.deen.spm', sha256: '417668f2ed297970febafb5b079a9d5ebc4ed0b3550ac8386d67a90473a09bd7' },
+const MODEL_HOST = 'https://bergamot.s3.amazonaws.com/models/';
+const OCR_LANGUAGES = ['deu', 'fra', 'spa', 'ita'];
+const MODELS = {
+  deen: {
+    model: { file: 'model.deen.intgemm.alphas.bin', sha256: '1980225d00dc5645491777accff5b3c9d20b92eff67a25135f1cf8fe2ed8fb8f' },
+    lex: { file: 'lex.50.50.deen.s2t.bin', sha256: '2f7c0f7bbce97ae5b52454074a892ba7b7610fb98e3c5d341e4ca79f0850c4de' },
+    vocab: { file: 'vocab.deen.spm', sha256: '417668f2ed297970febafb5b079a9d5ebc4ed0b3550ac8386d67a90473a09bd7' },
+  },
+  fren: {
+    model: { file: 'model.intgemm.alphas.bin', sha256: '185f76d24c2d400fe4ea0cb2487df77722641b97a3ef10633872e8a7fdf40e09' },
+    lex: { file: 'lex.s2t.bin', sha256: '3148abf21ea98a4d69d0e4504e0d68a6c060204a9b9a39b76855aee1d5b2c8ea' },
+    vocab: { file: 'vocab.fren.spm', sha256: '4c84b95b62c930f0791466d73eb996841eef474c96d0c2f0e6c6d80640f2005a' },
+  },
+  esen: {
+    model: { file: 'model.esen.intgemm.alphas.bin', sha256: '4b6b7f451094aaa447d012658af158ffc708fc8842dde2f871a58404f5457fe0' },
+    lex: { file: 'lex.50.50.esen.s2t.bin', sha256: 'f11a2c23ef85ab1fee1c412b908d69bc20d66fd59faa8f7da5a5f0347eddf969' },
+    vocab: { file: 'vocab.esen.spm', sha256: '909b1eea1face0d7f90a474fe29a8c0fef8d104b6e41e65616f864c964ba8845' },
+  },
+  iten: {
+    model: { file: 'model.iten.intgemm.alphas.bin', sha256: '1fae546faeb9046f80b1b7e940b37b660974ce72902778181d6cd1c30b717f35' },
+    lex: { file: 'lex.50.50.iten.s2t.bin', sha256: '357d362373022b029ee9965975a133e6f36fdb0fed749202ff578365cf0111f8' },
+    vocab: { file: 'vocab.iten.spm', sha256: '22d5ce6973be5360a921103acbe984a9bfca952a1f6c55c9cb5ef7de4fd58266' },
+  },
 };
 
 rmSync(vendor, { recursive: true, force: true });
@@ -26,15 +44,15 @@ function sha256(buffer) {
   return createHash('sha256').update(buffer).digest('hex');
 }
 
-async function download(name, { file, sha256: expected }) {
-  const target = join(cache, file);
+async function download(pair, { file, sha256: expected }) {
+  const target = join(cache, pair, file);
   if (existsSync(target) && sha256(readFileSync(target)) === expected) return target;
-  console.log(`Downloading translation ${name} (${file})`);
-  const response = await fetch(MODEL_HOST + file);
-  if (!response.ok) throw new Error(`Download failed for ${file}: ${response.status}`);
+  console.log(`Downloading translation model ${pair}/${file}`);
+  const response = await fetch(`${MODEL_HOST}${pair}/${file}`);
+  if (!response.ok) throw new Error(`Download failed for ${pair}/${file}: ${response.status}`);
   const buffer = Buffer.from(await response.arrayBuffer());
-  if (sha256(buffer) !== expected) throw new Error(`Checksum mismatch for ${file}`);
-  mkdirSync(cache, { recursive: true });
+  if (sha256(buffer) !== expected) throw new Error(`Checksum mismatch for ${pair}/${file}`);
+  mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, buffer);
   return target;
 }
@@ -46,10 +64,12 @@ for (const file of readdirSync(join(modules, 'tesseract.js-core'))) {
   if (file.endsWith('-lstm.wasm.js')) copy(`tesseract.js-core/${file}`, `tesseract-core/${file}`);
 }
 copy('tesseract.js-core/LICENSE', 'tesseract-core/LICENSE');
-copy('@tesseract.js-data/deu/4.0.0_best_int/deu.traineddata.gz', 'lang/deu.traineddata.gz');
+for (const language of OCR_LANGUAGES) {
+  copy(`@tesseract.js-data/${language}/4.0.0_best_int/${language}.traineddata.gz`, `lang/${language}.traineddata.gz`);
+}
 
-copy('pdfjs-dist/build/pdf.min.mjs', 'pdfjs/pdf.min.mjs');
-copy('pdfjs-dist/build/pdf.worker.min.mjs', 'pdfjs/pdf.worker.min.mjs');
+copy('pdfjs-dist/legacy/build/pdf.min.mjs', 'pdfjs/pdf.min.mjs');
+copy('pdfjs-dist/legacy/build/pdf.worker.min.mjs', 'pdfjs/pdf.worker.min.mjs');
 copy('pdfjs-dist/wasm', 'pdfjs/wasm');
 copy('pdfjs-dist/standard_fonts', 'pdfjs/standard_fonts');
 copy('pdfjs-dist/cmaps', 'pdfjs/cmaps');
@@ -59,16 +79,19 @@ copy('pdfjs-dist/LICENSE', 'pdfjs/LICENSE');
 copy('@browsermt/bergamot-translator/translator.js', 'bergamot/translator.js');
 copy('@browsermt/bergamot-translator/worker', 'bergamot/worker');
 
-const registry = { deen: {} };
-for (const [name, info] of Object.entries(MODEL_FILES)) {
-  const source = await download(name, info);
-  mkdirSync(join(vendor, 'models', 'deen'), { recursive: true });
-  cpSync(source, join(vendor, 'models', 'deen', info.file));
-  registry.deen[name] = {
-    name: `/vendor/models/deen/${info.file}`,
-    size: readFileSync(source).length,
-    expectedSha256Hash: info.sha256,
-  };
+const registry = {};
+for (const [pair, files] of Object.entries(MODELS)) {
+  registry[pair] = {};
+  for (const [part, info] of Object.entries(files)) {
+    const source = await download(pair, info);
+    mkdirSync(join(vendor, 'models', pair), { recursive: true });
+    cpSync(source, join(vendor, 'models', pair, info.file));
+    registry[pair][part] = {
+      name: `/vendor/models/${pair}/${info.file}`,
+      size: readFileSync(source).length,
+      expectedSha256Hash: info.sha256,
+    };
+  }
 }
 writeFileSync(join(vendor, 'models', 'registry.json'), JSON.stringify(registry, null, 2));
 

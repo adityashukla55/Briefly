@@ -1,19 +1,38 @@
 {
   "id": "/",
-  "name": "Briefly – German letters, explained",
+  "name": "Briefly – official letters, explained",
   "short_name": "Briefly",
-  "description": "Understand German official letters in plain English: deadlines, amounts and what to do next. Free, private and works offline.",
+  "description": "Understand official letters from Germany, Austria, Switzerland, France, Spain and Italy in plain English: deadlines, amounts and what to do next. Free, private and works offline.",
   "lang": "en",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f8f5ee",
   "theme_color": "#1f2a44",
-  "categories": ["productivity", "utilities", "education"],
+  "categories": [
+    "productivity",
+    "utilities",
+    "education"
+  ],
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "share_target": {
     "action": "/share",
@@ -23,7 +42,15 @@
       "title": "title",
       "text": "text",
       "files": [
-        { "name": "files", "accept": ["image/*", "application/pdf", ".pdf", "text/plain"] }
+        {
+          "name": "files",
+          "accept": [
+            "image/*",
+            "application/pdf",
+            ".pdf",
+            "text/plain"
+          ]
+        }
       ]
     }
   },
@@ -31,10 +58,19 @@
     {
       "action": "/",
       "accept": {
-        "application/pdf": [".pdf"],
-        "image/png": [".png"],
-        "image/jpeg": [".jpg", ".jpeg"],
-        "image/webp": [".webp"]
+        "application/pdf": [
+          ".pdf"
+        ],
+        "image/png": [
+          ".png"
+        ],
+        "image/jpeg": [
+          ".jpg",
+          ".jpeg"
+        ],
+        "image/webp": [
+          ".webp"
+        ]
       }
     }
   ]
