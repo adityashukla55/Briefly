@@ -1,4 +1,4 @@
-const VERSION = '1.1.0';
+const VERSION = '1.1.1';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-1';
 const SHARE_CACHE = 'briefly-share';
@@ -6,7 +6,7 @@ const SHARE_CACHE = 'briefly-share';
 const SHELL = [
   '/',
   '/styles.css',
-  '/manifest.webmanifest',
+  '/manifest.json',
   '/icons/icon.svg',
   '/icons/icon-192.png',
   '/src/app.js',
