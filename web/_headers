@@ -8,5 +8,8 @@
 /sw.js
   Cache-Control: no-cache
 
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+
 /vendor/*
   Cache-Control: public, max-age=604800

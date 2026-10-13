@@ -2,6 +2,8 @@
 
 **German letters, explained.** Take a photo of an official German letter and understand it in plain English: who sent it, what they want, the deadline, the amount, and what to do next.
 
+**Try it: [brieflyapp.pages.dev](https://brieflyapp.pages.dev)** — no sign-up, nothing to install.
+
 Everything runs in your browser. The letter is never uploaded — not to a server, not to an AI company. It works offline and can be installed like an app.
 
 ## What it does
@@ -64,7 +66,7 @@ npm test
 
 ## Deploy to Cloudflare Pages
 
-**With Git (recommended):** connect the GitHub repository in the Cloudflare dashboard and use:
+**With Git (recommended):** in the Cloudflare dashboard go to Workers & Pages → Create → “Looking to deploy Pages? Get started”, connect the GitHub repository and use:
 
 | Setting | Value |
 |---|---|
