@@ -1,0 +1,5 @@
+node_modules/
+web/vendor/
+.cache/
+.wrangler/
+.DS_Store

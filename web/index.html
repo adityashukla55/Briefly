@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Briefly – German letters, explained</title>
+  <meta name="description" content="Take a photo of a German official letter and understand it in plain English: deadlines, amounts and what to do next. Free, private, works offline.">
+  <meta name="theme-color" content="#1f2a44">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="/icons/icon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta property="og:title" content="Briefly – German letters, explained">
+  <meta property="og:description" content="Understand German official letters in plain English. Your letter never leaves your device.">
+  <meta property="og:image" content="/icons/icon-512.png">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/src/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Briefly home">
+      <img src="/icons/icon.svg" alt="" width="32" height="32">
+      <span>Briefly</span>
+    </a>
+    <button id="install" class="button ghost small" type="button" hidden>Install app</button>
+  </header>
+
+  <main id="main">
+    <section id="start" class="view">
+      <div class="hero">
+        <h1>Got a German letter?<br>Understand it in a minute.</h1>
+        <p class="lead">Take a photo or open a PDF. Briefly finds the deadline, the amount and what you need to do — in plain English.</p>
+      </div>
+
+      <div id="dropzone" class="dropzone" tabindex="-1">
+        <svg class="drop-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="11" width="36" height="26" rx="4"/><path d="M9 15l15 11 15-11"/></svg>
+        <p class="drop-title">Drop your letter here</p>
+        <p class="drop-hint">Photo (JPG, PNG) or PDF. You can add several pages.</p>
+        <div class="drop-actions">
+          <label class="button primary" id="camera-label">
+            <input id="camera" type="file" accept="image/*" capture="environment" hidden>
+            Take a photo
+          </label>
+          <label class="button secondary" id="files-label">
+            <input id="files" type="file" accept="image/png,image/jpeg,image/webp,application/pdf,text/plain" multiple hidden>
+            Choose photo or PDF
+          </label>
+        </div>
+        <button id="paste-toggle" class="link" type="button">or paste the text</button>
+        <form id="paste-form" class="paste-form" hidden>
+          <label for="paste" class="visually-hidden">Letter text</label>
+          <textarea id="paste" rows="7" placeholder="Paste the German text of your letter here"></textarea>
+          <button class="button primary" type="submit">Check this text</button>
+        </form>
+      </div>
+
+      <p class="privacy-line">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        Your letter never leaves this device. No account, no upload, and it works offline.
+      </p>
+
+      <div class="examples">
+        <p class="examples-title">No letter at hand? Try an example:</p>
+        <div id="samples" class="chips"></div>
+      </div>
+
+      <ol class="how">
+        <li><span><strong>Read.</strong> Text recognition runs right here in your browser.</span></li>
+        <li><span><strong>Understand.</strong> Briefly finds who wrote, what they want, deadlines and money.</span></li>
+        <li><span><strong>Act.</strong> A checklist, a calendar reminder and ready-made German replies.</span></li>
+      </ol>
+    </section>
+
+    <section id="working" class="view" hidden aria-live="polite">
+      <div class="card working-card">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="working-label" class="working-label">Reading your letter</p>
+        <div class="progress" aria-hidden="true"><div id="working-bar" class="progress-bar"></div></div>
+        <p class="muted small">Everything happens on your device. The first time can take a little longer.</p>
+      </div>
+    </section>
+
+    <section id="result" class="view" hidden>
+      <div class="result-top">
+        <button id="again" class="link back" type="button">← Check another letter</button>
+        <button id="share" class="button ghost small" type="button" hidden>Share summary</button>
+      </div>
+      <div id="result-body"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p><strong>Not legal advice.</strong> Briefly helps you understand a letter. Always check the original, and ask the sender or a free advice centre if you are unsure.</p>
+    <p>Nothing is saved. Close the page and your letter is gone. <a href="https://github.com/adityashukla55/Briefly">Open source</a></p>
+    <p id="ios-hint" class="small" hidden>To install on iPhone: tap Share, then “Add to Home Screen”.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

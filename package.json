@@ -1,0 +1,21 @@
+{
+  "name": "briefly",
+  "version": "1.0.0",
+  "description": "Understand German official letters in plain English. A free web app that runs fully on your device.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "Aditya Shukla",
+  "scripts": {
+    "postinstall": "node scripts/vendor.mjs",
+    "vendor": "node scripts/vendor.mjs",
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "@browsermt/bergamot-translator": "0.4.9",
+    "@tesseract.js-data/deu": "1.0.0",
+    "pdfjs-dist": "6.4.299",
+    "tesseract.js": "7.0.0"
+  }
+}
