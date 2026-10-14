@@ -96,6 +96,19 @@ export default {
     general: 'the OCMW / CPAS, your union or health insurance fund, or a free first-line legal advice office (juridische eerstelijnsbijstand / aide juridique de première ligne)',
   },
   paymentReference: /(?:gestructureerde mededeling|mededeling|communication structurée|communication)\s*:?\s*([+*]{3}\s?\d{3}\s?\/\s?\d{4}\s?\/\s?\d{5}\s?[+*]{3})/i,
+  cancelTips: [
+    'Phone, internet and TV: after 6 months, you can cancel for free. Before that, the fee is at most the monthly fees up to month 6. If you got a cheap phone, you may pay for it, but never after 24 months.',
+    'Energy: you can cancel any time with 1 month’s notice, without a fee.',
+    'Insurance: in the first year, cancel at least 2 months before the end date. After the first year, you can cancel car, fire and family liability insurance any time, for free. It ends 2 months after you send your letter.',
+    'Gyms: after the contract renews for the first time, you can cancel without a fee, with at most 2 months’ notice.',
+  ],
+  cancelRules: [
+    {
+      after: 6,
+      term: 6,
+      text: 'Phone, internet and TV contracts: after 6 months, you can cancel any time, for free.',
+    },
+  ],
   senders: [
     {
       id: 'fin',

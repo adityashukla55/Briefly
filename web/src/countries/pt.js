@@ -81,6 +81,12 @@ export default {
     const ref = reference[1].replace(/\s/g, '').replace(/(\d{3})(?=\d)/g, '$1 ');
     return { text: `Multibanco, entity ${entity[1]}, reference ${ref}`, rows: [['Multibanco entity (Entidade)', entity[1]], ['Reference (Referência)', ref]] };
   },
+  cancelTips: [
+    'Phone and internet: the minimum term (fidelização) can be at most 24 months. After the contract renews, the notice period is at most 1 month.',
+    'You can cancel a phone or internet contract online at cessacaodecontratos.pt, in your customer area, in a shop or in writing. The company must confirm it in writing within 5 working days.',
+    'Phone and internet contracts made since 14 November 2022: if you leave early, the fee is at most half of the monthly fees left in the first year, and 30% in the second year.',
+    'Insurance: to stop it from renewing, tell the insurer in writing at least 30 days before the renewal date.',
+  ],
   senders: [
     {
       id: 'at',

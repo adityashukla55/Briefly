@@ -75,6 +75,12 @@ export default {
     if (bank) return { text: `reg. no. ${bank[1]}, account ${bank[2]}`, rows: [['Reg. no. (reg.nr.)', bank[1]], ['Account (kontonr.)', bank[2]]] };
     return null;
   },
+  cancelTips: [
+    'Most ongoing contracts, like gyms and subscriptions: after 5 months, you can cancel with 1 month’s notice to the end of a month. This doesn’t apply to insurance.',
+    'If you signed up online or in an app, you can cancel there too.',
+    'Phone and internet: the minimum term can be at most 6 months, notice included. The notice period can be at most the rest of the month plus 1 month.',
+    'Insurance: you can usually cancel any time with 30 days’ notice to the 1st of the next month. Cancelling before the end of the term can cost a fee.',
+  ],
   senders: [
     {
       id: 'skattestyrelsen',

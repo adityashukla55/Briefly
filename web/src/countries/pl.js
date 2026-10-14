@@ -90,6 +90,13 @@ export default {
     instalments: 'rozłożenie na raty',
     general: 'a free legal aid point (nieodpłatna pomoc prawna) or the consumer ombudsman in your town or county (rzecznik konsumentów)',
   },
+  cancelTips: [
+    'Phone and internet: the minimum term can be at most 24 months. After the contract renews by itself, you can cancel any time with 1 month’s notice.',
+    'If you could sign a phone or internet contract online or by email, you can cancel it the same way. The company must confirm it within 1 working day.',
+    'If you leave a phone or internet contract early, the fee can’t be more than the monthly fees left until the end date.',
+    'Car insurance (OC) renews by itself for 12 months, unless you cancel it in writing at least 1 day before it ends.',
+    'Energy: a contract with no end date can be cancelled for free. For a home, it ends on the last day of the month after the company gets your letter.',
+  ],
   senders: [
     {
       id: 'urzad-skarbowy',

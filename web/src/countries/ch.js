@@ -61,6 +61,10 @@ export default {
     instalments: 'Ratenzahlung',
     general: 'a free advice centre, for example the integration office of your canton or town (Fachstelle Integration) or Caritas',
   },
+  cancelTips: [
+    'Insurance: you can cancel for the end of the 3rd year, or any year after that, with 3 months’ notice, even if the contract runs longer. An email is enough. This doesn’t apply to life insurance.',
+    'Basic health insurance: your cancellation must reach the insurer by 30 November. Send it by registered letter by mid-November to be safe.',
+  ],
   senders: [
     {
       id: 'steueramt',

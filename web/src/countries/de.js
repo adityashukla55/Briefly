@@ -40,6 +40,21 @@ export default {
     instalments: 'Ratenzahlung',
     general: 'a free advice centre such as the Verbraucherzentrale or a migration advice service (Migrationsberatung)',
   },
+  cancelTips: [
+    'An email is usually enough. For contracts made since October 2016, the company can’t ask for a signed letter.',
+    'Websites where you can sign a contract must also have a cancel button: “Verträge hier kündigen”.',
+    'If the company raises its prices, you can often cancel early (Sonderkündigungsrecht).',
+  ],
+  cancelRules: [
+    {
+      since: '2022-03-01',
+      notice: '1m',
+      text: 'For contracts made since 1 March 2022, the notice period can be at most 1 month. After the minimum term, you can cancel any time, even if the contract says it renews. This doesn’t apply to insurance.',
+    },
+    {
+      text: 'Phone and internet contracts: since December 2021, after the minimum term you can cancel any time with 1 month’s notice.',
+    },
+  ],
   senders: [
     {
       id: 'finanzamt',

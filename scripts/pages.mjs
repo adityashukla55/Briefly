@@ -30,9 +30,12 @@ export function esc(value) {
     .replace(/"/g, '&quot;');
 }
 
-function namesOf(country, joiner = 'and') {
-  const names = languagesOf(country).map((id) => LANGUAGES[id].name);
+function listOf(names, joiner = 'and') {
   return names.length > 1 ? `${names.slice(0, -1).join(', ')} ${joiner} ${names.at(-1)}` : names[0];
+}
+
+function namesOf(country, joiner = 'and') {
+  return listOf(languagesOf(country).map((id) => LANGUAGES[id].name), joiner);
 }
 
 function flag(country, extra = '') {
@@ -410,6 +413,7 @@ const TOOLS = [
       'Works for contracts in all 16 countries Briefly knows. The letter is in the language of the country: German, French, Spanish, Italian, Dutch, Polish, Portuguese, Swedish, Danish or English.',
       'Shows the last day the company must get your letter, and the day the contract ends.',
       'Knows contracts that renew by themselves, for another year or for the same time again.',
+      `Knows the main consumer rules in ${listOf(COUNTRIES.filter((country) => country.cancelTips?.length).map((country) => country.inName ?? country.name))}: for example, how long the notice period can be and when you can cancel any time.`,
       'Germany: knows the 2022 law for fair consumer contracts. After the minimum term, you can cancel any time with at most 1 month’s notice.',
       'Add a reminder to your calendar, copy the letter, or print it and save it as a PDF.',
       'Nothing you type is saved or sent.',

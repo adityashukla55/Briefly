@@ -37,6 +37,19 @@ export default {
     instalments: 'rateizzazione',
     general: 'a patronato (free help with pensions, benefits and work accidents), a CAF (help with taxes) or a consumer association',
   },
+  cancelTips: [
+    'Phone, internet and TV: you can cancel any time with at most 30 days’ notice. The company may only charge its real costs, and it must let you cancel online.',
+    'Phone and internet: after 24 months, or after the contract renews, you can leave with no penalty.',
+    'Car insurance (RC auto) doesn’t renew by itself. It ends on its end date, so you don’t need to cancel it.',
+    'Home and other damage insurance for several years: after 5 years, you can cancel every year with 60 days’ notice.',
+  ],
+  cancelRules: [
+    {
+      term: 0,
+      notice: '30d',
+      text: 'Phone, internet and TV contracts: you can cancel any time with at most 30 days’ notice. If you leave during a promotion, you may have to pay some costs or part of the discount back.',
+    },
+  ],
   senders: [
     {
       id: 'entrate',

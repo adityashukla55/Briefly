@@ -76,6 +76,9 @@ export default {
     instalments: 'installment agreement',
     general: 'a legal aid office, or for tax problems a Low Income Taxpayer Clinic or the Taxpayer Advocate Service',
   },
+  cancelTips: [
+    'If you signed up for a subscription online, the company must give you a simple way to stop the payments.',
+  ],
   senders: [
     {
       id: 'irs',

@@ -81,6 +81,12 @@ export default {
     instalments: 'payment arrangement',
     general: 'Citizens Information (free and independent), or FLAC for free legal advice',
   },
+  cancelTips: [
+    'Phone, internet and TV: the minimum term can be at most 24 months. The provider must tell you at least 1 month before it ends.',
+    'After the minimum term, you can leave a phone, internet or TV contract any time with at most 1 month’s notice.',
+    'If the provider changes your contract, you get 1 month’s notice and can usually leave for free. A price rise already written in the contract doesn’t count.',
+    'Broadband: to switch, contact your new provider. You don’t need to give 30 days’ notice to the old one.',
+  ],
   senders: [
     {
       id: 'revenue',

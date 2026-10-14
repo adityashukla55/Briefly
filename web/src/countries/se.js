@@ -74,6 +74,19 @@ export default {
     if (plusgiro) return { text: `plusgiro ${plusgiro[1]}`, rows: [['Plusgiro', plusgiro[1]]] };
     return null;
   },
+  cancelTips: [
+    'Phone and internet: the minimum term can be at most 24 months, and the notice period at most 1 month. After it renews, you can cancel any time with at most 1 month’s notice.',
+    'If a contract renews by itself, the company must remind you in writing at least 1 month before your last day to cancel. If it doesn’t, you can cancel at once.',
+    'Gyms may have a minimum term of at most 12 months.',
+    'Insurance: you can always cancel so it ends at the end of the insurance period. You can only cancel earlier for a good reason, for example if you no longer need it.',
+  ],
+  cancelRules: [
+    {
+      since: '2014-05-01',
+      notice: '1m',
+      text: 'Phone and internet contracts: the notice period can be at most 1 month. After the minimum term, you can cancel any time.',
+    },
+  ],
   senders: [
     {
       id: 'skatteverket',

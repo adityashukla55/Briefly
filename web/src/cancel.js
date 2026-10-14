@@ -18,8 +18,6 @@ export const RENEWALS = [
   { id: 'same', label: 'Renews for the same time' },
 ];
 
-export const GERMAN_RULE_START = '2022-03-01';
-
 export function noticeById(id) {
   return NOTICES.find((notice) => notice.id === id) ?? NOTICES[0];
 }
@@ -60,13 +58,28 @@ export function planCancel({ start, term, notice, renewal, today }) {
   return null;
 }
 
-export function longNotice(notice) {
-  return notice.unit === 'month' ? notice.amount > 1 : notice.amount > 31;
+function noticeDays(notice) {
+  return notice.unit === 'month' ? notice.amount * 31 : notice.amount;
 }
 
-export function germanRule({ countryId, start, notice, renewal }) {
-  if (countryId !== 'de' || !start) return null;
-  if (renewal === 'open' && !longNotice(notice)) return null;
-  if (start >= GERMAN_RULE_START) return 'new';
-  return renewal === 'open' ? null : 'phone';
+function longerThan(notice, id) {
+  return noticeDays(notice) > noticeDays(noticeById(id));
+}
+
+export function cancelRule({ country, start, term, notice, renewal, today }) {
+  if (!start) return null;
+  const renews = term > 0 && renewal !== 'open';
+  return (country.cancelRules ?? []).find((rule) => {
+    if (rule.since && start < rule.since) return false;
+    if (rule.after && today < addMonths(start, rule.after)) return false;
+    return renews || Boolean(rule.notice && longerThan(notice, rule.notice)) || (rule.term !== undefined && term > rule.term);
+  }) ?? null;
+}
+
+export function applyRule(rule, { term, notice }) {
+  return {
+    term: rule.term !== undefined && term > rule.term ? rule.term : term,
+    notice: rule.notice && longerThan(notice, rule.notice) ? rule.notice : notice.id,
+    renewal: 'open',
+  };
 }

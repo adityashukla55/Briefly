@@ -5,7 +5,7 @@ import { describeDaysLeft, formatMoney, formatWhen } from './format.js';
 import { isSupported, missingReaderFiles, prepareReader, readFiles } from './read.js';
 import { detectPlatform, installHelp } from './install.js';
 import { buildReplies, cancelLetter } from './replies.js';
-import { NOTICES, RENEWALS, TERMS, germanRule, longNotice, noticeById, planCancel } from './cancel.js';
+import { NOTICES, RENEWALS, TERMS, applyRule, cancelRule, noticeById, planCancel } from './cancel.js';
 import { formatShortDate } from './dates.js';
 import { COUNTRIES, DEFAULT_COUNTRY, countryById, detectLanguage, inLanguage, isLoaded, languageOf, languagesOf, loadCountry } from './countries/index.js';
 import { LANGUAGES } from './languages/index.js';
@@ -652,36 +652,34 @@ function cancelTips(plan, country) {
     'Keep proof that you sent it: the email, a screenshot, or the receipt for a registered letter.',
     'Ask for a written confirmation, and check your bank account to make sure the payments stop.',
   ];
-  if (country.id === 'de') {
-    tips.push(
-      'In Germany, an email is usually enough. For contracts made since October 2016, the company can’t ask for a signed letter.',
-      'Websites where you can sign a contract must also have a cancel button: “Verträge hier kündigen”.',
-      'If the company raises its prices, you can often cancel early (Sonderkündigungsrecht).',
-    );
-  }
-  return h('div', { class: 'card' },
-    h('h2', {}, 'How to send it'),
-    h('ul', { class: 'cancel-tips' }, tips.map((tip) => h('li', {}, tip))));
+  const local = country.cancelTips ?? [];
+  return [
+    h('div', { class: 'card' },
+      h('h2', {}, 'How to send it'),
+      h('ul', { class: 'cancel-tips' }, tips.map((tip) => h('li', {}, tip)))),
+    local.length ? h('div', { class: 'card' },
+      h('h2', {}, `Good to know in ${country.inName ?? country.name}`),
+      h('ul', { class: 'cancel-tips' }, local.map((tip) => h('li', {}, tip)))) : null,
+  ].filter(Boolean);
 }
 
-function renderCancelRule(country, start, notice, renewal) {
-  const rule = germanRule({ countryId: country.id, start, notice, renewal });
+function renderCancelRule(country, { start, term, notice, renewal }) {
+  const rule = cancelRule({ country, start, term, notice, renewal, today: todayLocal() });
   const box = $('#cancel-rule');
   box.hidden = !rule;
   if (!rule) return;
-  const text = rule === 'new'
-    ? 'For contracts made since 1 March 2022, the notice period can be at most 1 month. After the minimum term, you can cancel any time, even if the contract says it renews. This doesn’t apply to insurance.'
-    : 'Phone and internet contracts: since December 2021, after the minimum term you can cancel any time with 1 month’s notice.';
   box.replaceChildren(
-    h('strong', {}, 'German law may help you. '),
-    text,
+    h('strong', {}, `${country.adjective} law may help you. `),
+    rule.text,
     ' ',
     h('button', {
       class: 'link inline',
       type: 'button',
       onclick: () => {
-        cancelForm.renewal.value = 'open';
-        if (rule === 'new' && longNotice(notice)) cancelForm.notice.value = '1m';
+        const next = applyRule(rule, { term, notice });
+        cancelForm.term.value = String(next.term);
+        cancelForm.notice.value = next.notice;
+        cancelForm.renewal.value = next.renewal;
         renderCancel();
       },
     }, 'Use this rule'));
@@ -699,7 +697,7 @@ async function renderCancel() {
   const company = form.company.value.trim();
   const output = $('#cancel-output');
   form.renewal.disabled = term === 0;
-  renderCancelRule(base, start, notice, form.renewal.value);
+  renderCancelRule(base, { start, term, notice, renewal: form.renewal.value });
   if (term > 0 && !start) {
     output.replaceChildren(h('p', { class: 'notice' }, 'Add the date your contract started. Briefly then shows the last day to cancel and writes your letter.'));
     return;
@@ -713,8 +711,9 @@ async function renderCancel() {
   output.replaceChildren(
     cancelFacts(plan, country, company),
     ...cancelNotices(plan, country),
-    cancelLetterCard(plan, country, company, form.number.value),
-    cancelTips(plan, country));
+    h('div', { class: 'cancel-columns' },
+      cancelLetterCard(plan, country, company, form.number.value),
+      h('div', { class: 'cancel-side' }, cancelTips(plan, country))));
 }
 
 function setCancelLanguages(country) {

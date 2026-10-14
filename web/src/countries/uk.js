@@ -97,6 +97,13 @@ export default {
     instalments: 'payment arrangement',
     general: 'Citizens Advice (free, independent advice), or a law centre',
   },
+  cancelTips: [
+    'Mobile: to leave, text PAC to 65075 to keep your number, or STAC to 75075 if you don’t need it. It’s free and takes 1 working day. Text INFO to 85075 to see any exit fee.',
+    'Broadband: you only need to contact your new provider. They arrange the switch.',
+    'Phone and internet: if the price goes up and your contract didn’t say it could, you can cancel for free within 30 days of being told.',
+    'Insurance that renews by itself: the insurer must let you turn off the renewal any time, for free, in the same ways you could buy it.',
+    'Energy: on a fixed tariff, you can switch without an exit fee in the last 49 days. On a standard variable tariff, you can switch any time.',
+  ],
   senders: [
     {
       id: 'hmrc',

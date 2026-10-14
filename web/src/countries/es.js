@@ -67,6 +67,13 @@ export default {
     instalments: 'aplazamiento o fraccionamiento',
     general: 'the social services of your town hall (servicios sociales del ayuntamiento), a consumer association, or a migrant support service such as Cruz Roja or Cáritas',
   },
+  cancelTips: [
+    'You can cancel the same way you signed up, for example online if you signed up online.',
+    'If you leave during a minimum term (permanencia), any fee must match the time that is left.',
+    'Phone and internet: you can cancel any time. Tell the company at least 2 working days before.',
+    'Phone and internet contracts can run for at most 24 months. If one renews by itself, you can cancel any time after that, for free, with at most 1 month’s notice.',
+    'Insurance: to stop it from renewing, tell the insurer in writing at least 1 month before the end date.',
+  ],
   senders: [
     {
       id: 'aeat',

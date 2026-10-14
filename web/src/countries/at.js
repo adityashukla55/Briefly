@@ -68,6 +68,13 @@ export default {
     instalments: 'Ratenzahlung',
     general: 'a free advice service such as the Arbeiterkammer (free for employees) or a migrant advice centre',
   },
+  cancelTips: [
+    'A written cancellation is always enough. The company can’t ask for more, like a registered letter.',
+    'Contracts for regular deliveries, like energy or magazines, that run longer than 1 year or have no end date: you can cancel with 2 months’ notice to the end of the first year, and after that to the end of every half year.',
+    'Phone and internet: the minimum term can be at most 24 months, and the notice period at most 1 month.',
+    'Insurance that runs longer than 3 years: you can cancel at the end of the 3rd year or any later year, with 1 month’s notice. You may have to pay back discounts.',
+    'Car insurance renews by itself for another year, unless you cancel at least 1 month before it ends.',
+  ],
   senders: [
     {
       id: 'finanzamt',

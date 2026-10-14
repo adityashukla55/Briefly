@@ -16,7 +16,7 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 - **Tells you what to do** as a checklist, and explains the office words in the letter.
 - **Adds a calendar reminder** (.ics file) for any deadline.
 - **Writes the reply for you**: ready-made letters in the letter’s language to object, ask for more time, pay in instalments, or move an appointment. Print them or save them as a PDF.
-- **Cancels a contract**: enter when a phone, internet, gym, streaming or insurance contract started, its minimum term and its notice period. Briefly shows the last day to cancel, when the contract ends and what happens if it renews, and writes the cancellation letter in the country’s language. For Germany it knows the 2022 law for fair consumer contracts.
+- **Cancels a contract**: enter when a phone, internet, gym, streaming or insurance contract started, its minimum term and its notice period. Briefly shows the last day to cancel, when the contract ends and what happens if it renews, and writes the cancellation letter in the country’s language. It also gives short tips on local consumer law for each country, like Germany’s 2022 law for fair consumer contracts.
 - **Translates the whole letter** to English on the device, with amounts and dates protected from translation mistakes.
 - **Copy or save the text** it read — a private, offline document-to-text scanner.
 

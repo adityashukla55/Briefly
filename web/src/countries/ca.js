@@ -83,6 +83,18 @@ export default {
     instalments: 'a payment arrangement',
     general: 'a community legal clinic, a settlement agency for newcomers, or 211 (a free helpline that connects you to local services)',
   },
+  cancelTips: [
+    'Mobile: you can cancel any time. It ends on the day your provider gets your request.',
+    'Phone, internet and TV: you don’t have to give 30 days’ notice, and you can’t be charged for the time after you cancel.',
+    'If you got a cheaper phone with your plan, the cancel fee is at most what you saved on the phone. It goes down to $0 within 24 months.',
+  ],
+  cancelRules: [
+    {
+      term: 0,
+      notice: 'none',
+      text: 'Phone, mobile, internet and TV: you can cancel any time, without 30 days’ notice. You may have to pay an early cancellation fee, for example for a cheaper phone.',
+    },
+  ],
   senders: [
     {
       id: 'cra',

@@ -57,6 +57,21 @@ export default {
     instalments: 'échéancier',
     general: 'a free help desk such as France Services, a social worker, or a legal advice point (Point-justice)',
   },
+  cancelTips: [
+    'If you can sign a contract online, you must also be able to cancel it online, for free (“résiliation en 3 clics”).',
+    'Contracts that renew by themselves: the company must remind you 1 to 3 months before your last day to say no. If it doesn’t, you can cancel at once, for free. This doesn’t apply to insurance or phone contracts.',
+    'Phone and internet: you can leave during the minimum term. With a 24-month term, you pay what is left up to month 12, then only 25% of the rest. It ends within 10 days.',
+    'Health cover (mutuelle): after the first year, you can cancel any time.',
+    'Electricity and gas: you can cancel any time. Changing supplier never costs a fee.',
+  ],
+  cancelRules: [
+    {
+      after: 12,
+      term: 12,
+      notice: '1m',
+      text: 'Home and car insurance: after the first year, you can cancel any time, for free. It ends 1 month after the insurer gets your letter.',
+    },
+  ],
   senders: [
     {
       id: 'dgfip',

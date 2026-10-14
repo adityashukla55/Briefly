@@ -68,6 +68,19 @@ export default {
     instalments: 'betalingsregeling',
     general: 'the Juridisch Loket (free legal advice), or the Informatiepunt Digitale Overheid in your local library',
   },
+  cancelTips: [
+    'You can cancel the same way you signed up. If you signed up online, you can cancel online.',
+    'Phone, internet and TV: the first term can be at most 2 years. After that, you can cancel any time for free, with at most 1 month’s notice.',
+    'Energy: the notice period is at most 1 month. Variable and dynamic contracts can be cancelled without a fee.',
+    'Insurance: after the first year, you can usually cancel any time with at most 1 month’s notice. You can always cancel online.',
+  ],
+  cancelRules: [
+    {
+      since: '2011-12-01',
+      notice: '1m',
+      text: 'For most subscriptions made since 1 December 2011, like gyms, papers, phone and energy, the notice period can be at most 1 month. After the first term, you can cancel any time, even if the contract says it renews.',
+    },
+  ],
   senders: [
     {
       id: 'belastingdienst',
