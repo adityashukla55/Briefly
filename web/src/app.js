@@ -59,6 +59,7 @@ function selectCountry(id) {
   history.replaceState(history.state, '', url);
   renderCountryPicker();
   renderSamples();
+  renderScope();
   refreshOffline(true);
 }
 
@@ -69,6 +70,30 @@ function renderCountryPicker() {
     'aria-pressed': String(country.id === selectedCountry),
     onclick: () => selectCountry(country.id),
   }, h('img', { class: 'flag', src: `/icons/flags/${country.id}.svg`, alt: '', width: 21, height: 14 }), country.name)));
+}
+
+const SCOPE_PREVIEW = 8;
+
+function renderScope() {
+  const country = countryById(selectedCountry);
+  const senders = country.senders;
+  const kinds = country.kinds.filter((kind) => !kind.weight || kind.weight >= 1);
+  const tag = (sender) => h('li', { class: 'scope-tag' }, h('strong', {}, sender.local), sender.local === sender.name ? null : h('span', {}, ` · ${sender.name}`));
+  $('#scope').replaceChildren(
+    h('p', { class: 'scope-title' }, `Briefly understands letters from these offices in ${country.name}:`),
+    h('ul', { class: 'scope-tags' }, senders.slice(0, SCOPE_PREVIEW).map(tag)),
+    h('details', { class: 'scope-more' },
+      h('summary', {}, `See all ${senders.length} offices and ${kinds.length} kinds of letters`),
+      h('div', { class: 'scope-columns' },
+        h('div', {},
+          h('p', { class: 'scope-head' }, 'Offices'),
+          h('ul', { class: 'scope-list' }, senders.map((sender) => h('li', {},
+            h('a', { href: `/${country.slug}/${sender.slug}/` }, sender.local),
+            sender.local === sender.name ? null : ` — ${sender.name}`)))),
+        h('div', {},
+          h('p', { class: 'scope-head' }, 'Kinds of letters'),
+          h('ul', { class: 'scope-list' }, kinds.map((kind) => h('li', {}, h('strong', {}, kind.local), ` — ${kind.name}`)))))),
+    h('p', { class: 'scope-not' }, h('strong', {}, 'Not for: '), 'personal letters, receipts, contracts, ID cards, handwritten notes or letters from other countries.'));
 }
 
 function renderSamples() {
@@ -388,9 +413,15 @@ function showResult(text, source, countryId = null) {
   current = { result, source };
   const facts = [...result.dates.map((date) => dateFact(result, date)), ...moneyFacts(result)];
   const switched = !countryId && result.country.id !== selectedCountry;
+  const unknown = !result.sender && !result.kind && !result.dates.length && !result.money.toPay && !result.money.toGet && !result.payment;
   $('#result-body').replaceChildren(...[
     source === 'sample' ? h('p', { class: 'notice' }, 'This is a made-up example letter. Try it with your own letter next.') : null,
-    switched ? h('p', { class: 'notice' }, `This letter looks like it’s from ${result.country.name}, so Briefly used the ${result.country.adjective} rules. Wrong? Change the country below.`) : null,
+    unknown ? errorBox({
+      title: 'This doesn’t look like an official letter',
+      message: `Briefly couldn’t find an office, a deadline or an amount. It works with letters from offices, landlords, insurers and companies in ${result.country.name} — see the list on the start page. If this is such a letter, check that the whole page is in the photo. The translation below may still help.`,
+      details: null,
+    }) : null,
+    switched && !unknown ? h('p', { class: 'notice' }, `This letter looks like it’s from ${result.country.name}, so Briefly used the ${result.country.adjective} rules. Wrong? Change the country below.`) : null,
     summaryCard(result),
     facts.length ? h('div', { class: 'facts' }, facts) : null,
     stepsCard(result),
@@ -409,6 +440,7 @@ function showResult(text, source, countryId = null) {
 function setupStart() {
   renderCountryPicker();
   renderSamples();
+  renderScope();
 
   for (const input of [$('#files'), $('#camera')]) {
     input.addEventListener('change', () => {
