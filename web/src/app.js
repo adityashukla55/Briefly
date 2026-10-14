@@ -350,16 +350,24 @@ function translationCard(result) {
       await prepareTranslator(result.country, (progress) => { status.textContent = `Downloading the translator… ${Math.round(progress * 100)}%`; });
       status.textContent = 'Translating…';
       const paragraphs = await translateText(result.text, result.country, (done, total) => { status.textContent = `Translating… ${done} of ${total}`; });
-      const showOriginal = h('input', { type: 'checkbox', id: 'show-original' });
-      const list = h('div', {}, paragraphs.map((paragraph) => h('div', {},
-        h('p', {}, paragraph.english),
-        h('p', { class: 'original', hidden: true, lang: language.id }, paragraph.original))));
-      showOriginal.addEventListener('change', () => {
-        for (const original of list.querySelectorAll('.original')) original.hidden = !showOriginal.checked;
-      });
+      const wide = window.matchMedia('(min-width: 960px)');
+      const showOriginal = h('input', { type: 'checkbox', id: 'show-original', checked: wide.matches });
+      const label = h('label', { for: 'show-original' });
+      const list = h('div', { class: 'pairs' },
+        h('div', { class: 'pair pair-head', 'aria-hidden': 'true' }, h('p', {}, `${language.name} (original)`), h('p', {}, 'English')),
+        paragraphs.map((paragraph) => h('div', { class: 'pair' },
+          h('p', { class: 'original', lang: language.id }, paragraph.original),
+          h('p', { class: 'english' }, paragraph.english))));
+      const update = () => {
+        list.classList.toggle('with-original', showOriginal.checked);
+        label.textContent = wide.matches ? `Show the ${language.name} side by side` : `Show the ${language.name} under each part`;
+      };
+      showOriginal.addEventListener('change', update);
+      wide.addEventListener('change', update);
+      update();
       body.replaceChildren(
         h('p', { class: 'muted small' }, `Machine translation made on your device. It can contain mistakes — dates and amounts above come straight from the ${language.name} text.`),
-        h('p', { class: 'translation-actions' }, showOriginal, h('label', { for: 'show-original' }, `Show the ${language.name} under each part`)),
+        h('p', { class: 'translation-actions' }, showOriginal, label),
         list);
     } catch (error) {
       console.error(error);
@@ -389,12 +397,20 @@ function repliesCard(result) {
     h('p', { class: 'muted small' }, 'Fill in the parts in [brackets], print, sign and send by post. Keep a copy.'),
     replies.map((reply) => h('details', { class: 'reply' },
       h('summary', {}, reply.title),
-      h('p', {}, reply.when),
-      h('p', { class: 'muted small' }, h('strong', {}, 'What it says: '), reply.english),
-      h('pre', { class: 'letter', lang: result.country.language }, reply.local),
-      h('div', { class: 'reply-actions' },
-        h('button', { class: 'button secondary small', type: 'button', onclick: () => copy(reply.local, 'Letter copied') }, 'Copy letter'),
-        h('button', { class: 'button ghost small', type: 'button', onclick: () => download(`briefly-${reply.id}.txt`, reply.local, 'text/plain;charset=utf-8') }, 'Download')))));
+      h('div', { class: 'reply-body' },
+        h('div', { class: 'reply-info' },
+          h('p', {}, reply.when),
+          h('p', { class: 'muted small' }, h('strong', {}, 'What it says: '), reply.english),
+          h('div', { class: 'reply-actions' },
+            h('button', { class: 'button secondary small', type: 'button', onclick: () => copy(reply.local, 'Letter copied') }, 'Copy letter'),
+            h('button', { class: 'button ghost small', type: 'button', onclick: () => download(`briefly-${reply.id}.txt`, reply.local, 'text/plain;charset=utf-8') }, 'Download'))),
+        h('pre', { class: 'letter', lang: result.country.language }, reply.local)))));
+}
+
+function resultColumns(main, side) {
+  return h('div', { class: `result-columns${side.length ? '' : ' single'}` },
+    h('div', { class: 'result-main' }, main),
+    side.length ? h('div', { class: 'result-side' }, side) : null);
 }
 
 const SOURCE_NAMES = { sample: 'example letter', file: 'photo or PDF', paste: 'pasted text', share: 'shared text', edit: 'edited text' };
@@ -460,10 +476,7 @@ async function showResult(text, source, countryId = null, notices = []) {
     switched && !unknown ? h('p', { class: 'notice' }, `This letter looks like it’s from ${result.country.inName ?? result.country.name}, so Briefly used the ${result.country.adjective} rules. Wrong? Change the country below.`) : null,
     summaryCard(result),
     facts.length ? h('div', { class: 'facts' }, facts) : null,
-    stepsCard(result),
-    paymentCard(result),
-    referencesCard(result),
-    termsCard(result),
+    resultColumns(stepsCard(result), [paymentCard(result), referencesCard(result), termsCard(result)].filter(Boolean)),
     translationCard(result),
     repliesCard(result),
     sourceCard(result),

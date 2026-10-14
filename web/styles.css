@@ -687,7 +687,12 @@ html.ready .boot-warning { display: none; }
   padding: 6px 8px;
 }
 .summary-title .local { font-weight: 500; color: var(--ink-3); font-size: 18px; }
-.translation .original { color: var(--ink-3); font-size: 14px; border-left: 3px solid var(--line); padding-left: 10px; }
+.pairs .original { display: none; color: var(--ink-3); font-size: 14px; border-left: 3px solid var(--line); padding-left: 10px; }
+.pairs.with-original .original { display: block; order: 2; }
+.pairs .pair { display: flex; flex-direction: column; }
+.pairs.with-original .pair { border-bottom: 1px solid var(--line); padding: 10px 0 2px; }
+.pairs.with-original .pair:last-child { border-bottom: 0; }
+.pairs .pair.pair-head { display: none; }
 
 .prose { line-height: 1.65; }
 .prose h1 { font-size: clamp(28px, 5.5vw, 40px); line-height: 1.15; letter-spacing: -0.02em; margin: 18px 0 12px; }
@@ -810,7 +815,19 @@ html.ready .boot-warning { display: none; }
   .countries { gap: 6px; }
   .country { min-height: 36px; padding: 5px 10px; gap: 6px; font-size: 14px; }
   .scope-tag:nth-child(n+5) { display: none; }
-  #working, #result { max-width: 760px; width: 100%; margin: 0 auto; }
+  #working { max-width: 760px; width: 100%; margin: 0 auto; }
+  #result { max-width: 1140px; width: 100%; margin: 0 auto; }
+  .facts { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .result-columns { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+  .result-columns.single { grid-template-columns: minmax(0, 1fr); }
+  .result-columns > div > .card:last-child { margin-bottom: 0; }
+  .result-columns { margin-bottom: 16px; }
+  .pairs.with-original .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .pairs.with-original .original { order: 0; font-size: 15px; border-left: 0; padding-left: 0; color: var(--ink-2); }
+  .pairs.with-original .pair-head { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding: 0 0 4px; border-bottom: 2px solid var(--line); }
+  .pairs.with-original .pair-head p { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+  .reply-body { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .reply-body .letter { margin-top: 0; }
   .page-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; max-width: 1140px; align-items: start; }
   .page-side { display: block; position: sticky; top: 16px; padding: 70px 16px 32px 0; }
   .page-side .promises { margin-top: 16px; }
