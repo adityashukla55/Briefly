@@ -92,19 +92,25 @@ const PROMISES = `<ul class="promises" aria-label="Our promise to you">
       </li>
       </ul>`;
 
-function sidebar(path) {
+function sidebar(path, side) {
   const country = COUNTRIES.find((item) => path.startsWith(`/${item.slug}/`));
-  return `<aside class="page-side" aria-label="Check your letter">
+  const cta = side ?? {
+    title: country ? `Got a letter from ${country.inName ?? country.name}?` : 'Got an official letter?',
+    text: 'Take a photo or open a PDF. Briefly finds the deadline, the amount and what to do — in plain English.',
+    href: `/${country ? `?country=${country.id}` : ''}`,
+    label: 'Check your letter',
+  };
+  return `<aside class="page-side" aria-label="${esc(cta.label)}">
     <div class="page-cta side-cta">
-      <p class="page-cta-title">${country ? `Got a letter from ${esc(country.inName ?? country.name)}?` : 'Got an official letter?'}</p>
-      <p>Take a photo or open a PDF. Briefly finds the deadline, the amount and what to do — in plain English.</p>
-      <a class="button primary" href="/${country ? `?country=${country.id}` : ''}">Check your letter</a>
+      <p class="page-cta-title">${esc(cta.title)}</p>
+      <p>${esc(cta.text)}</p>
+      <a class="button primary" href="${cta.href}">${esc(cta.label)}</a>
     </div>
     ${PROMISES}
   </aside>`;
 }
 
-function layout({ path, title, description, crumbs, body, schema = [], noIndex = false }) {
+function layout({ path, title, description, crumbs, body, side = null, schema = [], noIndex = false }) {
   const nav = crumbs.length > 1
     ? `<nav class="crumbs" aria-label="Breadcrumb">${crumbs.map(([name, href], index) => (index === crumbs.length - 1 ? `<span>${esc(name)}</span>` : `<a href="${href}">${esc(name)}</a>`)).join(' › ')}</nav>`
     : '';
@@ -143,7 +149,7 @@ function layout({ path, title, description, crumbs, body, schema = [], noIndex =
       ${nav}
       ${body}
     </main>
-    ${sidebar(path)}
+    ${sidebar(path, side)}
   </div>
   ${footer()}
 </body>
@@ -382,6 +388,33 @@ const TOOLS = [
     lead: 'Many letters don’t give a date — they say “within one month after delivery” or “within 10 working days”. Briefly finds these phrases and estimates the last day for you.',
     points: COUNTRIES.map((country) => `${country.name}: ${country.deliveryNote}`),
   },
+  {
+    slug: 'cancel-a-contract',
+    short: 'Cancel a contract',
+    title: 'Cancel a contract — last day to cancel and a free letter – Briefly',
+    description: 'Find the last day to cancel your phone, internet, gym, streaming or insurance contract, and get a ready-made cancellation letter in the local language. Free, private, works offline.',
+    h1: 'Cancel a contract: the last day and a ready-made letter',
+    lead: 'Enter when your contract started, the minimum term and the notice period. Briefly shows the last day to cancel and writes the letter for you.',
+    cta: `<aside class="page-cta">
+  <p class="page-cta-title">Try it now</p>
+  <p>Phone, internet, gym, streaming or insurance. No account, nothing is saved or sent, works offline.</p>
+  <a class="button primary" href="/#cancel">Cancel a contract — it’s free</a>
+</aside>`,
+    side: {
+      title: 'Want to cancel a contract?',
+      text: 'Phone, internet, gym, streaming or insurance. See the last day to cancel and get a ready-made letter.',
+      href: '/#cancel',
+      label: 'Cancel a contract',
+    },
+    points: [
+      'Works for contracts in all 16 countries Briefly knows. The letter is in the language of the country: German, French, Spanish, Italian, Dutch, Polish, Portuguese, Swedish, Danish or English.',
+      'Shows the last day the company must get your letter, and the day the contract ends.',
+      'Knows contracts that renew by themselves, for another year or for the same time again.',
+      'Germany: knows the 2022 law for fair consumer contracts. After the minimum term, you can cancel any time with at most 1 month’s notice.',
+      'Add a reminder to your calendar, copy the letter, or print it and save it as a PDF.',
+      'Nothing you type is saved or sent.',
+    ],
+  },
 ];
 
 function toolPage(tool) {
@@ -391,10 +424,11 @@ function toolPage(tool) {
     title: tool.title,
     description: tool.description,
     crumbs: [['Briefly', '/'], [tool.short, path]],
+    side: tool.side ?? null,
     schema: [{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Briefly', url: `${SITE}/`, applicationCategory: 'UtilitiesApplication', operatingSystem: 'Any (web browser)', offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' }, description: tool.description }],
     body: `<h1>${esc(tool.h1)}</h1>
 <p class="lead">${esc(tool.lead)}</p>
-${cta(null, 'Try it now')}
+${tool.cta ?? cta(null, 'Try it now')}
 <h2>How it works</h2>
 <ul>${tool.points.map((point) => `<li>${esc(point)}</li>`).join('\n')}</ul>`,
   };

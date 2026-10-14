@@ -108,5 +108,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `el ${date}${time ? ` a las ${time}` : ''}`,
+    cancel: {
+      subject: 'Asunto: Solicitud de baja del contrato',
+      number: 'N.º de cliente',
+      company: 'Nombre de la empresa',
+      address: '[Dirección de la empresa]',
+      body: (end) => [
+        `Por medio de la presente, solicito la baja de mi contrato con fecha ${end} o, si no fuera posible, en la primera fecha posible.`,
+        '',
+        'Les ruego que me confirmen por escrito la baja y la fecha de fin del contrato.',
+        'Asimismo, les pido que no realicen ningún cargo en mi cuenta a partir de esa fecha.',
+      ],
+    },
   },
 };

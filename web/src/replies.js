@@ -22,7 +22,7 @@ function header(result, templates, subject) {
     you.street,
     you.city,
     '',
-    `[${result.sender?.local ?? templates.officeFallback}]`,
+    result.recipient ?? `[${result.sender?.local ?? templates.officeFallback}]`,
     templates.officeAddress,
     '',
     `${you.place}, ${result.today === null ? datePlaceholder(result.country.dateSeparator ?? '.', result.country.dateOrder ?? 'dmy') : local(result.country, result.today ?? todayIso())}`,
@@ -127,4 +127,18 @@ export function templateLetters(country) {
     { ...instalments(result, templates) },
     reschedule(result, templates),
   ];
+}
+
+export function cancelLetter({ country, company = '', number = '', ends, today = todayIso() }) {
+  const templates = templatesFor(country);
+  const { cancel } = templates;
+  const result = {
+    country,
+    today,
+    sender: null,
+    recipient: company.trim() || null,
+    references: [{ local: cancel.number, value: number.trim() || `[${cancel.number}]`, personal: true }],
+  };
+  const letter = { ...templates, officeFallback: cancel.company, officeAddress: cancel.address, greeting: cancel.greeting ?? templates.greeting };
+  return compose(result, letter, cancel.subject, cancel.body(local(country, ends)));
 }

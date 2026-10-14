@@ -115,5 +115,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `am ${date}${time ? ` um ${time} Uhr` : ''}`,
+    cancel: {
+      subject: 'Kündigung meines Vertrags',
+      number: 'Kundennummer',
+      company: 'Name der Firma',
+      address: '[Adresse der Firma]',
+      body: (end) => [
+        `hiermit kündige ich meinen Vertrag fristgerecht zum ${end}, hilfsweise zum nächstmöglichen Termin.`,
+        '',
+        'Bitte bestätigen Sie mir die Kündigung und das Vertragsende schriftlich.',
+        'Die Erlaubnis zum Lastschrifteinzug widerrufe ich zum Vertragsende.',
+      ],
+    },
   },
 };

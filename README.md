@@ -15,7 +15,8 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 - **Finds the money**: what you must pay, or what you get back, plus IBAN and payment reference with copy buttons. Euros and Swiss francs.
 - **Tells you what to do** as a checklist, and explains the office words in the letter.
 - **Adds a calendar reminder** (.ics file) for any deadline.
-- **Writes the reply for you**: ready-made letters in the letter’s language to object, ask for more time, pay in instalments, or move an appointment.
+- **Writes the reply for you**: ready-made letters in the letter’s language to object, ask for more time, pay in instalments, or move an appointment. Print them or save them as a PDF.
+- **Cancels a contract**: enter when a phone, internet, gym, streaming or insurance contract started, its minimum term and its notice period. Briefly shows the last day to cancel, when the contract ends and what happens if it renews, and writes the cancellation letter in the country’s language. For Germany it knows the 2022 law for fair consumer contracts.
 - **Translates the whole letter** to English on the device, with amounts and dates protected from translation mistakes.
 - **Copy or save the text** it read — a private, offline document-to-text scanner.
 
@@ -57,7 +58,7 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
 - a page per office, e.g. [/germany/finanzamt/](https://brieflyapp.pages.dev/germany/finanzamt/)
 - a page per office word, e.g. [/germany/words/bescheid/](https://brieflyapp.pages.dev/germany/words/bescheid/)
 - reply templates, e.g. [/germany/templates/objection/](https://brieflyapp.pages.dev/germany/templates/objection/)
-- tool pages: scan to text offline, translate letters, deadline calculator
+- tool pages: scan to text offline, translate letters, deadline calculator, cancel a contract
 - `sitemap.xml`, `robots.txt`, structured data (breadcrumbs, FAQ, web app)
 
 After changing a country or language file, run `npm run pages` and commit the result. It also rebuilds `web/src/countries/meta.js`, the small country list the app loads first (each full country file is loaded only when needed). A test fails if anything is out of date.

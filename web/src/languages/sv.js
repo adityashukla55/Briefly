@@ -107,5 +107,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `den ${date}${time ? ` kl. ${time}` : ''}`,
+    cancel: {
+      subject: 'Ärende: Uppsägning av avtal',
+      number: 'Kundnummer',
+      company: 'Företagets namn',
+      address: '[Företagets adress]',
+      body: (end) => [
+        `Härmed säger jag upp mitt avtal till den ${end}, eller till första möjliga datum om det inte går.`,
+        '',
+        'Vänligen bekräfta uppsägningen och avtalets slutdatum skriftligt.',
+        'Jag återkallar också mitt autogiromedgivande från och med slutdatumet.',
+      ],
+    },
   },
 };

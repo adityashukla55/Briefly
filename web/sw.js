@@ -1,4 +1,4 @@
-const VERSION = '3.5.0';
+const VERSION = '3.6.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -29,6 +29,7 @@ const SHELL = [
   '/src/app.js',
   '/src/boot.js',
   '/src/calendar.js',
+  '/src/cancel.js',
   '/src/countries/at.js',
   '/src/countries/be.js',
   '/src/countries/ca.js',

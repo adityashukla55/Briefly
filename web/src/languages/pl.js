@@ -109,5 +109,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `na dzień ${date}${time ? ` o godz. ${time}` : ''}`,
+    cancel: {
+      subject: 'Dotyczy: Wypowiedzenie umowy',
+      number: 'Numer klienta',
+      company: 'Nazwa firmy',
+      address: '[Adres firmy]',
+      body: (end) => [
+        `Niniejszym wypowiadam umowę z dniem ${end}, a jeśli nie jest to możliwe – z najbliższym możliwym terminem.`,
+        '',
+        'Proszę o pisemne potwierdzenie wypowiedzenia i daty rozwiązania umowy.',
+        'Proszę również o niepobieranie żadnych opłat z mojego konta po tej dacie.',
+      ],
+    },
   },
 };

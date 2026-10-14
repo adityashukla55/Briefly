@@ -111,6 +111,14 @@
           <div id="samples" class="chips"></div>
         </div>
 
+        <section class="card cancel-teaser" aria-labelledby="cancel-teaser-title">
+          <div>
+            <h2 id="cancel-teaser-title">Want to cancel a contract?</h2>
+            <p>Phone, internet, gym, streaming or insurance. See the last day to cancel and get a ready-made letter.</p>
+          </div>
+          <a class="button secondary" href="#cancel">Cancel a contract</a>
+        </section>
+
         <section class="card works" aria-labelledby="works-title">
           <h2 id="works-title">What works</h2>
           <div class="works-grid">
@@ -178,6 +186,52 @@
       </div>
       <div id="result-body"></div>
     </section>
+
+    <section id="cancel" class="view cancel" hidden>
+      <div class="result-top">
+        <button id="cancel-back" class="link back" type="button">← Back</button>
+      </div>
+      <h1 class="cancel-title" tabindex="-1">Cancel a contract</h1>
+      <p class="lead">Phone, internet, gym, streaming or insurance. Briefly works out the last day to cancel and writes the letter for you, in the language of the country.</p>
+      <form id="cancel-form" class="card cancel-form" novalidate>
+        <div class="field">
+          <label for="cancel-country">Country of the contract</label>
+          <select id="cancel-country"></select>
+        </div>
+        <div class="field" id="cancel-language-field" hidden>
+          <label for="cancel-language">Language of the letter</label>
+          <select id="cancel-language"></select>
+        </div>
+        <div class="field">
+          <label for="cancel-company">Company <span class="optional">(optional)</span></label>
+          <input id="cancel-company" type="text" autocomplete="off" placeholder="Name on your bill">
+        </div>
+        <div class="field">
+          <label for="cancel-number">Customer number <span class="optional">(optional)</span></label>
+          <input id="cancel-number" type="text" autocomplete="off" placeholder="On your bill or contract">
+        </div>
+        <div class="field">
+          <label for="cancel-start">The contract started on</label>
+          <input id="cancel-start" type="date" min="1990-01-01" max="2099-12-31">
+        </div>
+        <div class="field">
+          <label for="cancel-term">Minimum term</label>
+          <select id="cancel-term"></select>
+        </div>
+        <div class="field">
+          <label for="cancel-notice">Notice period</label>
+          <select id="cancel-notice"></select>
+        </div>
+        <div class="field">
+          <label for="cancel-renewal">After the minimum term</label>
+          <select id="cancel-renewal"></select>
+        </div>
+        <p class="field-hint">You find these in your contract, on your first bill or in your online account. Nothing you type here is saved or sent.</p>
+        <p id="cancel-rule" class="notice" hidden></p>
+      </form>
+      <div id="cancel-output"></div>
+      <p class="cancel-not"><strong>Not for:</strong> renting a flat, a job or a loan. Those have their own rules.</p>
+    </section>
   </main>
 
   <footer class="footer">
@@ -189,7 +243,7 @@
     <p><strong>Not legal advice.</strong> Briefly helps you understand a letter. Always check the original, and ask the sender or a free advice centre if you are unsure.</p>
     <p>Nothing is saved. Close the page and your letter is gone.</p>
     <p><strong>Letters from:</strong> <a href="/germany/"><img class="flag" src="/icons/flags/de.svg" alt="" width="21" height="14">Germany</a> · <a href="/austria/"><img class="flag" src="/icons/flags/at.svg" alt="" width="21" height="14">Austria</a> · <a href="/switzerland/"><img class="flag" src="/icons/flags/ch.svg" alt="" width="21" height="14">Switzerland</a> · <a href="/france/"><img class="flag" src="/icons/flags/fr.svg" alt="" width="21" height="14">France</a> · <a href="/spain/"><img class="flag" src="/icons/flags/es.svg" alt="" width="21" height="14">Spain</a> · <a href="/portugal/"><img class="flag" src="/icons/flags/pt.svg" alt="" width="21" height="14">Portugal</a> · <a href="/italy/"><img class="flag" src="/icons/flags/it.svg" alt="" width="21" height="14">Italy</a> · <a href="/netherlands/"><img class="flag" src="/icons/flags/nl.svg" alt="" width="21" height="14">Netherlands</a> · <a href="/belgium/"><img class="flag" src="/icons/flags/be.svg" alt="" width="21" height="14">Belgium</a> · <a href="/poland/"><img class="flag" src="/icons/flags/pl.svg" alt="" width="21" height="14">Poland</a> · <a href="/sweden/"><img class="flag" src="/icons/flags/se.svg" alt="" width="21" height="14">Sweden</a> · <a href="/denmark/"><img class="flag" src="/icons/flags/dk.svg" alt="" width="21" height="14">Denmark</a> · <a href="/united-kingdom/"><img class="flag" src="/icons/flags/uk.svg" alt="" width="21" height="14">United Kingdom</a> · <a href="/ireland/"><img class="flag" src="/icons/flags/ie.svg" alt="" width="21" height="14">Ireland</a> · <a href="/united-states/"><img class="flag" src="/icons/flags/us.svg" alt="" width="21" height="14">United States</a> · <a href="/canada/"><img class="flag" src="/icons/flags/ca.svg" alt="" width="21" height="14">Canada</a></p>
-    <p><strong>Tools:</strong> <a href="/scan-document-to-text-offline/">Scan to text offline</a> · <a href="/translate-german-letter-to-english/">Translate German letters</a> · <a href="/translate-french-letter-to-english/">Translate French letters</a> · <a href="/translate-spanish-letter-to-english/">Translate Spanish letters</a> · <a href="/translate-italian-letter-to-english/">Translate Italian letters</a> · <a href="/translate-dutch-letter-to-english/">Translate Dutch letters</a> · <a href="/translate-polish-letter-to-english/">Translate Polish letters</a> · <a href="/translate-portuguese-letter-to-english/">Translate Portuguese letters</a> · <a href="/translate-swedish-letter-to-english/">Translate Swedish letters</a> · <a href="/translate-danish-letter-to-english/">Translate Danish letters</a> · <a href="/official-letter-deadline-calculator/">Deadline calculator</a></p>
+    <p><strong>Tools:</strong> <a href="/scan-document-to-text-offline/">Scan to text offline</a> · <a href="/translate-german-letter-to-english/">Translate German letters</a> · <a href="/translate-french-letter-to-english/">Translate French letters</a> · <a href="/translate-spanish-letter-to-english/">Translate Spanish letters</a> · <a href="/translate-italian-letter-to-english/">Translate Italian letters</a> · <a href="/translate-dutch-letter-to-english/">Translate Dutch letters</a> · <a href="/translate-polish-letter-to-english/">Translate Polish letters</a> · <a href="/translate-portuguese-letter-to-english/">Translate Portuguese letters</a> · <a href="/translate-swedish-letter-to-english/">Translate Swedish letters</a> · <a href="/translate-danish-letter-to-english/">Translate Danish letters</a> · <a href="/official-letter-deadline-calculator/">Deadline calculator</a> · <a href="/cancel-a-contract/">Cancel a contract</a></p>
     <div class="support">
       <p>Briefly is free and has no ads. If it helped you, you can buy me a coffee.</p>
       <a class="coffee" href="https://buymeacoffee.com/adi.shukla41" target="_blank" rel="noopener">

@@ -107,5 +107,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `den ${date}${time ? ` kl. ${time}` : ''}`,
+    cancel: {
+      subject: 'Vedr.: Opsigelse af aftale',
+      number: 'Kundenummer',
+      company: 'Virksomhedens navn',
+      address: '[Virksomhedens adresse]',
+      body: (end) => [
+        `Hermed opsiger jeg min aftale til ophør den ${end}, eller til første mulige dato, hvis det ikke er muligt.`,
+        '',
+        'Jeg beder jer bekræfte opsigelsen og aftalens slutdato skriftligt.',
+        'Samtidig tilbagekalder jeg min tilmelding til Betalingsservice fra slutdatoen.',
+      ],
+    },
   },
 };

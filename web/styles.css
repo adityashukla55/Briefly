@@ -848,3 +848,42 @@ html.ready .boot-warning { display: none; }
   .drop-icon, .drop-title { display: none; }
   .drop-hint { margin-bottom: 12px; }
 }
+
+.cancel-teaser { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-top: 22px; }
+.cancel-teaser h2 { font-size: 18px; letter-spacing: -0.01em; text-transform: none; color: var(--ink); margin: 0 0 4px; }
+.cancel-teaser p { margin: 0; color: var(--ink-2); font-size: 15px; max-width: 32em; }
+
+.cancel-title { font-size: clamp(26px, 5vw, 34px); line-height: 1.15; letter-spacing: -0.02em; margin: 6px 0 8px; }
+.cancel-title:focus { outline: none; }
+.cancel-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 16px; }
+.field { display: grid; gap: 6px; align-content: start; }
+.field label { font-weight: 650; font-size: 15px; }
+.field .optional { font-weight: 400; color: var(--ink-3); }
+.field input, .field select {
+  width: 100%;
+  min-height: 44px;
+  font: 15px/1.4 var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.field select:disabled { opacity: .5; }
+.field-hint, .cancel-form .notice { grid-column: 1 / -1; margin: 0; }
+.field-hint { color: var(--ink-3); font-size: 14px; }
+.cancel-tips { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: var(--ink-2); }
+.cancel-not { color: var(--ink-3); font-size: 14px; margin: 4px 4px 0; }
+
+.print-sheet { display: none; }
+
+@media print {
+  @page { margin: 25mm 20mm; }
+  .printing body { background: #fff; display: block; min-height: 0; }
+  .printing body > *:not(.print-sheet) { display: none !important; }
+  .printing .print-sheet { display: block; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 11pt/1.5 var(--font); color: #000; }
+}
+
+@media (min-width: 960px) {
+  #cancel { max-width: 900px; width: 100%; margin: 0 auto; }
+}

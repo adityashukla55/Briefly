@@ -111,5 +111,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `le ${date}${time ? ` à ${time.replace(':', 'h')}` : ''}`,
+    cancel: {
+      subject: 'Objet : Résiliation de mon contrat',
+      number: 'N° de client',
+      company: 'Nom de l’entreprise',
+      address: '[Adresse de l’entreprise]',
+      body: (end) => [
+        `Par la présente, je résilie mon contrat à la date du ${end} ou, à défaut, à la première date possible.`,
+        '',
+        'Je vous remercie de me confirmer par écrit la résiliation et la date de fin du contrat.',
+        'Je vous demande également de ne plus effectuer de prélèvement sur mon compte après cette date.',
+      ],
+    },
   },
 };

@@ -108,5 +108,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `op ${date}${time ? ` om ${time} uur` : ''}`,
+    cancel: {
+      subject: 'Betreft: Opzegging van mijn contract',
+      number: 'Klantnummer',
+      company: 'Naam van het bedrijf',
+      address: '[Adres van het bedrijf]',
+      body: (end) => [
+        `Hierbij zeg ik mijn contract op per ${end}, of anders per de eerst mogelijke datum.`,
+        '',
+        'Wilt u de opzegging en de einddatum schriftelijk aan mij bevestigen?',
+        'Ik trek mijn machtiging voor automatische incasso in vanaf de einddatum.',
+      ],
+    },
   },
 };

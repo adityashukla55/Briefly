@@ -4,8 +4,10 @@ import { makeIcs } from './calendar.js';
 import { describeDaysLeft, formatMoney, formatWhen } from './format.js';
 import { isSupported, missingReaderFiles, prepareReader, readFiles } from './read.js';
 import { detectPlatform, installHelp } from './install.js';
-import { buildReplies } from './replies.js';
-import { COUNTRIES, countryById, detectLanguage, inLanguage, isLoaded, languageOf, languagesOf, loadCountry } from './countries/index.js';
+import { buildReplies, cancelLetter } from './replies.js';
+import { NOTICES, RENEWALS, TERMS, germanRule, longNotice, noticeById, planCancel } from './cancel.js';
+import { formatShortDate } from './dates.js';
+import { COUNTRIES, DEFAULT_COUNTRY, countryById, detectLanguage, inLanguage, isLoaded, languageOf, languagesOf, loadCountry } from './countries/index.js';
 import { LANGUAGES } from './languages/index.js';
 import { buildSteps } from './steps.js';
 import { h } from './dom.js';
@@ -14,7 +16,7 @@ import { isTranslatorCached, needsTranslator, prepareTranslator, saveTranslator,
 
 const $ = (selector) => document.querySelector(selector);
 
-const views = { start: $('#start'), working: $('#working'), result: $('#result') };
+const views = { start: $('#start'), working: $('#working'), result: $('#result'), cancel: $('#cancel') };
 let current = null;
 
 const COUNTRY_KEY = 'briefly-country';
@@ -154,6 +156,17 @@ function download(filename, content, type) {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function printLetter(text, lang) {
+  const sheet = h('pre', { class: 'print-sheet', lang }, text);
+  document.body.append(sheet);
+  document.documentElement.classList.add('printing');
+  window.addEventListener('afterprint', () => {
+    sheet.remove();
+    document.documentElement.classList.remove('printing');
+  }, { once: true });
+  window.print();
 }
 
 function setWorking(label, progress = null) {
@@ -420,7 +433,8 @@ function repliesCard(result) {
           h('p', { class: 'muted small' }, h('strong', {}, 'What it says: '), reply.english),
           h('div', { class: 'reply-actions' },
             h('button', { class: 'button secondary small', type: 'button', onclick: () => copy(reply.local, 'Letter copied') }, 'Copy letter'),
-            h('button', { class: 'button ghost small', type: 'button', onclick: () => download(`briefly-${reply.id}.txt`, reply.local, 'text/plain;charset=utf-8') }, 'Download'))),
+            h('button', { class: 'button ghost small', type: 'button', onclick: () => download(`briefly-${reply.id}.txt`, reply.local, 'text/plain;charset=utf-8') }, 'Download'),
+            h('button', { class: 'button ghost small', type: 'button', onclick: () => printLetter(reply.local, result.country.language) }, 'Print or save as PDF'))),
         h('pre', { class: 'letter', lang: result.country.language }, reply.local)))));
 }
 
@@ -552,6 +566,207 @@ async function showResult(text, source, countryId = null, notices = []) {
   show('result');
   balanceColumns();
   $('#result .summary-title')?.focus?.();
+}
+
+const cancelForm = {
+  country: $('#cancel-country'),
+  language: $('#cancel-language'),
+  company: $('#cancel-company'),
+  number: $('#cancel-number'),
+  start: $('#cancel-start'),
+  term: $('#cancel-term'),
+  notice: $('#cancel-notice'),
+  renewal: $('#cancel-renewal'),
+};
+
+let cancelRun = 0;
+let cancelOpened = false;
+let cancelFromStart = false;
+
+function longDate(iso, country) {
+  return formatWhen({ iso }, country);
+}
+
+function cancelTone(daysLeft) {
+  if (daysLeft <= 7) return 'high';
+  if (daysLeft <= 21) return 'medium';
+  return '';
+}
+
+function cancelFacts(plan, country, company) {
+  const ends = h('div', { class: 'card fact' },
+    h('span', { class: 'fact-label' }, 'Contract ends'),
+    h('span', { class: 'fact-value' }, longDate(plan.ends, country)),
+    h('span', { class: 'fact-note' }, plan.open ? `If ${company || 'the company'} gets your letter today.` : 'If you cancel in time.'));
+  if (plan.open) {
+    return h('div', { class: 'facts' },
+      h('div', { class: 'card fact' },
+        h('span', { class: 'fact-label' }, 'You can cancel'),
+        h('span', { class: 'fact-value' }, 'Any time'),
+        h('span', { class: 'fact-note' }, plan.missedEnd ? 'The minimum term is over.' : 'There is no minimum term.')),
+      ends);
+  }
+  return h('div', { class: 'facts' },
+    h('div', { class: 'card fact' },
+      h('span', { class: 'fact-label' }, 'Last day to cancel'),
+      h('span', { class: 'fact-value' }, longDate(plan.sendBy, country)),
+      h('span', { class: `fact-note ${cancelTone(plan.daysLeft)}` }, describeDaysLeft(plan.daysLeft)),
+      h('span', { class: 'fact-note' }, `${company || 'The company'} must get your letter by this day.`),
+      h('button', {
+        class: 'button ghost small',
+        type: 'button',
+        onclick: () => {
+          download(`briefly-cancel-${plan.sendBy}.ics`, makeIcs({ title: `Last day to cancel: ${company || 'contract'}`, iso: plan.sendBy, description: `${company || 'The company'} must get your cancellation today. The contract then ends on ${formatShortDate(plan.ends)}.` }), 'text/calendar');
+          toast('Calendar file ready — open it to add the reminder');
+        },
+      }, 'Add to calendar')),
+    ends);
+}
+
+function cancelNotices(plan, country) {
+  const notes = [];
+  if (plan.missedEnd && !plan.open) notes.push(`It’s too late to end it on ${longDate(plan.missedEnd, country)}, so the contract has renewed. The next possible end is ${longDate(plan.ends, country)}.`);
+  if (plan.nextEnd) notes.push(`If you miss the last day, the contract runs on until ${longDate(plan.nextEnd, country)}.`);
+  return notes.map((note) => h('p', { class: 'notice' }, note));
+}
+
+function cancelLetterCard(plan, country, company, number) {
+  const language = languageOf(country);
+  const letter = cancelLetter({ country, company, number, ends: plan.ends, today: todayLocal() });
+  return h('div', { class: 'card' },
+    h('h2', {}, `Your letter in ${language.name}`),
+    h('p', { class: 'muted small' }, 'Fill in the parts in [brackets]. Send it by email or through the company’s website, or print it, sign it and send it by post. Keep a copy.'),
+    language.id === 'en' ? null : h('p', { class: 'muted small' }, h('strong', {}, 'What it says: '), `I cancel my contract so that it ends on ${formatShortDate(plan.ends)}, or on the earliest possible date. Please confirm it in writing and stop taking payments after that date.`),
+    h('div', { class: 'reply-actions' },
+      h('button', { class: 'button secondary small', type: 'button', onclick: () => copy(letter, 'Letter copied') }, 'Copy letter'),
+      h('button', { class: 'button ghost small', type: 'button', onclick: () => download('briefly-cancellation.txt', letter, 'text/plain;charset=utf-8') }, 'Download'),
+      h('button', { class: 'button ghost small', type: 'button', onclick: () => printLetter(letter, language.id) }, 'Print or save as PDF')),
+    h('pre', { class: 'letter', lang: language.id }, letter));
+}
+
+function cancelTips(plan, country) {
+  const tips = [
+    plan.open
+      ? 'The sooner the company gets your letter, the sooner the contract ends. An email or the company’s website arrives the same day. A letter by post takes a few days.'
+      : 'Send it so the company gets it by the last day. An email or the company’s website arrives the same day. A letter by post takes a few days.',
+    'Keep proof that you sent it: the email, a screenshot, or the receipt for a registered letter.',
+    'Ask for a written confirmation, and check your bank account to make sure the payments stop.',
+  ];
+  if (country.id === 'de') {
+    tips.push(
+      'In Germany, an email is usually enough. For contracts made since October 2016, the company can’t ask for a signed letter.',
+      'Websites where you can sign a contract must also have a cancel button: “Verträge hier kündigen”.',
+      'If the company raises its prices, you can often cancel early (Sonderkündigungsrecht).',
+    );
+  }
+  return h('div', { class: 'card' },
+    h('h2', {}, 'How to send it'),
+    h('ul', { class: 'cancel-tips' }, tips.map((tip) => h('li', {}, tip))));
+}
+
+function renderCancelRule(country, start, notice, renewal) {
+  const rule = germanRule({ countryId: country.id, start, notice, renewal });
+  const box = $('#cancel-rule');
+  box.hidden = !rule;
+  if (!rule) return;
+  const text = rule === 'new'
+    ? 'For contracts made since 1 March 2022, the notice period can be at most 1 month. After the minimum term, you can cancel any time, even if the contract says it renews. This doesn’t apply to insurance.'
+    : 'Phone and internet contracts: since December 2021, after the minimum term you can cancel any time with 1 month’s notice.';
+  box.replaceChildren(
+    h('strong', {}, 'German law may help you. '),
+    text,
+    ' ',
+    h('button', {
+      class: 'link inline',
+      type: 'button',
+      onclick: () => {
+        cancelForm.renewal.value = 'open';
+        if (rule === 'new' && longNotice(notice)) cancelForm.notice.value = '1m';
+        renderCancel();
+      },
+    }, 'Use this rule'));
+}
+
+async function renderCancel() {
+  const run = ++cancelRun;
+  const form = cancelForm;
+  const base = await loadCountry(form.country.value);
+  if (run !== cancelRun) return;
+  const country = inLanguage(base, form.language.value || base.language);
+  const term = Number(form.term.value);
+  const notice = noticeById(form.notice.value);
+  const start = form.start.value;
+  const company = form.company.value.trim();
+  const output = $('#cancel-output');
+  form.renewal.disabled = term === 0;
+  renderCancelRule(base, start, notice, form.renewal.value);
+  if (term > 0 && !start) {
+    output.replaceChildren(h('p', { class: 'notice' }, 'Add the date your contract started. Briefly then shows the last day to cancel and writes your letter.'));
+    return;
+  }
+  const today = todayLocal();
+  const plan = start && (start < '1990-01-01' || start > '2099-12-31') ? null : planCancel({ start: start || today, term, notice, renewal: form.renewal.value, today });
+  if (!plan) {
+    output.replaceChildren(h('p', { class: 'notice error' }, 'Please check the start date.'));
+    return;
+  }
+  output.replaceChildren(
+    cancelFacts(plan, country, company),
+    ...cancelNotices(plan, country),
+    cancelLetterCard(plan, country, company, form.number.value),
+    cancelTips(plan, country));
+}
+
+function setCancelLanguages(country) {
+  const ids = languagesOf(country);
+  $('#cancel-language-field').hidden = ids.length < 2;
+  cancelForm.language.replaceChildren(...ids.map((id) => h('option', { value: id }, LANGUAGES[id].name)));
+}
+
+async function openCancel() {
+  if (!cancelOpened) {
+    cancelOpened = true;
+    cancelForm.country.value = selectedCountry ?? DEFAULT_COUNTRY;
+  }
+  show('cancel');
+  setCancelLanguages(await loadCountry(cancelForm.country.value));
+  await renderCancel();
+  $('#cancel .cancel-title').focus();
+}
+
+function routeCancel() {
+  if (location.hash === '#cancel') openCancel();
+  else if (!views.cancel.hidden) show(current ? 'result' : 'start');
+}
+
+function setupCancel() {
+  const form = cancelForm;
+  form.country.replaceChildren(...COUNTRIES.map((country) => h('option', { value: country.id }, country.name)));
+  form.term.replaceChildren(...TERMS.map((months) => h('option', { value: String(months) }, months ? `${months} ${months === 1 ? 'month' : 'months'}` : 'None')));
+  form.notice.replaceChildren(...NOTICES.map((notice) => h('option', { value: notice.id }, notice.label)));
+  form.renewal.replaceChildren(...RENEWALS.map((renewal) => h('option', { value: renewal.id }, renewal.label)));
+  form.term.value = '12';
+  form.notice.value = '1m';
+  form.country.addEventListener('change', async () => {
+    setCancelLanguages(await loadCountry(form.country.value));
+    renderCancel();
+  });
+  for (const field of [form.language, form.term, form.notice, form.renewal]) field.addEventListener('change', renderCancel);
+  for (const field of [form.company, form.number, form.start]) field.addEventListener('input', renderCancel);
+  $('#cancel-form').addEventListener('submit', (event) => event.preventDefault());
+  $('#cancel-back').addEventListener('click', () => {
+    if (cancelFromStart) {
+      history.back();
+      return;
+    }
+    history.replaceState(history.state, '', `${location.pathname}${location.search}`);
+    show('start');
+  });
+  window.addEventListener('hashchange', () => {
+    cancelFromStart = location.hash === '#cancel';
+    routeCancel();
+  });
+  routeCancel();
 }
 
 function setupStart() {
@@ -947,6 +1162,7 @@ function checkSupport() {
 document.documentElement.classList.add('ready');
 checkSupport();
 setupStart();
+setupCancel();
 setupInstall();
 setupLaunchQueue();
 registerServiceWorker();

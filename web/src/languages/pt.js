@@ -109,5 +109,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `para o dia ${date}${time ? ` às ${time}` : ''}`,
+    cancel: {
+      subject: 'Assunto: Denúncia do contrato',
+      number: 'N.º de cliente',
+      company: 'Nome da empresa',
+      address: '[Morada da empresa]',
+      body: (end) => [
+        `Venho, por este meio, denunciar o meu contrato, para que cesse a ${end} ou, se não for possível, na primeira data possível.`,
+        '',
+        'Solicito que me confirmem por escrito a cessação do contrato e a respetiva data.',
+        'Solicito ainda que cancelem todos os débitos diretos na minha conta após essa data.',
+      ],
+    },
   },
 };

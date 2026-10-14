@@ -111,5 +111,17 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `on ${date}${time ? ` at ${clock(time)}` : ''}`,
+    cancel: {
+      subject: 'Re: Cancellation of my contract',
+      number: 'Account number',
+      company: 'Name of the company',
+      address: '[Address of the company]',
+      body: (end) => [
+        `I am writing to cancel my contract. Please end it on ${end}, or on the earliest possible date after that.`,
+        '',
+        'Please confirm the cancellation and the end date in writing.',
+        'Please do not take any more payments from my account after the end date.',
+      ],
+    },
   },
 };

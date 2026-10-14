@@ -108,5 +108,18 @@ export default {
       ],
     },
     appointmentWhen: (date, time) => `il ${date}${time ? ` alle ore ${time}` : ''}`,
+    cancel: {
+      subject: 'Oggetto: Disdetta del contratto',
+      number: 'Codice cliente',
+      company: 'Nome dell’azienda',
+      address: '[Indirizzo dell’azienda]',
+      greeting: 'Spettabile Società,',
+      body: (end) => [
+        `con la presente comunico la disdetta del mio contratto con effetto dal ${end} o, se non fosse possibile, dalla prima data utile.`,
+        '',
+        'Vi prego di confermarmi per iscritto la disdetta e la data di cessazione del contratto.',
+        'Vi chiedo inoltre di interrompere ogni addebito sul mio conto dopo tale data.',
+      ],
+    },
   },
 };
