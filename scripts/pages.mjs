@@ -67,6 +67,42 @@ function cta(country, text = 'Check your letter now') {
 </aside>`;
 }
 
+const PROMISES = `<ul class="promises" aria-label="Our promise to you">
+      <li>
+      <span class="promise-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/><path class="cross" d="M3 3l18 18"/></svg>
+      </span>
+      <strong>No account</strong>
+      <span>Just open it and start. No sign-up, no email.</span>
+      </li>
+      <li>
+      <span class="promise-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/><path class="cross" d="M3 3l18 18"/></svg>
+      </span>
+      <strong>No upload</strong>
+      <span>Your letter never leaves your device.</span>
+      </li>
+      <li>
+      <span class="promise-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+      </span>
+      <strong>Works offline</strong>
+      <span>Even without internet, after your first visit.</span>
+      </li>
+      </ul>`;
+
+function sidebar(path) {
+  const country = COUNTRIES.find((item) => path.startsWith(`/${item.slug}/`));
+  return `<aside class="page-side" aria-label="Check your letter">
+    <div class="page-cta side-cta">
+      <p class="page-cta-title">${country ? `Got a letter from ${esc(country.inName ?? country.name)}?` : 'Got an official letter?'}</p>
+      <p>Take a photo or open a PDF. Briefly finds the deadline, the amount and what to do — in plain English.</p>
+      <a class="button primary" href="/${country ? `?country=${country.id}` : ''}">Check your letter</a>
+    </div>
+    ${PROMISES}
+  </aside>`;
+}
+
 function layout({ path, title, description, crumbs, body, schema = [], noIndex = false }) {
   const nav = crumbs.length > 1
     ? `<nav class="crumbs" aria-label="Breadcrumb">${crumbs.map(([name, href], index) => (index === crumbs.length - 1 ? `<span>${esc(name)}</span>` : `<a href="${href}">${esc(name)}</a>`)).join(' › ')}</nav>`
@@ -101,10 +137,13 @@ function layout({ path, title, description, crumbs, body, schema = [], noIndex =
     </a>
     <a class="button primary small" href="/">Open Briefly</a>
   </header>
-  <main class="prose">
-    ${nav}
-    ${body}
-  </main>
+  <div class="page-layout">
+    <main class="prose">
+      ${nav}
+      ${body}
+    </main>
+    ${sidebar(path)}
+  </div>
   ${footer()}
 </body>
 </html>

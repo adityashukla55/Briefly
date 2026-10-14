@@ -709,6 +709,10 @@ html.ready .boot-warning { display: none; }
   background: var(--good-bg);
   border: 1px solid color-mix(in srgb, var(--good) 25%, transparent);
 }
+.page-layout { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; }
+.page-layout main { max-width: none; }
+.page-side { display: none; }
+
 .page-cta-title { margin: 0 0 4px; font-weight: 750; font-size: 18px; color: var(--ink) !important; }
 .page-cta p { margin: 0 0 12px; }
 .page-cta .button { text-decoration: none; color: var(--accent-ink); }
@@ -806,7 +810,11 @@ html.ready .boot-warning { display: none; }
   .country { min-height: 36px; padding: 5px 10px; gap: 6px; font-size: 14px; }
   .scope-tag:nth-child(n+5) { display: none; }
   #working, #result { max-width: 760px; width: 100%; margin: 0 auto; }
-  .page .topbar, .page main, .page .footer { max-width: 760px; }
+  .page-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; max-width: 1140px; align-items: start; }
+  .page-side { display: block; position: sticky; top: 16px; padding: 70px 16px 32px 0; }
+  .page-side .promises { margin-top: 16px; }
+  .page-side .side-cta { margin: 0; }
+  .prose .page-cta { display: none; }
 }
 
 @media (hover: none) and (pointer: coarse) {
