@@ -175,27 +175,48 @@ async function readPdf(file, onStep, language) {
 
 const PDF_DECODERS = ['pdfjs/wasm/openjpeg.wasm', 'pdfjs/wasm/jbig2.wasm', 'pdfjs/wasm/qcms_bg.wasm'];
 
-export async function prepareReader(language, onStep = () => {}) {
-  const previous = reportProgress;
-  reportProgress = (label) => onStep(label);
+const SIMD = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11]);
+const RELAXED_SIMD = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 15, 1, 13, 0, 65, 1, 253, 15, 65, 2, 253, 15, 253, 128, 2, 11]);
+
+function supports(bytes) {
   try {
-    await getOcr(language);
-  } finally {
-    reportProgress = previous;
+    return WebAssembly.validate(bytes);
+  } catch {
+    return false;
   }
-  await Promise.all(PDF_DECODERS.map((path) => fetch(vendor(path)).then((response) => response.arrayBuffer())));
+}
+
+function coreFile() {
+  if (supports(RELAXED_SIMD)) return 'tesseract-core/tesseract-core-relaxedsimd-lstm.wasm.js';
+  if (supports(SIMD)) return 'tesseract-core/tesseract-core-simd-lstm.wasm.js';
+  return 'tesseract-core/tesseract-core-lstm.wasm.js';
+}
+
+function readerFiles(language) {
+  return [coreFile(), `lang/${language}.traineddata.gz`, 'tesseract/tesseract.esm.min.js', 'tesseract/worker.min.js', 'pdfjs/pdf.min.mjs', 'pdfjs/pdf.worker.min.mjs', ...PDF_DECODERS];
+}
+
+export async function prepareReader(language, onStep = () => {}) {
+  const files = readerFiles(language);
+  for (const [index, path] of files.entries()) {
+    onStep(`${Math.round((index / files.length) * 100)}%`);
+    if (await caches.match(vendor(path))) continue;
+    const response = await fetch(vendor(path));
+    if (!response.ok) throw new Error(`Could not save ${path}`);
+    await response.arrayBuffer();
+  }
+  onStep('100%');
+}
+
+export async function missingReaderFiles(language) {
+  if (!('caches' in self)) return readerFiles(language);
+  const files = readerFiles(language);
+  const found = await Promise.all(files.map((path) => caches.match(vendor(path))));
+  return files.filter((path, index) => !found[index]);
 }
 
 export async function isReaderSaved(language) {
-  if (!('caches' in self)) return false;
-  const needed = [`lang/${language}.traineddata.gz`, 'tesseract/worker.min.js', 'tesseract/tesseract.esm.min.js', 'pdfjs/pdf.min.mjs', 'pdfjs/pdf.worker.min.mjs', ...PDF_DECODERS];
-  const found = await Promise.all(needed.map((path) => caches.match(vendor(path))));
-  if (!found.every(Boolean)) return false;
-  for (const key of await caches.keys()) {
-    const requests = await (await caches.open(key)).keys();
-    if (requests.some((request) => request.url.includes('/vendor/tesseract-core/'))) return true;
-  }
-  return false;
+  return (await missingReaderFiles(language)).length === 0;
 }
 
 export function isSupported(file) {

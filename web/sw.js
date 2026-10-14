@@ -1,4 +1,4 @@
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';

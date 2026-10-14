@@ -458,6 +458,8 @@ details.source textarea { margin: 12px 0 10px; font-family: var(--mono); font-si
 .offline-item.waiting, .offline-item.failed { color: var(--soon); }
 .offline-item .link { padding: 0; font-weight: 650; color: var(--ink); }
 .offline-tick { font-weight: 800; }
+.offline-missing { flex-basis: 100%; font-size: 13px; color: var(--ink-3); }
+.offline-missing p { margin: 4px 0 0; overflow-wrap: anywhere; }
 .mini-spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--surface-2); border-top-color: var(--accent); animation: spin 0.9s linear infinite; }
 
 .save { margin-top: 16px; padding: 20px; }

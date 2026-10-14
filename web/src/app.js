@@ -2,7 +2,7 @@ import { analyze } from './analyze.js';
 import { ReadError, friendlyError, missingFeatures } from './errors.js';
 import { makeIcs } from './calendar.js';
 import { describeDaysLeft, formatMoney, formatWhen } from './format.js';
-import { isReaderSaved, isSupported, prepareReader, readFiles } from './read.js';
+import { isSupported, missingReaderFiles, prepareReader, readFiles } from './read.js';
 import { detectPlatform, installHelp } from './install.js';
 import { buildReplies } from './replies.js';
 import { COUNTRIES, countryById, detectLanguage, languageOf } from './countries/index.js';
@@ -531,7 +531,11 @@ function setupInstall() {
     deferred = null;
     event.prompt();
     const choice = await event.userChoice.catch(() => null);
-    if (choice?.outcome === 'accepted') toast('Briefly is being saved as an app');
+    if (choice?.outcome === 'accepted') {
+      installedNow = true;
+      toast('Briefly is being saved as an app');
+      refreshOffline(true);
+    }
     refresh();
     return true;
   };
@@ -544,6 +548,8 @@ function setupInstall() {
 
   window.addEventListener('appinstalled', () => {
     deferred = null;
+    installedNow = true;
+    refreshOffline(true);
     refresh();
     toast('Saved! Open Briefly from your home screen or apps.');
   });
@@ -591,7 +597,13 @@ function setupLaunchQueue() {
   });
 }
 
-const offline = { reader: 'checking', readerStep: '', translator: 'checking', translatorProgress: 0, translatorSize: 0, warming: null };
+let installedNow = false;
+
+function isInstalled() {
+  return installedNow || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+const offline = { reader: 'checking', readerStep: '', missing: [], translator: 'checking', translatorProgress: 0, translatorSize: 0, warming: null };
 
 function offlineSupported() {
   return 'serviceWorker' in navigator && 'caches' in self;
@@ -602,7 +614,7 @@ async function controlled() {
   await navigator.serviceWorker.ready;
   if (navigator.serviceWorker.controller) return true;
   return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(Boolean(navigator.serviceWorker.controller)), 8000);
+    const timer = setTimeout(() => resolve(Boolean(navigator.serviceWorker.controller)), 120000);
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       clearTimeout(timer);
       resolve(true);
@@ -622,12 +634,16 @@ function renderOffline() {
     return;
   }
   reader.className = `offline-item ${offline.reader}`;
+  $('#offline-title').textContent = isInstalled() ? 'Offline use — saved with the app' : 'Offline use';
   if (offline.reader === 'ready') reader.replaceChildren(...tick(`Reading ${language.name} letters works offline.`));
   else if (offline.reader === 'working') reader.replaceChildren(h('span', { class: 'mini-spinner', 'aria-hidden': 'true' }), `Getting ready to read ${language.name} letters offline… ${offline.readerStep}`);
   else if (offline.reader === 'waiting') reader.replaceChildren(`You’re offline. Connect to the internet once so Briefly can save its ${language.name} text reader (about 6 MB).`);
   else if (offline.reader === 'missing') reader.replaceChildren(`To read ${language.name} letters offline, Briefly needs to save its text reader (about 6 MB). `, h('button', { class: 'link', type: 'button', onclick: () => warmReader(true) }, 'Save it now'));
   else if (offline.reader === 'failed') reader.replaceChildren('Couldn’t save the text reader for offline use. ', h('button', { class: 'link', type: 'button', onclick: () => warmReader(true) }, 'Try again'));
   else reader.replaceChildren('Checking…');
+  if (['waiting', 'missing', 'failed'].includes(offline.reader) && offline.missing.length) {
+    reader.append(h('details', { class: 'offline-missing' }, h('summary', {}, 'What’s missing'), h('p', {}, offline.missing.map((path) => path.split('/').pop()).join(', '))));
+  }
 
   translator.className = `offline-item ${offline.translator}`;
   const size = offline.translatorSize ? ` (${Math.round(offline.translatorSize / 1_000_000)} MB)` : '';
@@ -656,7 +672,7 @@ async function warmReader(force = false) {
   offline.readerStep = '';
   renderOffline();
   try {
-    await controlled();
+    if (!(await controlled())) throw new Error('Offline saving is not active yet');
     await prepareReader(ocr, (step) => {
       offline.readerStep = step;
       if (countryById(selectedCountry).language === country.language) renderOffline();
@@ -666,18 +682,20 @@ async function warmReader(force = false) {
   }
   offline.warming = null;
   if (countryById(selectedCountry).language === country.language) {
-    offline.reader = (await isReaderSaved(ocr)) ? 'ready' : 'failed';
+    offline.missing = await missingReaderFiles(ocr);
+    offline.reader = offline.missing.length ? 'failed' : 'ready';
     renderOffline();
   }
 }
 
 async function saveTranslatorOffline() {
+  if (offline.translator === 'working') return;
   const country = countryById(selectedCountry);
   offline.translator = 'working';
   offline.translatorProgress = 0;
   renderOffline();
   try {
-    await controlled();
+    if (!(await controlled())) throw new Error('Offline saving is not active yet');
     await saveTranslator(country, (progress) => {
       offline.translatorProgress = progress;
       renderOffline();
@@ -698,17 +716,23 @@ async function refreshOffline(warm = false) {
   }
   const country = countryById(selectedCountry);
   const ocr = languageOf(country).ocr;
-  if (offline.warming !== ocr) offline.reader = (await isReaderSaved(ocr)) ? 'ready' : (navigator.onLine ? 'missing' : 'waiting');
+  if (offline.warming !== ocr) {
+    offline.missing = await missingReaderFiles(ocr);
+    offline.reader = !offline.missing.length ? 'ready' : (navigator.onLine ? 'missing' : 'waiting');
+  }
   offline.translator = (await isTranslatorCached(country)) ? 'ready' : 'missing';
   offline.translatorSize = await translatorSize(country).catch(() => 0);
   renderOffline();
-  if (warm && offline.reader !== 'ready') warmReader();
+  if (!warm || !navigator.onLine) return;
+  if (offline.reader !== 'ready') await warmReader(isInstalled());
+  if (isInstalled() && offline.translator === 'missing' && countryById(selectedCountry) === country) await saveTranslatorOffline();
 }
 
 function setupOffline() {
   renderOffline();
   window.addEventListener('online', () => refreshOffline(true));
   window.addEventListener('offline', () => refreshOffline());
+  if (offlineSupported()) navigator.serviceWorker.addEventListener('controllerchange', () => refreshOffline(true));
   const start = () => refreshOffline(true);
   if ('requestIdleCallback' in window) requestIdleCallback(start, { timeout: 4000 });
   else setTimeout(start, 1500);
