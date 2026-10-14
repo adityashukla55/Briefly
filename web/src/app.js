@@ -8,25 +8,11 @@ import { buildReplies } from './replies.js';
 import { COUNTRIES, countryById, detectLanguage, languageOf } from './countries/index.js';
 import { LANGUAGES } from './languages/index.js';
 import { buildSteps } from './steps.js';
-import { isTranslatorCached, prepareTranslator, saveTranslator, translateText, translatorSize } from './translate.js';
+import { h } from './dom.js';
+import { openFeedback } from './feedback.js';
+import { isTranslatorCached, needsTranslator, prepareTranslator, saveTranslator, translateText, translatorSize } from './translate.js';
 
 const $ = (selector) => document.querySelector(selector);
-
-function h(tag, props = {}, ...children) {
-  const element = document.createElement(tag);
-  for (const [key, value] of Object.entries(props ?? {})) {
-    if (value === null || value === undefined || value === false) continue;
-    if (key === 'class') element.className = value;
-    else if (key.startsWith('on')) element.addEventListener(key.slice(2), value);
-    else if (key in element && typeof value !== 'string') element[key] = value;
-    else element.setAttribute(key, value === true ? '' : value);
-  }
-  for (const child of children.flat(Infinity)) {
-    if (child === null || child === undefined || child === false) continue;
-    element.append(child instanceof Node ? child : document.createTextNode(String(child)));
-  }
-  return element;
-}
 
 const views = { start: $('#start'), working: $('#working'), result: $('#result') };
 let current = null;
@@ -43,8 +29,10 @@ function guessCountry() {
   const locale = (navigator.language || 'de').toLowerCase();
   if (locale.startsWith('de-at')) return 'at';
   if (locale.startsWith('de-ch') || locale.startsWith('gsw')) return 'ch';
+  if (locale.endsWith('-ca')) return 'ca';
+  if (locale === 'en-us') return 'us';
   const language = locale.slice(0, 2);
-  return ['fr', 'es', 'it'].includes(language) ? language : 'de';
+  return ['fr', 'es', 'it', 'nl', 'pl'].includes(language) ? language : 'de';
 }
 
 let selectedCountry = guessCountry();
@@ -70,9 +58,16 @@ function renderCountryPicker() {
     'aria-pressed': String(country.id === selectedCountry),
     onclick: () => selectCountry(country.id),
   }, h('img', { class: 'flag', src: `/icons/flags/${country.id}.svg`, alt: '', width: 21, height: 14 }), country.name)));
+  const selected = $('#countries .selected');
+  const row = $('#countries');
+  if (selected && row.scrollWidth > row.clientWidth) row.scrollLeft = selected.offsetLeft - row.offsetLeft - 16;
 }
 
 const SCOPE_PREVIEW = 8;
+
+function notFor(className) {
+  return h('p', { class: className }, h('strong', {}, 'Not for: '), 'personal letters, receipts, contracts, ID cards, handwritten notes or letters from other countries.');
+}
 
 function renderScope() {
   const country = countryById(selectedCountry);
@@ -80,8 +75,9 @@ function renderScope() {
   const kinds = country.kinds.filter((kind) => !kind.weight || kind.weight >= 1);
   const tag = (sender) => h('li', { class: 'scope-tag' }, h('strong', {}, sender.local), sender.local === sender.name ? null : h('span', {}, ` · ${sender.name}`));
   $('#scope').replaceChildren(
-    h('p', { class: 'scope-title' }, `Briefly understands letters from these offices in ${country.name}:`),
+    h('p', { class: 'scope-title' }, `Briefly understands letters from these offices in ${country.inName ?? country.name}:`),
     h('ul', { class: 'scope-tags' }, senders.slice(0, SCOPE_PREVIEW).map(tag)),
+    h('p', { class: 'scope-short' }, `${senders.slice(0, 3).map((sender) => sender.name).join(', ')} and ${senders.length - 3} more.`),
     h('details', { class: 'scope-more' },
       h('summary', {}, `See all ${senders.length} offices and ${kinds.length} kinds of letters`),
       h('div', { class: 'scope-columns' },
@@ -92,8 +88,9 @@ function renderScope() {
             sender.local === sender.name ? null : ` — ${sender.name}`)))),
         h('div', {},
           h('p', { class: 'scope-head' }, 'Kinds of letters'),
-          h('ul', { class: 'scope-list' }, kinds.map((kind) => h('li', {}, h('strong', {}, kind.local), ` — ${kind.name}`)))))),
-    h('p', { class: 'scope-not' }, h('strong', {}, 'Not for: '), 'personal letters, receipts, contracts, ID cards, handwritten notes or letters from other countries.'));
+          h('ul', { class: 'scope-list' }, kinds.map((kind) => h('li', {}, h('strong', {}, kind.local), ` — ${kind.name}`))))),
+      notFor('scope-not scope-not-inner')),
+    notFor('scope-not'));
 }
 
 function renderSamples() {
@@ -226,7 +223,7 @@ function calendarButton(result, date) {
 
 function dateFact(result, date) {
   const tone = dateTone(date);
-  const when = formatWhen(date);
+  const when = formatWhen(date, result.country);
   let note;
   if (!date.iso) note = `Within ${date.period} after you received the letter`;
   else if (date.daysLeft < 0) note = `This date has passed (${describeDaysLeft(date.daysLeft)})`;
@@ -235,7 +232,7 @@ function dateFact(result, date) {
     h('span', { class: 'fact-label' }, date.label),
     h('span', { class: 'fact-value' }, when ?? '—'),
     h('span', { class: `fact-note ${tone}` }, note),
-    date.estimated && date.iso ? h('span', { class: 'fact-note' }, `Estimated: ${date.period}, counted from about ${result.country.deliveryDays} days after the letter date. ${result.country.deliveryNote}`) : null,
+    date.estimated && date.iso ? h('span', { class: 'fact-note' }, `Estimated: ${date.period}, counted from ${result.country.deliveryDays ? `about ${result.country.deliveryDays} days after the letter date` : 'the date on the letter'}. ${result.country.deliveryNote}`) : null,
     calendarButton(result, date));
 }
 
@@ -306,7 +303,7 @@ function referencesCard(result) {
   return h('div', { class: 'card' },
     h('h2', {}, 'Your reference numbers'),
     h('p', { class: 'muted small' }, 'Write these on every reply and use them when you call.'),
-    h('dl', { class: 'rows' }, list.map((reference) => row(`${reference.name} (${reference.local})`, reference.value, { code: true }))));
+    h('dl', { class: 'rows' }, list.map((reference) => row(reference.name.toLowerCase().includes(reference.local.toLowerCase()) ? reference.name : `${reference.name} (${reference.local})`, reference.value, { code: true }))));
 }
 
 function termsCard(result) {
@@ -317,6 +314,7 @@ function termsCard(result) {
 }
 
 function translationCard(result) {
+  if (!needsTranslator(result.country)) return null;
   const language = languageOf(result.country);
   const body = h('div', { class: 'translation' });
   const status = h('p', { class: 'muted small' });
@@ -376,6 +374,15 @@ function repliesCard(result) {
         h('button', { class: 'button ghost small', type: 'button', onclick: () => download(`briefly-${reply.id}.txt`, reply.local, 'text/plain;charset=utf-8') }, 'Download')))));
 }
 
+const SOURCE_NAMES = { sample: 'example letter', file: 'photo or PDF', paste: 'pasted text', share: 'shared text', edit: 'edited text' };
+
+function reportLine(result, source) {
+  const found = `${result.kind?.name ?? 'Unknown kind of letter'}${result.sender ? ` from ${result.sender.local}` : ''} · ${result.country.name} · ${SOURCE_NAMES[source] ?? source}`;
+  return h('p', { class: 'report-line' },
+    'Something wrong or unclear in this result? ',
+    h('button', { class: 'link', type: 'button', onclick: () => openFeedback(found, 'text') }, 'Report it'));
+}
+
 function sourceCard(result) {
   const area = h('textarea', { rows: 10, spellcheck: 'false', lang: result.country.language });
   area.value = result.text;
@@ -392,7 +399,7 @@ function sourceCard(result) {
 
 function summaryText(result) {
   const lines = [`${result.kind?.name ?? 'Letter'}${result.sender ? ` from ${result.sender.name} (${result.sender.local})` : ''}`];
-  for (const date of result.dates.filter((item) => item.iso)) lines.push(`${date.label}: ${formatWhen(date)}${date.estimated ? ' (estimated)' : ''}`);
+  for (const date of result.dates.filter((item) => item.iso)) lines.push(`${date.label}: ${formatWhen(date, result.country)}${date.estimated ? ' (estimated)' : ''}`);
   if (result.money.toPay) lines.push(`To pay: ${formatMoney(result.money.toPay)}`);
   if (result.money.toGet) lines.push(`You get: ${formatMoney(result.money.toGet)}`);
   lines.push('', ...buildSteps(result).map((step) => `• ${step.text}`), '', 'Made with Briefly');
@@ -409,6 +416,9 @@ function countrySwitcher(result) {
 }
 
 function showResult(text, source, countryId = null) {
+  try {
+    localStorage.setItem('briefly-returning', '1');
+  } catch {}
   const result = analyze(text, countryId ? { country: countryId } : { preferred: selectedCountry });
   current = { result, source };
   const facts = [...result.dates.map((date) => dateFact(result, date)), ...moneyFacts(result)];
@@ -418,10 +428,10 @@ function showResult(text, source, countryId = null) {
     source === 'sample' ? h('p', { class: 'notice' }, 'This is a made-up example letter. Try it with your own letter next.') : null,
     unknown ? errorBox({
       title: 'This doesn’t look like an official letter',
-      message: `Briefly couldn’t find an office, a deadline or an amount. It works with letters from offices, landlords, insurers and companies in ${result.country.name} — see the list on the start page. If this is such a letter, check that the whole page is in the photo. The translation below may still help.`,
+      message: `Briefly couldn’t find an office, a deadline or an amount. It works with letters from offices, landlords, insurers and companies in ${result.country.inName ?? result.country.name} — see the list on the start page. If this is such a letter, check that the whole page is in the photo. The translation below may still help.`,
       details: null,
     }) : null,
-    switched && !unknown ? h('p', { class: 'notice' }, `This letter looks like it’s from ${result.country.name}, so Briefly used the ${result.country.adjective} rules. Wrong? Change the country below.`) : null,
+    switched && !unknown ? h('p', { class: 'notice' }, `This letter looks like it’s from ${result.country.inName ?? result.country.name}, so Briefly used the ${result.country.adjective} rules. Wrong? Change the country below.`) : null,
     summaryCard(result),
     facts.length ? h('div', { class: 'facts' }, facts) : null,
     stepsCard(result),
@@ -431,6 +441,7 @@ function showResult(text, source, countryId = null) {
     translationCard(result),
     repliesCard(result),
     sourceCard(result),
+    reportLine(result, source),
   ].filter(Boolean));
   $('#share').hidden = !navigator.share;
   show('result');
@@ -677,6 +688,7 @@ function renderOffline() {
     reader.append(h('details', { class: 'offline-missing' }, h('summary', {}, 'What’s missing'), h('p', {}, offline.missing.map((path) => path.split('/').pop()).join(', '))));
   }
 
+  translator.hidden = !needsTranslator(country);
   translator.className = `offline-item ${offline.translator}`;
   const size = offline.translatorSize ? ` (${Math.round(offline.translatorSize / 1_000_000)} MB)` : '';
   if (offline.translator === 'ready') translator.replaceChildren(...tick(`The ${language.name} translator works offline.`));

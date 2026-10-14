@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { dirname, extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { handleFeedback, onRequestPost } from '../functions/api/feedback.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'web');
 const port = Number(process.env.PORT ?? 8150);
@@ -46,6 +47,20 @@ const rules = parseHeaders(await readFile(join(root, '_headers'), 'utf8'));
 
 createServer(async (request, response) => {
   const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+  if (request.method === 'POST' && path === '/api/feedback') {
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    const incoming = new Request(`http://${request.headers.host}${request.url}`, {
+      method: 'POST',
+      headers: { 'content-type': request.headers['content-type'] ?? '', ...(request.headers.origin ? { origin: request.headers.origin } : {}) },
+      body: Buffer.concat(chunks),
+    });
+    const reply = process.env.RESEND_API_KEY
+      ? await onRequestPost({ request: incoming, env: process.env })
+      : await handleFeedback(incoming, { to: 'you@localhost', send: async (email) => (console.log('Feedback email (not sent locally):', JSON.stringify(email, null, 2)), true) });
+    response.writeHead(reply.status, Object.fromEntries(reply.headers)).end(await reply.text());
+    return;
+  }
   if (request.method === 'POST' && path === '/share') {
     response.writeHead(303, { location: '/' }).end();
     return;

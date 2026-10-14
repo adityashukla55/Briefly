@@ -4,9 +4,10 @@ import { formatShortDate, toIso } from './dates.js';
 
 const vendor = (path) => new URL(`../vendor/${path}`, import.meta.url).href;
 
-const MONEY_OUT = /(?<![\w.])(€|EUR ?|CHF ?)(\d+)(?:\.(\d{2}))?(?!\d)/g;
-const MONEY_OUT_AFTER = /(?<![\w.])(\d+)(?:\.(\d{2}))? ?(EUR|CHF)\b/g;
-const DATE_OUT = /(?<![\d.\/])(\d{1,2})([./])(\d{1,2})\2(\d{4})(?!\d)/g;
+const MONEY_OUT = /(?<![\w.])(€|EUR ?|CHF ?|PLN ?)(\d+)(?:\.(\d{2}))?(?!\d)/g;
+const MONEY_OUT_AFTER = /(?<![\w.])(\d+)(?:\.(\d{2}))? ?(EUR|CHF|PLN)\b/g;
+const SYMBOL_IN = { CHF: 'CHF ', PLN: 'PLN ', EUR: 'EUR ' };
+const DATE_OUT = /(?<![\d.\/-])(\d{1,2})([./-])(\d{1,2})\2(\d{4})(?!\d)/g;
 
 export function beforeTranslation(line, country) {
   const language = languageOf(country);
@@ -14,7 +15,7 @@ export function beforeTranslation(line, country) {
   for (const [pattern, replace] of language.rewrite) out = out.replace(new RegExp(pattern.source, pattern.flags), replace);
   return out.replace(amountPattern(country), (match, before, whole, cents, after) => {
     if (!before && !after) return match;
-    const symbol = country.currency === 'CHF' ? 'CHF ' : 'EUR ';
+    const symbol = SYMBOL_IN[country.currency] ?? `${country.currency} `;
     const digits = whole.replace(/\D/g, '');
     return cents && /^\d{2}$/.test(cents) ? `${symbol}${digits}.${cents}` : `${symbol}${digits}`;
   });
@@ -23,7 +24,7 @@ export function beforeTranslation(line, country) {
 export function afterTranslation(english) {
   return english
     .replace(MONEY_OUT_AFTER, (match, whole, cents, code) => `${code} ${whole}${cents ? `.${cents}` : ''}`)
-    .replace(MONEY_OUT, (match, symbol, whole, cents) => `${symbol.trim() === 'CHF' ? 'CHF ' : '€'}${Number(whole).toLocaleString('en-IE')}${cents ? `.${cents}` : ''}`)
+    .replace(MONEY_OUT, (match, symbol, whole, cents) => `${['CHF', 'PLN'].includes(symbol.trim()) ? `${symbol.trim()} ` : '€'}${Number(whole).toLocaleString('en-IE')}${cents ? `.${cents}` : ''}`)
     .replace(DATE_OUT, (match, day, separator, month, year) => {
       const iso = toIso(Number(year), Number(month), Number(day));
       return iso ? formatShortDate(iso) : match;
@@ -58,18 +59,25 @@ async function download(pair, onProgress) {
   }
 }
 
+export function needsTranslator(country) {
+  return Boolean(languageOf(country).model);
+}
+
 export async function saveTranslator(country, onProgress = () => {}) {
+  if (!needsTranslator(country)) return;
   await download(languageOf(country).model, (progress) => onProgress(progress * 0.95));
   await Promise.all(ENGINE.map((path) => fetch(vendor(path)).then((response) => response.arrayBuffer())));
   onProgress(1);
 }
 
 export async function translatorSize(country) {
+  if (!needsTranslator(country)) return 0;
   const files = await modelFiles(languageOf(country).model);
   return files.reduce((sum, file) => sum + file.size, 0);
 }
 
 export async function isTranslatorCached(country) {
+  if (!needsTranslator(country)) return true;
   if (!('caches' in self)) return false;
   const files = await modelFiles(languageOf(country).model).catch(() => []);
   if (!files.length) return false;

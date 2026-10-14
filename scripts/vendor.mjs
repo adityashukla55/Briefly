@@ -9,7 +9,8 @@ const vendor = join(root, 'web', 'vendor');
 const cache = join(root, '.cache', 'models');
 
 const MODEL_HOST = 'https://bergamot.s3.amazonaws.com/models/';
-const OCR_LANGUAGES = ['deu', 'fra', 'spa', 'ita'];
+const OCR_LANGUAGES = ['deu', 'fra', 'spa', 'ita', 'nld', 'pol', 'eng'];
+const MOZILLA = 'https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/';
 const MODELS = {
   deen: {
     model: { file: 'model.deen.intgemm.alphas.bin', sha256: '1980225d00dc5645491777accff5b3c9d20b92eff67a25135f1cf8fe2ed8fb8f' },
@@ -25,6 +26,16 @@ const MODELS = {
     model: { file: 'model.esen.intgemm.alphas.bin', sha256: '4b6b7f451094aaa447d012658af158ffc708fc8842dde2f871a58404f5457fe0' },
     lex: { file: 'lex.50.50.esen.s2t.bin', sha256: 'f11a2c23ef85ab1fee1c412b908d69bc20d66fd59faa8f7da5a5f0347eddf969' },
     vocab: { file: 'vocab.esen.spm', sha256: '909b1eea1face0d7f90a474fe29a8c0fef8d104b6e41e65616f864c964ba8845' },
+  },
+  nlen: {
+    model: { file: 'model.nlen.intgemm.alphas.bin', sha256: '187f9c8f1ffbcc8ecf0724b608ffed9f15bde262b9de5c4754f8d763b585969d', url: `${MOZILLA}1db60932-8656-41a8-a00f-191eb925cef8.bin` },
+    lex: { file: 'lex.50.50.nlen.s2t.bin', sha256: '15c473e6e5aef1fa3fe5cc804844e19a2c671d2e39169dcbc06f456ca4f9b2c0', url: `${MOZILLA}eeba1c98-e44a-4d97-8b5c-44c0a56edc3c.bin` },
+    vocab: { file: 'vocab.nlen.spm', sha256: '48a6331cb8a69d21dd24c6c2a15de44a07bcfd4a4470eaf4616849d77945f6b9', url: `${MOZILLA}e16e52fe-1c21-48ab-9b7f-af1183a99d1a.spm` },
+  },
+  plen: {
+    model: { file: 'model.plen.intgemm.alphas.bin', sha256: '172a5f1d44bf8dd6a6eec3868b13b33ce265f3530e898fe11a80b739b821726e', url: `${MOZILLA}b26a428b-a136-469d-91dd-9389f72c053e.bin` },
+    lex: { file: 'lex.50.50.plen.s2t.bin', sha256: '863afade0ba058fb0173fedef3d1fb14d0dcabc24c3b4584cb1fed8f84d6d879', url: `${MOZILLA}ce258bcd-2f27-42c4-8f46-4ccaac1158ae.bin` },
+    vocab: { file: 'vocab.plen.spm', sha256: 'a1d27e6f5c0d29f406364ebf0382949d1c0affc750cec4380f3173150552f43e', url: `${MOZILLA}98b6b745-b695-4543-95d8-adf1996095ce.spm` },
   },
   iten: {
     model: { file: 'model.iten.intgemm.alphas.bin', sha256: '1fae546faeb9046f80b1b7e940b37b660974ce72902778181d6cd1c30b717f35' },
@@ -44,11 +55,11 @@ function sha256(buffer) {
   return createHash('sha256').update(buffer).digest('hex');
 }
 
-async function download(pair, { file, sha256: expected }) {
+async function download(pair, { file, sha256: expected, url }) {
   const target = join(cache, pair, file);
   if (existsSync(target) && sha256(readFileSync(target)) === expected) return target;
   console.log(`Downloading translation model ${pair}/${file}`);
-  const response = await fetch(`${MODEL_HOST}${pair}/${file}`);
+  const response = await fetch(url ?? `${MODEL_HOST}${pair}/${file}`);
   if (!response.ok) throw new Error(`Download failed for ${pair}/${file}: ${response.status}`);
   const buffer = Buffer.from(await response.arrayBuffer());
   if (sha256(buffer) !== expected) throw new Error(`Checksum mismatch for ${pair}/${file}`);

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Briefly – official letters, explained in English</title>
-  <meta name="description" content="Take a photo of an official letter from Germany, Austria, Switzerland, France, Spain or Italy and understand it in plain English: deadlines, amounts and what to do next. Free, private, works offline.">
+  <meta name="description" content="Take a photo of an official letter from Germany, Austria, Switzerland, France, Spain, Italy, the Netherlands, Poland, the United States or Canada and understand it in plain English: deadlines, amounts and what to do next. Free, private, works offline.">
   <meta name="theme-color" content="#1f2a44">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
@@ -12,11 +12,12 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <meta property="og:title" content="Briefly – official letters, explained in English">
-  <meta property="og:description" content="Understand official letters from Germany, Austria, Switzerland, France, Spain and Italy in plain English. Your letter never leaves your device.">
+  <meta property="og:description" content="Understand official letters from Germany, Austria, Switzerland, France, Spain, Italy, the Netherlands, Poland, the United States and Canada in plain English. Your letter never leaves your device.">
   <meta property="og:image" content="/icons/icon-512.png">
   <link rel="canonical" href="https://brieflyapp.pages.dev/">
   <link rel="stylesheet" href="/styles.css">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Briefly","url":"https://brieflyapp.pages.dev/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Understand official letters from Germany, Austria, Switzerland, France, Spain and Italy in plain English. Reads photos and PDFs, finds deadlines and amounts, and translates — all on your device."}</script>
+  <script src="/src/boot.js"></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Briefly","url":"https://brieflyapp.pages.dev/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Understand official letters from Germany, Austria, Switzerland, France, Spain, Italy, the Netherlands, Poland, the United States and Canada in plain English. Reads photos and PDFs, finds deadlines and amounts, and translates — all on your device."}</script>
   <script type="module" src="/src/app.js"></script>
 </head>
 <body>
@@ -32,129 +33,133 @@
   </header>
 
   <main id="main">
-    <section id="start" class="view">
-      <div class="hero">
-        <h1>Got an official letter?<br>Understand it in a minute.</h1>
-        <p class="lead">Take a photo or open a PDF of a letter from an office, landlord or company. Briefly finds the deadline, the amount and what you need to do — in plain English.</p>
-      </div>
-
-      <ul class="promises" aria-label="Our promise to you">
-        <li>
-          <span class="promise-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/><path class="cross" d="M3 3l18 18"/></svg>
-          </span>
-          <strong>No account</strong>
-          <span>Just open it and start. No sign-up, no email.</span>
-        </li>
-        <li>
-          <span class="promise-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/><path class="cross" d="M3 3l18 18"/></svg>
-          </span>
-          <strong>No upload</strong>
-          <span>Your letter never leaves your device.</span>
-        </li>
-        <li>
-          <span class="promise-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
-          </span>
-          <strong>Works offline</strong>
-          <span>Even without internet, after your first visit.</span>
-        </li>
-      </ul>
-
-      <div class="country-picker">
-        <p class="country-title" id="country-title">Where is the letter from?</p>
-        <div id="countries" class="countries" role="group" aria-labelledby="country-title"></div>
-      </div>
-
-      <div id="scope" class="scope" aria-live="polite"></div>
-
-      <div id="dropzone" class="dropzone" tabindex="-1">
-        <svg class="drop-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="11" width="36" height="26" rx="4"/><path d="M9 15l15 11 15-11"/></svg>
-        <p class="drop-title">Drop your letter here</p>
-        <p class="drop-hint">Photo (JPG, PNG) or PDF. You can add several pages.</p>
-        <div class="drop-actions">
-          <label class="button primary" id="camera-label">
-            <input id="camera" type="file" accept="image/*" capture="environment" hidden>
-            Take a photo
-          </label>
-          <label class="button secondary" id="files-label">
-            <input id="files" type="file" accept="image/png,image/jpeg,image/webp,application/pdf,text/plain" multiple hidden>
-            Choose photo or PDF
-          </label>
+    <section id="start" class="view start">
+      <aside class="intro" aria-label="About Briefly">
+        <div class="hero">
+          <h1>Got an official letter? <span>Understand it in a minute.</span></h1>
+          <p class="lead">Take a photo or open a PDF of a letter from an office, landlord or company. Briefly finds the deadline, the amount and what you need to do — in plain English.</p>
         </div>
-        <button id="paste-toggle" class="link" type="button">or paste the text</button>
-        <form id="paste-form" class="paste-form" hidden>
-          <label for="paste" class="visually-hidden">Letter text</label>
-          <textarea id="paste" rows="7" placeholder="Paste the German text of your letter here"></textarea>
-          <button class="button primary" type="submit">Check this text</button>
-        </form>
-      </div>
 
-      <p class="privacy-line">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-        <span>How? Briefly has no server. Everything runs inside your browser, and the page is locked so it can’t send your letter anywhere.</span>
-      </p>
-
-      <div class="examples">
-        <p class="examples-title">No letter at hand? Try an example:</p>
-        <div id="samples" class="chips"></div>
-      </div>
-
-      <ol class="how">
-        <li><span><strong>Read.</strong> Text recognition runs right here in your browser.</span></li>
-        <li><span><strong>Understand.</strong> Briefly knows the offices, deadlines and rules of each country, and finds who wrote, what they want and the money.</span></li>
-        <li><span><strong>Act.</strong> A checklist, a calendar reminder and ready-made German replies.</span></li>
-      </ol>
-
-      <section class="card works" aria-labelledby="works-title">
-        <h2 id="works-title">What works</h2>
-        <div class="works-grid">
-          <div>
-            <p class="works-head yes">Works</p>
-            <ul class="works-list yes">
-              <li>Photos (JPG, PNG, WebP) and PDFs, up to 8 pages</li>
-              <li>Typed letters from Germany, Austria, Switzerland (German), France, Spain and Italy</li>
-              <li>The latest Chrome, Edge, Firefox and Safari, on phones and computers</li>
-              <li>Offline, after your first visit</li>
-            </ul>
-          </div>
-          <div>
-            <p class="works-head no">Doesn’t work (yet)</p>
-            <ul class="works-list no">
-              <li>Handwritten letters, or letters from other countries</li>
-              <li>Password-protected PDFs</li>
-              <li>HEIC photos outside Safari — take a screenshot instead</li>
-              <li>Old browsers that haven’t been updated for years</li>
-            </ul>
-          </div>
-        </div>
-        <p class="works-note">After your first visit, Briefly saves its text reader for your country (about 6 MB), so reading letters works offline. The translator is an extra 20–26 MB per language — save it under “Offline use” below. Everything stays on your device.</p>
-      </section>
-
-      <section id="offline" class="card offline" aria-labelledby="offline-title" aria-live="polite">
-        <h2 id="offline-title">Offline use</h2>
-        <ul class="offline-list">
-          <li id="offline-reader" class="offline-item">Checking…</li>
-          <li id="offline-translator" class="offline-item"></li>
+        <ul class="promises" aria-label="Our promise to you">
+          <li>
+            <span class="promise-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/><path class="cross" d="M3 3l18 18"/></svg>
+            </span>
+            <strong>No account</strong>
+            <span>Just open it and start. No sign-up, no email.</span>
+          </li>
+          <li>
+            <span class="promise-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/><path class="cross" d="M3 3l18 18"/></svg>
+            </span>
+            <strong>No upload</strong>
+            <span>Your letter never leaves your device.</span>
+          </li>
+          <li>
+            <span class="promise-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+            </span>
+            <strong>Works offline</strong>
+            <span>Even without internet, after your first visit.</span>
+          </li>
         </ul>
-      </section>
 
-      <section id="save" class="card save" aria-labelledby="save-title">
-        <div class="save-head">
-          <img src="/icons/icon-192.png" alt="" width="64" height="64">
-          <div>
-            <h2 id="save-title">Save Briefly on your phone or computer</h2>
-            <p>Open it like an app from your home screen. It works offline, and you don’t need an app store. Saving the app also saves the text reader and translator for your country (about 30 MB), so everything works without internet.</p>
-          </div>
+        <ol class="how">
+          <li><span><strong>Read.</strong> Text recognition runs right here in your browser.</span></li>
+          <li><span><strong>Understand.</strong> Briefly knows the offices, deadlines and rules of each country, and finds who wrote, what they want and the money.</span></li>
+          <li><span><strong>Act.</strong> A checklist, a calendar reminder and ready-made replies in the letter’s language.</span></li>
+        </ol>
+      </aside>
+
+      <div class="work">
+        <div class="country-picker">
+          <p class="country-title" id="country-title">Where is the letter from?</p>
+          <div id="countries" class="countries" role="group" aria-labelledby="country-title"></div>
         </div>
-        <button id="save-button" class="button primary save-button" type="button" hidden>
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg>
-          Save Briefly as an app
-        </button>
-        <div id="save-help"></div>
-        <p id="save-done" class="save-done" hidden>✓ Briefly is saved on this device. You’re using the app.</p>
-      </section>
+
+        <div id="scope" class="scope" aria-live="polite"></div>
+
+        <div id="dropzone" class="dropzone" tabindex="-1">
+          <svg class="drop-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="11" width="36" height="26" rx="4"/><path d="M9 15l15 11 15-11"/></svg>
+          <p class="drop-title">Drop your letter here</p>
+          <p class="drop-hint">Photo (JPG, PNG) or PDF. You can add several pages.</p>
+          <div class="drop-actions">
+            <label class="button primary" id="camera-label">
+              <input id="camera" type="file" accept="image/*" capture="environment" hidden>
+              Take a photo
+            </label>
+            <label class="button secondary" id="files-label">
+              <input id="files" type="file" accept="image/png,image/jpeg,image/webp,application/pdf,text/plain" multiple hidden>
+              Choose photo or PDF
+            </label>
+          </div>
+          <button id="paste-toggle" class="link" type="button">or paste the text</button>
+          <form id="paste-form" class="paste-form" hidden>
+            <label for="paste" class="visually-hidden">Letter text</label>
+            <textarea id="paste" rows="7" placeholder="Paste the text of your letter here"></textarea>
+            <button class="button primary" type="submit">Check this text</button>
+          </form>
+        </div>
+
+        <p class="privacy-line">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <span>How? Your letter is never sent to any server. Everything runs inside your browser, and the page is locked so it can’t send your letter anywhere.</span>
+        </p>
+
+        <div class="examples">
+          <p class="examples-title">No letter at hand? Try an example:</p>
+          <div id="samples" class="chips"></div>
+        </div>
+
+        <section class="card works" aria-labelledby="works-title">
+          <h2 id="works-title">What works</h2>
+          <div class="works-grid">
+            <div>
+              <p class="works-head yes">Works</p>
+              <ul class="works-list yes">
+                <li>Photos (JPG, PNG, WebP) and PDFs, up to 8 pages</li>
+                <li>Typed official letters from the 10 countries above</li>
+                <li>The latest Chrome, Edge, Firefox and Safari, on phones and computers</li>
+                <li>Offline, after your first visit</li>
+              </ul>
+            </div>
+            <div>
+              <p class="works-head no">Doesn’t work (yet)</p>
+              <ul class="works-list no">
+                <li>Handwritten letters, or letters from other countries</li>
+                <li>Password-protected PDFs</li>
+                <li>HEIC photos outside Safari — take a screenshot instead</li>
+                <li>Old browsers that haven’t been updated for years</li>
+              </ul>
+            </div>
+          </div>
+          <p class="works-note">After your first visit, Briefly saves its text reader for your country (about 6 MB), so reading letters works offline. The translator is an extra 20–26 MB per language — save it under “Offline use” below. English letters need no translator. Everything stays on your device.</p>
+        </section>
+
+        <section id="offline" class="card offline" aria-labelledby="offline-title" aria-live="polite">
+          <h2 id="offline-title">Offline use</h2>
+          <ul class="offline-list">
+            <li id="offline-reader" class="offline-item">Checking…</li>
+            <li id="offline-translator" class="offline-item"></li>
+          </ul>
+        </section>
+
+        <section id="save" class="card save" aria-labelledby="save-title">
+          <div class="save-head">
+            <img src="/icons/icon-192.png" alt="" width="64" height="64">
+            <div>
+              <h2 id="save-title">Save Briefly on your phone or computer</h2>
+              <p>Open it like an app from your home screen. It works offline, and you don’t need an app store. Saving the app also saves the text reader and translator for your country (about 30 MB), so everything works without internet.</p>
+            </div>
+          </div>
+          <button id="save-button" class="button primary save-button" type="button" hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg>
+            Save Briefly as an app
+          </button>
+          <div id="save-help"></div>
+          <p id="save-done" class="save-done" hidden>✓ Briefly is saved on this device. You’re using the app.</p>
+        </section>
+      </div>
     </section>
 
     <section id="working" class="view" hidden aria-live="polite">
@@ -176,10 +181,15 @@
   </main>
 
   <footer class="footer">
+    <nav class="footer-links" aria-label="About Briefly">
+      <a class="footer-link" href="/privacy/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>Privacy</a>
+      <a class="footer-link" href="https://github.com/adityashukla55/Briefly"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>Open source</a>
+      <button class="footer-link" type="button" data-feedback><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-6 4V5z"/><path d="M12 8v3.5M12 14h.01"/></svg>Report a problem</button>
+    </nav>
     <p><strong>Not legal advice.</strong> Briefly helps you understand a letter. Always check the original, and ask the sender or a free advice centre if you are unsure.</p>
-    <p>Nothing is saved. Close the page and your letter is gone. <a href="/privacy/">Privacy</a> · <a href="https://github.com/adityashukla55/Briefly">Open source</a></p>
-    <p><strong>Letters from:</strong> <a href="/germany/"><img class="flag" src="/icons/flags/de.svg" alt="" width="21" height="14"> Germany</a> · <a href="/austria/"><img class="flag" src="/icons/flags/at.svg" alt="" width="21" height="14"> Austria</a> · <a href="/switzerland/"><img class="flag" src="/icons/flags/ch.svg" alt="" width="21" height="14"> Switzerland</a> · <a href="/france/"><img class="flag" src="/icons/flags/fr.svg" alt="" width="21" height="14"> France</a> · <a href="/spain/"><img class="flag" src="/icons/flags/es.svg" alt="" width="21" height="14"> Spain</a> · <a href="/italy/"><img class="flag" src="/icons/flags/it.svg" alt="" width="21" height="14"> Italy</a></p>
-    <p><strong>Tools:</strong> <a href="/scan-document-to-text-offline/">Scan to text offline</a> · <a href="/translate-german-letter-to-english/">Translate German letters</a> · <a href="/translate-french-letter-to-english/">Translate French letters</a> · <a href="/translate-spanish-letter-to-english/">Translate Spanish letters</a> · <a href="/translate-italian-letter-to-english/">Translate Italian letters</a> · <a href="/official-letter-deadline-calculator/">Deadline calculator</a></p>
+    <p>Nothing is saved. Close the page and your letter is gone.</p>
+    <p><strong>Letters from:</strong> <a href="/germany/"><img class="flag" src="/icons/flags/de.svg" alt="" width="21" height="14">Germany</a> · <a href="/austria/"><img class="flag" src="/icons/flags/at.svg" alt="" width="21" height="14">Austria</a> · <a href="/switzerland/"><img class="flag" src="/icons/flags/ch.svg" alt="" width="21" height="14">Switzerland</a> · <a href="/france/"><img class="flag" src="/icons/flags/fr.svg" alt="" width="21" height="14">France</a> · <a href="/spain/"><img class="flag" src="/icons/flags/es.svg" alt="" width="21" height="14">Spain</a> · <a href="/italy/"><img class="flag" src="/icons/flags/it.svg" alt="" width="21" height="14">Italy</a> · <a href="/netherlands/"><img class="flag" src="/icons/flags/nl.svg" alt="" width="21" height="14">Netherlands</a> · <a href="/poland/"><img class="flag" src="/icons/flags/pl.svg" alt="" width="21" height="14">Poland</a> · <a href="/united-states/"><img class="flag" src="/icons/flags/us.svg" alt="" width="21" height="14">United States</a> · <a href="/canada/"><img class="flag" src="/icons/flags/ca.svg" alt="" width="21" height="14">Canada</a></p>
+    <p><strong>Tools:</strong> <a href="/scan-document-to-text-offline/">Scan to text offline</a> · <a href="/translate-german-letter-to-english/">Translate German letters</a> · <a href="/translate-french-letter-to-english/">Translate French letters</a> · <a href="/translate-spanish-letter-to-english/">Translate Spanish letters</a> · <a href="/translate-italian-letter-to-english/">Translate Italian letters</a> · <a href="/translate-dutch-letter-to-english/">Translate Dutch letters</a> · <a href="/translate-polish-letter-to-english/">Translate Polish letters</a> · <a href="/official-letter-deadline-calculator/">Deadline calculator</a></p>
     <div class="support">
       <p>Briefly is free and has no ads. If it helped you, you can buy me a coffee.</p>
       <a class="coffee" href="https://buymeacoffee.com/adi.shukla41" target="_blank" rel="noopener">

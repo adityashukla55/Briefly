@@ -280,7 +280,7 @@ export default {
     { name: 'Insured person number', local: 'Versichertennummer', pattern: /(?:versichertennummer|versicherten-nr\.?|versicherungsnummer)/gi },
     { name: 'Policy number', local: 'Policennummer', pattern: /(?:policennummer|policen-nr\.?|police nr\.?)/gi },
     { name: 'Customer number', local: 'Kundennummer', pattern: /(?:kundennummer|kunden-nr\.?)/gi },
-    { name: 'Social security number', local: 'AHV-Nummer', pattern: /(?:ahv-?nummer|ahv-?nr\.?|ahvn13|sozialversicherungsnummer)/gi },
+    { name: 'Social security number', local: 'AHV-Nummer', personal: true, pattern: /(?:ahv-?nummer|ahv-?nr\.?|ahvn13|sozialversicherungsnummer)/gi },
     { name: 'Tax number', local: 'Steuernummer', pattern: /(?:steuernummer|steuer-nr\.?)/gi },
     { name: 'Register number', local: 'Registernummer', pattern: /(?:registernummer|register-nr\.?)/gi },
     { name: 'Case number', local: 'Geschäftsnummer', pattern: /(?:geschäftsnummer|geschäfts-nr\.?|dossiernummer|dossier-nr\.?|fallnummer|verfahrensnummer|aktenzeichen)/gi },

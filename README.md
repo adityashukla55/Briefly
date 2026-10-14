@@ -1,6 +1,6 @@
 # Briefly
 
-**Official letters, explained.** Take a photo of an official letter from **Germany, Austria, Switzerland, France, Spain or Italy** and understand it in plain English: who sent it, what they want, the deadline, the amount, and what to do next.
+**Official letters, explained.** Take a photo of an official letter from **Germany, Austria, Switzerland, France, Spain, Italy, the Netherlands, Poland, the United States or Canada** and understand it in plain English: who sent it, what they want, the deadline, the amount, and what to do next.
 
 **Try it: [brieflyapp.pages.dev](https://brieflyapp.pages.dev)** — no sign-up, nothing to install.
 
@@ -8,8 +8,8 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 
 ## What it does
 
-- **Reads the letter** from a photo, a scanned PDF, a normal PDF or pasted text — in German, French, Spanish or Italian.
-- **Knows each country:** the offices (Finanzamt, AMS, Betreibungsamt, CAF, Agencia Tributaria, Agenzia delle Entrate…), the kinds of letters, how deadlines are counted, money formats and reference numbers.
+- **Reads the letter** from a photo, a scanned PDF, a normal PDF or pasted text — in German, French, Spanish, Italian, Dutch, Polish or English.
+- **Knows each country:** the offices (Finanzamt, AMS, Betreibungsamt, CAF, Agencia Tributaria, Agenzia delle Entrate, Belastingdienst, Urząd Skarbowy, IRS, CRA…), the kinds of letters, how deadlines are counted, money formats and reference numbers.
 - **Detects the country by itself** from the language, IBAN and office names — and switches if you picked the wrong one.
 - **Finds the important dates**: payment deadlines, appointments, and the last day to object — including deadlines like “within one month after delivery” or “within 10 working days”, estimated with each country’s delivery rule.
 - **Finds the money**: what you must pay, or what you get back, plus IBAN and payment reference with copy buttons. Euros and Swiss francs.
@@ -23,7 +23,7 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 
 | | |
 |---|---|
-| No server | A static site. There is no backend to send anything to. |
+| No server sees your letter | A static site. The only backend is a tiny feedback function that receives what a visitor types into “Report a problem” — never a letter. |
 | Locked down | The Content Security Policy only allows connections to the site itself (`connect-src 'self'`), so the page *cannot* send your letter anywhere. |
 | No storage | Nothing is saved. Close the tab and the letter is gone. |
 | Offline | A service worker keeps the app, the text reader and the translator on the device after first use. |
@@ -44,9 +44,9 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
                                                               └──► translator (Bergamot, WebAssembly) ──► English
 ```
 
-- **Text reading:** [Tesseract.js](https://github.com/naptha/tesseract.js) with German, French, Spanish and Italian models, and [pdf.js](https://github.com/mozilla/pdf.js) for PDFs that already contain text.
+- **Text reading:** [Tesseract.js](https://github.com/naptha/tesseract.js) with German, French, Spanish, Italian, Dutch, Polish and English models, and [pdf.js](https://github.com/mozilla/pdf.js) for PDFs that already contain text.
 - **Understanding:** hand-written rules. Each **language** ([`web/src/languages/`](web/src/languages/)) knows dates, deadline phrases, amounts and reply letters. Each **country** ([`web/src/countries/`](web/src/countries/)) knows its offices, letter types, legal delivery rules, office words and example letters. The engine is [`web/src/analyze.js`](web/src/analyze.js). Rules are predictable and testable, which matters when the result is a legal deadline.
-- **Translation:** [Bergamot](https://browser.mt/) models (the engine behind Firefox Translations) for German, French, Spanish and Italian → English, 20–26 MB each, downloaded only when used.
+- **Translation:** [Bergamot](https://browser.mt/) models (the engine behind Firefox Translations) for German, French, Spanish, Italian, Dutch and Polish → English, 20–26 MB each, downloaded only when used. Letters from the United States and Canada are already in English, so they need no translator.
 - **No framework, no build step.** Plain HTML, CSS and JavaScript modules.
 
 ## Search pages
@@ -96,6 +96,21 @@ npx wrangler pages deploy web --project-name brieflyapp
 ```
 
 Security headers come from [`web/_headers`](web/_headers).
+
+## Feedback (“Report a problem”)
+
+Every page has a **Report a problem** button. Under a result there is also a **Report it** link, which adds what Briefly found (kind of letter, office, country), never the letter itself. The form posts to [`functions/api/feedback.js`](functions/api/feedback.js), a Cloudflare Pages Function on the same site, so the page’s lock (`connect-src 'self'`) stays as it is. The function emails the report to you through [Resend](https://resend.com/). Your address is kept as a secret in Cloudflare and never appears on the site.
+
+Set it up once:
+
+1. Create a free account at [resend.com](https://resend.com/). Without your own domain, Resend can send only to the email address you signed up with, which is all this needs.
+2. In Resend, go to **API Keys** → **Create API key** (permission: *Sending access*) and copy the key.
+3. In Cloudflare, open the **brieflyapp** Pages project → **Settings** → **Variables and Secrets** → **Add** (for Production), and add two secrets:
+   - `RESEND_API_KEY` = the key from step 2
+   - `FEEDBACK_EMAIL` = the email you used for Resend
+4. Deploy again (push a commit or use **Retry deployment**). Secrets are only picked up by a new deployment.
+
+Spam protection: a hidden field that only bots fill in, a minimum time before sending, and size limits. When you run it locally without `RESEND_API_KEY`, reports are printed in the terminal instead of being sent.
 
 ## Browser support
 

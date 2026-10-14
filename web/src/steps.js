@@ -4,8 +4,8 @@ function firstOf(result, type) {
   return result.dates.find((date) => date.type === type) ?? null;
 }
 
-function byWhen(date, fallback = '') {
-  const when = date && formatWhen(date);
+function byWhen(date, country, fallback = '') {
+  const when = date && formatWhen(date, country);
   if (!when) return fallback;
   return ` by ${when}${date.estimated ? ' (estimated)' : ''}`;
 }
@@ -15,7 +15,7 @@ function payStep(result) {
   if (!toPay) return null;
   const due = firstOf(result, 'payment');
   const where = result.payment ? ` to the account ${result.payment.iban}` : '';
-  return `Pay ${formatMoney(toPay)}${toPay.monthly ? ' a month' : ''}${byWhen(due)}${where}.`;
+  return `Pay ${formatMoney(toPay)}${toPay.monthly ? ' a month' : ''}${byWhen(due, result.country)}${where}.`;
 }
 
 const PAYING = ['reminder', 'fee-decision', 'bill', 'repayment', 'utility-bill', 'tax-assessment', 'fine', 'enforcement', 'decision'];
@@ -57,19 +57,19 @@ export function buildSteps(result) {
   }
 
   if (type === 'appointment' || appointment) {
-    if (appointment?.iso) add(`Go to the appointment on ${formatWhen(appointment)}. Bring this letter and your ID.`, 'urgent');
+    if (appointment?.iso) add(`Go to the appointment on ${formatWhen(appointment, country)}`.replace(/\.?$/, '. Bring this letter and your ID.'), 'urgent');
     add('If you can’t come, tell them before the appointment and give a reason (for example a doctor’s note). There is a ready-made letter below.');
   }
 
   if (type === 'hearing') {
-    add(`You can explain your side in writing${byWhen(deadline)}. You don’t have to, but it can change their decision.`);
+    add(`You can explain your side in writing${byWhen(deadline, country)}. You don’t have to, but it can change their decision.`);
   }
 
   if (type === 'documents') {
-    add(`Send the documents they ask for${byWhen(deadline)}. Keep copies of everything you send.`, 'urgent');
+    add(`Send the documents they ask for${byWhen(deadline, country)}. Keep copies of everything you send.`, 'urgent');
     add('If you need more time, ask for it before the deadline. There is a ready-made letter below.');
   } else if (deadline && type !== 'hearing') {
-    add(`Do what they ask${byWhen(deadline)}.`);
+    add(`Do what they ask${byWhen(deadline, country)}.`);
   }
 
   if (type === 'termination') {
@@ -81,7 +81,7 @@ export function buildSteps(result) {
   }
 
   if (objection && result.kind?.objection !== false) {
-    const when = objection.iso ? ` by ${formatWhen(objection)} (estimated)` : ` within ${objection.period} after you received the letter`;
+    const when = objection.iso ? ` by ${formatWhen(objection, country)} (estimated)` : ` within ${objection.period} after you received the letter`;
     add(`If you disagree with this decision, send a written objection (${result.objection ?? country.objection[0]?.word ?? 'objection'})${when}.`);
   }
 
@@ -89,8 +89,9 @@ export function buildSteps(result) {
     add('Read the English version below. Look for words like “deadline” and “by” — they mark what you need to do and when.');
   }
 
-  const caseNumber = result.references.find((reference) => !reference.payment);
-  if (caseNumber) add(`Write the ${caseNumber.name.toLowerCase()} (${caseNumber.local}) ${caseNumber.value} on every reply.`);
+  const caseNumber = result.references.find((reference) => !reference.payment && !reference.personal) ?? result.references.find((reference) => !reference.payment);
+  const sameName = caseNumber && caseNumber.name.toLowerCase().includes(caseNumber.local.toLowerCase());
+  if (caseNumber) add(`Write the ${caseNumber.name.toLowerCase()}${sameName ? '' : ` (${caseNumber.local})`} ${caseNumber.value} on every reply.`);
   add('Keep this letter and the envelope. The envelope can prove when it arrived.');
   return steps;
 }

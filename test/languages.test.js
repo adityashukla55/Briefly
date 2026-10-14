@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyze } from '../web/src/analyze.js';
-import { findPeriods } from '../web/src/dates.js';
+import { findDates, findPeriods } from '../web/src/dates.js';
 import { LANGUAGES } from '../web/src/languages/index.js';
 
 test('French deadlines written as “d’un mois” and “deux (2) mois”', () => {
@@ -73,4 +73,25 @@ test('“Nachforderung” is the total to pay, even when the amount appears twic
   const result = analyze('Finanzamt Österreich\nWien, 08.10.2026\nEinkommensteuer 4.598,00 €\nAbgabennachforderung 638,00 €\nDie Abgabennachforderung von 638,00 € ist bis 16.11.2026 zu entrichten.', { country: 'at', today: '2026-10-13' });
   assert.equal(result.money.toPay.amount, 638);
   assert.equal(result.dates.find((date) => date.iso === '2026-11-16').type, 'payment');
+});
+
+test('English dates in US, Canadian and ISO formats, with 12- and 24-hour times', () => {
+  const read = (text, order) => findDates(text, LANGUAGES.en, order).map((date) => [date.iso, date.time ?? null]);
+  assert.deepEqual(read('2026/11/12', 'ymd'), [['2026-11-12', null]]);
+  assert.deepEqual(read('11/12/2026', 'mdy'), [['2026-11-12', null]]);
+  assert.deepEqual(read('25/12/2026', 'mdy'), [['2026-12-25', null]]);
+  assert.deepEqual(read('2026-10-21 09:30', 'ymd'), [['2026-10-21', '09:30']]);
+  assert.deepEqual(read('October 21, 2026 at 2:15 PM', 'mdy'), [['2026-10-21', '14:15']]);
+  assert.deepEqual(read('on Oct. 21, 2026 at 9:30 a.m.', 'mdy'), [['2026-10-21', '09:30']]);
+});
+
+test('“Total income” is not taken as the amount to pay', () => {
+  const result = analyze('Canada Revenue Agency\nNotice of reassessment\nDate issued: 2026-10-09\nTotal income: $52,480.00\nBalance owing: $1,234.56', { country: 'ca', today: '2026-10-13' });
+  assert.equal(result.money.toPay.amount, 1234.56);
+});
+
+test('English times: next line is fine, words like “amounts” are not times', () => {
+  const read = (text) => findDates(text, LANGUAGES.en, 'mdy').map((date) => date.time ?? null);
+  assert.deepEqual(read('October 21, 2026\n9:30 a.m.'), ['09:30']);
+  assert.deepEqual(read('11/05/2026\n2 amounts are due'), [null]);
 });

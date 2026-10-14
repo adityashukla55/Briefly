@@ -1,0 +1,115 @@
+function clock(time) {
+  const [hours, minutes] = time.split(':').map(Number);
+  const suffix = hours >= 12 ? 'p.m.' : 'a.m.';
+  return `${((hours + 11) % 12) + 1}:${String(minutes).padStart(2, '0')} ${suffix}`;
+}
+
+export default {
+  id: 'en',
+  name: 'English',
+  ocr: 'eng',
+  model: null,
+  monthFirst: true,
+  stopwords: ['the', 'and', 'you', 'your', 'to', 'of', 'for', 'this', 'that', 'is', 'are', 'we', 'our', 'please', 'will', 'be', 'if', 'with', 'by', 'have', 'has', 'must', 'notice', 'from', 'not', 'any', 'or'],
+  months: {
+    january: 1, jan: 1,
+    february: 2, feb: 2,
+    march: 3, mar: 3,
+    april: 4, apr: 4,
+    may: 5,
+    june: 6, jun: 6,
+    july: 7, jul: 7,
+    august: 8, aug: 8,
+    september: 9, sept: 9, sep: 9,
+    october: 10, oct: 10,
+    november: 11, nov: 11,
+    december: 12, dec: 12,
+  },
+  numberWords: {
+    one: 1, a: 1, an: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    fourteen: 14, fifteen: 15, twenty: 20, 'twenty-one': 21, thirty: 30, 'forty-five': 45, sixty: 60, ninety: 90,
+  },
+  time: /^[ \t,]*(?:\r?\n[ \t]*)?(?:at[ \t]+)?(\d{1,2})(?:[:.](\d{2}))?[ \t]*(a\.?[ \t]?m\.?|p\.?[ \t]?m\.?)(?![a-z])|^[ \t,]*(?:\r?\n[ \t]*)?(?:at[ \t]+)?(\d{1,2}):(\d{2})/i,
+  period: /(?:within|you have|in)\s+(?<amount>\d+|[a-z-]+)\s+(?:\(\d+\)\s+)?(?:(?<qualifier>calendar|business|working)\s+)?(?<unit>days?|weeks?|months?)\b(?:\s+(?:from|after|of)\s+(?:the\s+)?(?<from>date|receipt|notice|mailing))?/giu,
+  units: { month: /^month/, week: /^week/, workday: /^(?:business|working)/ },
+  context: {
+    range: /(?:\bfrom|\bbetween)\s+[\w,\/.\s-]{4,30}\s*(?:to|through|and|-)\s*$/,
+    mention: /(?:\bdated|\breceived date|\bdate received|\bpriority date|\bdate of birth|\bborn on|\bdob|\bsince|\bas of|\byour letter of|\bfiled on|\breceived on|\bperiod ended|\bperiod ending|\bperiod ended on|\btax year ended)\s*:?\s*$/,
+    start: /(?:\bstarting|\bbeginning|\beffective|\bstarting on|\bbegins on|\beffective on|\beffective date)\s*:?\s*$/,
+    payment: /(?:\bpay\b|payment|amount due|balance due|due date|due by|\bremit|autopay|direct debit|to avoid (?:additional )?(?:penalty|penalties|interest))[^\n]{0,70}$/,
+    paymentAfter: /^[^\n]{0,30}(?:to avoid|is due|payment due)/,
+    appointment: /(?:appointment|interview|hearing|appear|report to|biometrics|court date|jury|scheduled)[^\n]{0,80}$/,
+    deadline: /(?:\bby|\bbefore|no later than|on or before|deadline|respond by|reply by|received by|postmarked by|not later than)\s*:?\s*$/,
+    letterDate: /(?:\bdate|notice date|letter date|,)\s*:?\s*$/,
+    objection: /appeal|dispute|\bobject|objection|reconsideration|protest|request a hearing|\breview\b|disagree|don[’']t agree|do not agree|\bcontest/,
+    paymentNear: /\bpay|payment|remit|balance/,
+  },
+  money: {
+    repay: /overpayment|overpaid|must repay|you must pay back|repay|recover the|recovery of/,
+    repayKind: /repay|overpa/,
+    refund: /refund|credit to your account|we will send you|you are due|we owe you|credit balance/,
+    benefit: /monthly benefit|per month|a month|benefit amount|your benefit/,
+    monthly: /per month|a month|monthly|\/mo\b/,
+    pay: /\bpay|payment|amount due|balance|\bowe|owing|\bdebt\b|installment|\bdue|penalt|interest|\bfee|\bfine|\btax|bill|charge|total due|total amount/,
+    total: /(?:amount due|balance due|balance owing|amount owing|total amount due|total due|total balance|amount you owe|you owe)[^\n]{0,25}$/,
+  },
+  payment: {
+    recipient: /(?:make (?:your )?(?:check|money order) payable to|payable to|pay to the order of)\s*:?\s*([^\n]{3,70})/i,
+    reference: /(?:payment reference|reference number)\s*:\s*([^\n]{3,70})/i,
+  },
+  greeting: /^(?:dear|to whom it may concern|hello)/i,
+  fixedPhrases: [],
+  rewrite: [],
+  replies: {
+    you: { name: '[Your full name]', street: '[Your street address]', city: '[City, state or province, postal code]', place: '[City]' },
+    officeAddress: '[Address from the letter]',
+    officeFallback: 'Name of the agency or company',
+    greeting: 'Dear Sir or Madam,',
+    closing: ['Sincerely,', '', '', '[Signature]', '[Your full name]'],
+    letterOf: (date) => (date ? `dated ${date}` : 'dated [date of the letter]'),
+    objection: {
+      subject: (term, of) => `Re: ${term[0].toUpperCase()}${term.slice(1)} — your decision ${of}`,
+      body: (term, of) => [
+        `I am writing to request a review of your decision ${of} (${term}).`,
+        '',
+        'Reason: [Explain in a few sentences why the decision is wrong, and attach copies of any proof.]',
+        '',
+        'Please confirm that you received this letter.',
+      ],
+    },
+    moreTime: {
+      name: 'extension',
+      subject: 'Re: Request for an extension',
+      body: (of, deadline) => [
+        `Your letter ${of} gives me a deadline of ${deadline ?? '[date]'}.`,
+        'Unfortunately, I cannot meet this deadline because [reason, for example: I am still waiting for documents / I was ill].',
+        '',
+        'I kindly ask you to extend the deadline to [new date].',
+        '',
+        'Thank you for your understanding.',
+      ],
+    },
+    instalments: {
+      subject: 'Re: Request for a payment plan',
+      body: (of, amount) => [
+        `Your letter ${of} asks me to pay ${amount ?? '[amount]'}.`,
+        'I am not able to pay the full amount at once.',
+        '',
+        'I would like to pay in monthly installments of [amount], starting on [date].',
+        '',
+        'Please let me know if you agree.',
+      ],
+    },
+    reschedule: {
+      subject: 'Re: Request to reschedule my appointment',
+      body: (when) => [
+        `You scheduled an appointment for me ${when ?? 'on [date] at [time]'}`.replace(/([^.])$/, '$1.'),
+        'Unfortunately, I cannot attend because [reason, for example: I am ill / I have to work that day].',
+        '[I have attached proof.]',
+        '',
+        'Please give me a new appointment.',
+      ],
+    },
+    appointmentWhen: (date, time) => `on ${date}${time ? ` at ${clock(time)}` : ''}`,
+  },
+};

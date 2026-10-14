@@ -256,7 +256,7 @@ export default {
     { name: 'Case number', local: 'Numero pratica', pattern: /(?:numero (?:di |della )?pratica|codice pratica|\bpratica\s?(?:n\.|nr\.?|n[°º]))/gi },
     { name: 'Reference number', local: 'Protocollo', pattern: /(?:numero di protocollo|\bprot(?:ocollo)?\.?\s?(?:n\.|nr\.?|n[°º])|\bprotocollo\b)/gi },
     { name: 'Your reference', local: 'Numero di riferimento', pattern: /(?:numero di riferimento|\brif\.(?:\s?n\.)?)/gi },
-    { name: 'Tax code', local: 'Codice fiscale', pattern: /(?:codice fiscale|\bcod\.\s?fisc\.?|\bC\.F\.)/gi },
+    { name: 'Tax code', local: 'Codice fiscale', personal: true, pattern: /(?:codice fiscale|\bcod\.\s?fisc\.?|\bC\.F\.)/gi },
     { name: 'Payment code', local: 'Codice avviso PagoPA', payment: true, pattern: /(?:codice avviso(?: pagopa)?|codice iuv|\bIUV\b)/gi },
     { name: 'Payment reference', local: 'Causale', payment: true, pattern: /causale(?: del versamento| di pagamento)?/gi },
     { name: 'Customer number', local: 'Codice cliente', pattern: /(?:codice cliente|cod\. cliente|numero cliente)/gi },

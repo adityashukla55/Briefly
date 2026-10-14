@@ -276,7 +276,7 @@ export default {
     { name: 'Case number', local: 'Geschäftszahl', pattern: /(?:geschäftszahl|geschaeftszahl|\bgz\b\.?|\bzahl\s*:)/gi },
     { name: 'Case number', local: 'Aktenzeichen', pattern: /(?:aktenzeichen|aktenzahl|\baz\b\.?|unser zeichen)/gi },
     { name: 'Tax number', local: 'Steuernummer', pattern: /(?:steuernummer|st\.-?nr\.?)/gi },
-    { name: 'Social insurance number', local: 'Sozialversicherungsnummer', pattern: /(?:sozialversicherungsnummer|versicherungsnummer|sv-nummer|sv-nr\.?|\bvsnr\.?)/gi },
+    { name: 'Social insurance number', local: 'Sozialversicherungsnummer', personal: true, pattern: /(?:sozialversicherungsnummer|versicherungsnummer|sv-nummer|sv-nr\.?|\bvsnr\.?)/gi },
     { name: 'Customer number', local: 'Kundennummer', pattern: /(?:kundennummer|kunden-nr\.?|kundennr\.?)/gi },
     { name: 'Contribution number', local: 'Beitragsnummer', pattern: /beitragsnummer/gi },
     { name: 'Subscriber number', local: 'Teilnehmernummer', pattern: /(?:teilnehmernummer|teilnehmer-nr\.?)/gi },

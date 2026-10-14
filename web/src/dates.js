@@ -46,8 +46,8 @@ export function daysBetween(fromIsoDate, toIsoDate) {
   return Math.round((fromIso(toIsoDate) - fromIso(fromIsoDate)) / 86400000);
 }
 
-export function formatDate(iso) {
-  return new Intl.DateTimeFormat('en-GB', {
+export function formatDate(iso, locale = 'en-GB') {
+  return new Intl.DateTimeFormat(locale, {
     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
   }).format(fromIso(iso));
 }
@@ -56,41 +56,79 @@ export function formatShortDate(iso) {
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(fromIso(iso));
 }
 
-export function formatLocalDate(iso, separator = '.') {
+export function formatLocalDate(iso, separator = '.', order = 'dmy') {
   const [y, m, d] = iso.split('-');
+  if (order === 'mdy') return `${m}${separator}${d}${separator}${y}`;
+  if (order === 'ymd') return `${y}-${m}-${d}`;
   return `${d}${separator}${m}${separator}${y}`;
+}
+
+export function datePlaceholder(separator = '.', order = 'dmy') {
+  if (order === 'mdy') return `[MM${separator}DD${separator}YYYY]`;
+  if (order === 'ymd') return '[YYYY-MM-DD]';
+  return `[DD${separator}MM${separator}YYYY]`;
 }
 
 export const formatGermanDate = (iso) => formatLocalDate(iso, '.');
 
-const NUMERIC_DATE = /(?<![\d.\/])(\d{1,2})\s?([./])\s?(\d{1,2})\s?\2\s?(\d{4}|\d{2})(?![\d])/g;
+const NUMERIC_DATE = /(?<![\d.\/-])(\d{1,2})\s?([./])\s?(\d{1,2})\s?\2\s?(\d{4}|\d{2})(?![\d])/g;
+const DASH_DATE = /(?<![\d.\/-])(\d{1,2})-(\d{1,2})-(\d{4})(?![\d-])/g;
+const ISO_DATE = /(?<![\d.\/-])(\d{4})([-\/])(\d{1,2})\2(\d{1,2})(?![\d-\/])/g;
 const writtenCache = new WeakMap();
 
-function writtenPattern(language) {
+function monthNames(language) {
+  return Object.keys(language.months).sort((a, b) => b.length - a.length).join('|');
+}
+
+function writtenPatterns(language) {
   if (!writtenCache.has(language)) {
-    const names = Object.keys(language.months).sort((a, b) => b.length - a.length).join('|');
-    writtenCache.set(language, new RegExp(`(?<![\\d])(\\d{1,2})(?:er|º|°)?\\.?\\s*(?:de\\s+)?(${names})\\.?\\s+(?:de\\s+|del\\s+)?(\\d{4})(?!\\d)`, 'giu'));
+    const names = monthNames(language);
+    writtenCache.set(language, {
+      dayFirst: new RegExp(`(?<![\\d])(\\d{1,2})(?:er|º|°|st|nd|rd|th)?\\.?\\s*(?:de\\s+)?(${names})\\.?,?\\s+(?:de\\s+|del\\s+)?(\\d{4})(?!\\d)`, 'giu'),
+      monthFirst: new RegExp(`(?<![\\p{L}])(${names})\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})(?!\\d)`, 'giu'),
+    });
   }
   return writtenCache.get(language);
 }
 
-export function findDates(text, language) {
-  const found = [];
-  for (const match of text.matchAll(NUMERIC_DATE)) {
-    const iso = toIso(Number(match[4]), Number(match[3]), Number(match[1]));
-    if (iso) found.push({ iso, index: match.index, end: match.index + match[0].length, raw: match[0] });
+function toHour(hour, meridiem) {
+  let value = Number(hour);
+  if (meridiem) {
+    const pm = /^p/i.test(meridiem);
+    if (pm && value < 12) value += 12;
+    if (!pm && value === 12) value = 0;
   }
-  for (const match of text.matchAll(writtenPattern(language))) {
-    const month = language.months[match[2].toLowerCase()];
-    const iso = toIso(Number(match[3]), month, Number(match[1]));
-    if (iso) found.push({ iso, index: match.index, end: match.index + match[0].length, raw: match[0] });
+  return value;
+}
+
+export function findDates(text, language, order = 'dmy') {
+  const found = [];
+  const add = (iso, match) => {
+    if (iso && !found.some((item) => match.index < item.end && item.index < match.index + match[0].length)) {
+      found.push({ iso, index: match.index, end: match.index + match[0].length, raw: match[0] });
+    }
+  };
+  for (const match of text.matchAll(ISO_DATE)) add(toIso(Number(match[1]), Number(match[3]), Number(match[4])), match);
+  const numeric = (year, first, second) => {
+    const monthFirst = order === 'mdy' || (order === 'ymd' && second <= 12 && first <= 12);
+    const preferred = monthFirst ? toIso(year, first, second) : toIso(year, second, first);
+    return preferred ?? (monthFirst ? toIso(year, second, first) : toIso(year, first, second));
+  };
+  for (const match of text.matchAll(NUMERIC_DATE)) add(numeric(Number(match[4]), Number(match[1]), Number(match[3])), match);
+  for (const match of text.matchAll(DASH_DATE)) add(numeric(Number(match[3]), Number(match[1]), Number(match[2])), match);
+  const { dayFirst, monthFirst } = writtenPatterns(language);
+  for (const match of text.matchAll(dayFirst)) add(toIso(Number(match[3]), language.months[match[2].toLowerCase()], Number(match[1])), match);
+  if (language.monthFirst) {
+    for (const match of text.matchAll(monthFirst)) add(toIso(Number(match[3]), language.months[match[1].toLowerCase()], Number(match[2])), match);
   }
   found.sort((a, b) => a.index - b.index);
   for (const date of found) {
     const time = text.slice(date.end, date.end + 40).match(language.time);
-    if (time && Number(time[1]) < 24) {
-      date.time = `${time[1].padStart(2, '0')}:${time[2] ?? '00'}`;
-    }
+    if (!time) continue;
+    const hour = time[1] ?? time[4];
+    const minute = time[2] ?? time[5];
+    const value = toHour(hour, time[3]);
+    if (value < 24) date.time = `${String(value).padStart(2, '0')}:${minute ?? '00'}`;
   }
   return found;
 }
@@ -112,7 +150,7 @@ function unitOf(word, qualifier, language) {
 
 export function findPeriods(text, language) {
   const periods = [];
-  for (const match of text.matchAll(new RegExp(language.period.source, language.period.flags))) {
+  for (const match of text.matchAll(new RegExp(language.period.source.replace(/ /g, '\\s+'), language.period.flags))) {
     const { amount: amountWord, unit: unitWord, qualifier, from } = match.groups;
     const amount = amountWord ? parseNumberWord(amountWord, language) : 1;
     if (!amount) continue;

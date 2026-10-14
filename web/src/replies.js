@@ -1,5 +1,9 @@
 import { languageOf } from './countries/index.js';
-import { formatLocalDate, todayIso } from './dates.js';
+import { datePlaceholder, formatLocalDate, todayIso } from './dates.js';
+
+function local(country, iso) {
+  return formatLocalDate(iso, country.dateSeparator ?? '.', country.dateOrder ?? 'dmy');
+}
 
 function templatesFor(country) {
   const base = languageOf(country).replies;
@@ -7,7 +11,7 @@ function templatesFor(country) {
 }
 
 function localMoney(money, country) {
-  const locale = { de: 'de-DE', at: 'de-AT', ch: 'de-CH', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' }[country.id] ?? 'de-DE';
+  const locale = { de: 'de-DE', at: 'de-AT', ch: 'de-CH', fr: 'fr-FR', es: 'es-ES', it: 'it-IT', nl: 'nl-NL', pl: 'pl-PL', us: 'en-US', ca: 'en-CA' }[country.id] ?? 'de-DE';
   return new Intl.NumberFormat(locale, { style: 'currency', currency: money.currency ?? country.currency }).format(money.amount);
 }
 
@@ -21,11 +25,11 @@ function header(result, templates, subject) {
     `[${result.sender?.local ?? templates.officeFallback}]`,
     templates.officeAddress,
     '',
-    `${you.place}, ${result.today === null ? (result.country.dateSeparator === '/' ? '[DD/MM/YYYY]' : '[DD.MM.YYYY]') : formatLocalDate(result.today ?? todayIso(), result.country.dateSeparator ?? '.')}`,
+    `${you.place}, ${result.today === null ? datePlaceholder(result.country.dateSeparator ?? '.', result.country.dateOrder ?? 'dmy') : local(result.country, result.today ?? todayIso())}`,
     '',
     subject,
   ];
-  for (const reference of result.references.slice(0, 2)) {
+  for (const reference of [...result.references].sort((a, b) => Number(a.personal) - Number(b.personal)).slice(0, 2)) {
     lines.push(`${reference.local}: ${reference.value}`);
   }
   lines.push('', templates.greeting, '');
@@ -37,7 +41,7 @@ function compose(result, templates, subject, body) {
 }
 
 function letterOf(result, templates) {
-  return templates.letterOf(result.letterDate ? formatLocalDate(result.letterDate, result.country.dateSeparator ?? '.') : null);
+  return templates.letterOf(result.letterDate ? local(result.country, result.letterDate) : null);
 }
 
 function objection(result, templates) {
@@ -47,7 +51,7 @@ function objection(result, templates) {
     id: 'objection',
     title: `Object to the decision (${term})`,
     when: result.country.objectionAdvice ?? 'Use this if you think the decision is wrong. Send it before the deadline, signed, and keep a copy.',
-    english: `I object to your decision${result.letterDate ? ` dated ${formatLocalDate(result.letterDate, result.country.dateSeparator ?? '.')}` : ''}. Reason: [your reason]. Please confirm that you received this letter.`,
+    english: `I object to your decision${result.letterDate ? ` dated ${local(result.country, result.letterDate)}` : ''}. Reason: [your reason]. Please confirm that you received this letter.`,
     local: compose(result, templates, templates.objection.subject(term, of), templates.objection.body(term, of)),
   };
 }
@@ -59,7 +63,7 @@ function moreTime(result, templates) {
     title: `Ask for more time (${templates.moreTime.name ?? templates.moreTime.subject})`,
     when: 'Use this if you can’t make the deadline. Send it before the deadline ends.',
     english: 'You gave me a deadline. Unfortunately I can’t meet it because [reason]. Please extend it until [new date].',
-    local: compose(result, templates, templates.moreTime.subject, templates.moreTime.body(letterOf(result, templates), deadline ? formatLocalDate(deadline.iso, result.country.dateSeparator ?? '.') : null)),
+    local: compose(result, templates, templates.moreTime.subject, templates.moreTime.body(letterOf(result, templates), deadline ? local(result.country, deadline.iso) : null)),
   };
 }
 
@@ -76,7 +80,7 @@ function instalments(result, templates) {
 
 function reschedule(result, templates) {
   const appointment = result.dates.find((date) => date.type === 'appointment' && date.iso);
-  const when = appointment ? templates.appointmentWhen(formatLocalDate(appointment.iso, result.country.dateSeparator ?? '.'), appointment.time) : null;
+  const when = appointment ? templates.appointmentWhen(local(result.country, appointment.iso), appointment.time) : null;
   return {
     id: 'reschedule',
     title: 'Ask for a new appointment',

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { COUNTRIES, languageOf } from '../web/src/countries/index.js';
 import { LANGUAGES } from '../web/src/languages/index.js';
 import { templateLetters } from '../web/src/replies.js';
+import { datePlaceholder } from '../web/src/dates.js';
 
 export const SITE = 'https://brieflyapp.pages.dev';
 
@@ -12,6 +13,9 @@ const DEADLINE_WORDS = {
   fr: ['délai', 'avant le', 'au plus tard'],
   es: ['plazo', 'hasta el', 'días hábiles'],
   it: ['termine', 'entro il', 'scadenza'],
+  nl: ['termijn', 'uiterlijk', 'binnen'],
+  pl: ['termin', 'do dnia', 'w terminie'],
+  en: ['deadline', 'by', 'within'],
 };
 
 export function esc(value) {
@@ -78,6 +82,7 @@ function layout({ path, title, description, crumbs, body, schema = [], noIndex =
   <meta property="og:url" content="${SITE}${path}">
   <meta property="og:image" content="${SITE}/icons/icon-512.png">
   <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/src/feedback.js"></script>
   ${[breadcrumbs(crumbs), ...schema].map(jsonLd).join('\n  ')}
 </head>
 <body class="page">
@@ -99,11 +104,16 @@ function layout({ path, title, description, crumbs, body, schema = [], noIndex =
 }
 
 function footer() {
-  const countries = COUNTRIES.map((country) => `<a href="/${country.slug}/">${flag(country)} ${esc(country.name)}</a>`).join(' · ');
+  const countries = COUNTRIES.map((country) => `<a href="/${country.slug}/">${flag(country)}${esc(country.name)}</a>`).join(' · ');
   const tools = TOOLS.map((tool) => `<a href="/${tool.slug}/">${esc(tool.short)}</a>`).join(' · ');
   return `<footer class="footer">
+    <nav class="footer-links" aria-label="About Briefly">
+      <a class="footer-link" href="/privacy/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>Privacy</a>
+      <a class="footer-link" href="https://github.com/adityashukla55/Briefly"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>Open source</a>
+      <button class="footer-link" type="button" data-feedback><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-6 4V5z"/><path d="M12 8v3.5M12 14h.01"/></svg>Report a problem</button>
+    </nav>
     <p><strong>Letters from:</strong> ${countries}</p>
-    <p><strong>Tools:</strong> ${tools} · <a href="/privacy/">Privacy</a></p>
+    <p><strong>Tools:</strong> ${tools}</p>
     <p><strong>Not legal advice.</strong> Briefly helps you understand a letter. Always check the original, and ask the sender or a free advice centre if you are unsure.</p>
     <div class="support">
       <p>Briefly is free and has no ads. If it helped you, you can buy me a coffee.</p>
@@ -140,19 +150,21 @@ function countryPage(country) {
   const words = country.glossary.slice(0, 18).map((entry) => wordLink(country, entry)).join(', ');
   const templates = templatePages(country).map((page) => `<li><a href="${page.path}">${esc(page.title.split(' – ')[0])}</a></li>`).join('\n');
   const questions = [
-    [`How long do I have to answer an official letter in ${country.name}?`, deadlineAnswer(country)],
-    [`Can I understand a ${language.name} letter without speaking ${language.name}?`, `Yes. Take a photo of the letter with Briefly. It reads the ${language.name} text on your device, explains it in plain English, finds deadlines and amounts, and can translate the whole letter.`],
+    [`How long do I have to answer an official letter in ${country.inName ?? country.name}?`, deadlineAnswer(country)],
+    language.model
+      ? [`Can I understand a ${language.name} letter without speaking ${language.name}?`, `Yes. Take a photo of the letter with Briefly. It reads the ${language.name} text on your device, explains it in plain English, finds deadlines and amounts, and can translate the whole letter.`]
+      : [`How does Briefly help with official letters in ${country.inName ?? country.name}?`, 'Take a photo of the letter with Briefly. It explains the letter in plain words, finds the deadline and the amount, tells you what to do and gives you a ready-made reply.'],
     ['Is my letter uploaded anywhere?', 'No. Briefly runs completely in your browser. The letter never leaves your device, there is no account, and it works offline after the first visit.'],
   ];
   return {
     path,
-    title: `Official letters from ${country.name} explained in English – Briefly`,
-    description: `Understand official letters from ${country.name} in plain English: ${country.senders.slice(0, 4).map((sender) => sender.local).join(', ')} and more. Deadlines, amounts, office words and reply templates. Free and private.`,
+    title: `Official letters from ${country.inName ?? country.name} explained in English – Briefly`,
+    description: `Understand official letters from ${country.inName ?? country.name} in plain English: ${country.senders.slice(0, 4).map((sender) => sender.local).join(', ')} and more. Deadlines, amounts, office words and reply templates. Free and private.`,
     crumbs: [['Briefly', '/'], [country.name, path]],
     schema: [faq(questions)],
-    body: `<h1>${flag(country, ' flag-large')} Official letters from ${esc(country.name)}, explained in English</h1>
+    body: `<h1>${flag(country, ' flag-large')} Official letters from ${esc(country.inName ?? country.name)}, explained in English</h1>
 <p class="lead">${esc(country.intro)}</p>
-${cta(country, `Check your letter from ${country.name}`)}
+${cta(country, `Check your letter from ${country.inName ?? country.name}`)}
 <h2>Offices that write to you</h2>
 <ul class="link-list">${offices}</ul>
 <h2>Common kinds of letters</h2>
@@ -198,7 +210,7 @@ ${(sender.tips ?? []).map((tip) => `<li>${esc(tip)}</li>`).join('\n')}
 ${terms.length ? `<h2>Words you may see</h2>\n<dl class="terms">${terms.map((entry) => `<div><dt>${wordLink(country, entry)}</dt><dd>${esc(entry.meaning)}</dd></div>`).join('\n')}</dl>` : ''}
 <h2>Questions</h2>
 ${questions.map(([question, answer]) => `<h3>${esc(question)}</h3>\n<p>${esc(answer)}</p>`).join('\n')}
-<h2>Other offices in ${esc(country.name)}</h2>
+<h2>Other offices in ${esc(country.inName ?? country.name)}</h2>
 <p>${otherSenders.map((other) => `<a href="/${country.slug}/${other.slug}/">${esc(other.local)}</a>`).join(' · ')}</p>`,
   };
 }
@@ -210,10 +222,10 @@ function wordsIndex(country) {
   return {
     path,
     title: `${language.name} office words explained (${country.name}) – Briefly`,
-    description: `${country.glossary.length} words from official letters in ${country.name}, explained in plain English: ${sorted.slice(0, 6).map((entry) => entry.term).join(', ')} and more.`,
+    description: `${country.glossary.length} words from official letters in ${country.inName ?? country.name}, explained in plain English: ${sorted.slice(0, 6).map((entry) => entry.term).join(', ')} and more.`,
     crumbs: [['Briefly', '/'], [country.name, `/${country.slug}/`], ['Office words', path]],
-    body: `<h1>${esc(language.name)} office words from ${esc(country.name)}, explained</h1>
-<p class="lead">The words you see in official letters in ${esc(country.name)}, in plain English.</p>
+    body: `<h1>${esc(language.name)} office words from ${esc(country.inName ?? country.name)}, explained</h1>
+<p class="lead">The words you see in official letters in ${esc(country.inName ?? country.name)}, in plain English.</p>
 <dl class="terms">${sorted.map((entry) => `<div id="${entry.slug}"><dt>${wordLink(country, entry)}</dt><dd>${esc(entry.meaning)}</dd></div>`).join('\n')}</dl>
 ${cta(country)}`,
   };
@@ -228,14 +240,14 @@ function wordPage(country, entry) {
   return {
     path,
     title: `What does “${entry.term}” mean? ${language.name} office word (${country.name}) – Briefly`,
-    description: `“${entry.term}” in an official letter from ${country.name}: ${entry.meaning}${entry.tip ? ` ${entry.tip}` : ''}`.slice(0, 300),
+    description: `“${entry.term}” in an official letter from ${country.inName ?? country.name}: ${entry.meaning}${entry.tip ? ` ${entry.tip}` : ''}`.slice(0, 300),
     crumbs: [['Briefly', '/'], [country.name, `/${country.slug}/`], ['Office words', `/${country.slug}/words/`], [entry.term, path]],
     schema: [faq([[`What does “${entry.term}” mean?`, `${entry.meaning}${entry.tip ? ` ${entry.tip}` : ''}`]])],
     body: `<h1>What does “${esc(entry.term)}” mean?</h1>
 <p class="lead">${esc(entry.meaning)}</p>
 ${entry.tip ? `<h2>What to do</h2>\n<p>${esc(entry.tip)}</p>` : ''}
 ${senders.length ? `<h2>You may see it in letters from</h2>\n<ul>${senders.map((sender) => `<li><a href="/${country.slug}/${sender.slug}/">${esc(sender.local)}</a> — ${esc(sender.name)}</li>`).join('\n')}</ul>` : ''}
-<p>“${esc(entry.term)}” is a ${esc(language.name)} word used in official letters in ${esc(country.name)}. Briefly explains words like this automatically when you check a letter.</p>
+<p>“${esc(entry.term)}” is a ${esc(language.name)} word used in official letters in ${esc(country.inName ?? country.name)}. Briefly explains words like this automatically when you check a letter.</p>
 ${cta(country, 'Got a letter with this word?')}
 <h2>More office words</h2>
 <p>${neighbours.map((other) => wordLink(country, other)).join(' · ')} · <a href="/${country.slug}/words/">all words</a></p>`,
@@ -248,7 +260,7 @@ export function templatePages(country) {
   for (const extra of country.extraReplies ?? []) {
     const result = { country, today: null, sender: null, kind: null, letterDate: null, dates: [], money: { toPay: null }, references: [], objection: country.objection[0].word };
     const templates = { ...language.replies, ...(country.replies ?? {}) };
-    const header = [templates.you.name, templates.you.street, templates.you.city, '', `[${templates.officeFallback}]`, templates.officeAddress, '', `${templates.you.place}, [${country.dateSeparator === '/' ? 'DD/MM/YYYY' : 'DD.MM.YYYY'}]`, '', extra.subject, '', templates.greeting, ''];
+    const header = [templates.you.name, templates.you.street, templates.you.city, '', `[${templates.officeFallback}]`, templates.officeAddress, '', `${templates.you.place}, ${datePlaceholder(country.dateSeparator ?? '.', country.dateOrder ?? 'dmy')}`, '', extra.subject, '', templates.greeting, ''];
     letters.push({ id: extra.id, title: extra.title, when: extra.advice, english: extra.english, local: [...header, ...extra.body(result), '', ...templates.closing].join('\n') });
   }
   return letters.map((letter) => {
@@ -279,10 +291,10 @@ function templatesIndex(country) {
   const pages = templatePages(country);
   return {
     path,
-    title: `${language.name} reply letter templates for ${country.name} – free – Briefly`,
-    description: `Free ${language.name} templates for replying to official letters in ${country.name}: objection, more time, payment plan and new appointment.`,
+    title: `${language.name} reply letter templates for ${country.inName ?? country.name} – free – Briefly`,
+    description: `Free ${language.name} templates for replying to official letters in ${country.inName ?? country.name}: objection, more time, payment plan and new appointment.`,
     crumbs: [['Briefly', '/'], [country.name, `/${country.slug}/`], ['Templates', path]],
-    body: `<h1>Reply letter templates for ${esc(country.name)}</h1>
+    body: `<h1>Reply letter templates for ${esc(country.inName ?? country.name)}</h1>
 <p class="lead">Ready-made letters in ${esc(language.name)}, with an English explanation.</p>
 <ul class="link-list">${pages.map((page) => `<li><a href="${page.path}">${esc(page.letter.title)}</a> — ${esc(page.letter.when)}</li>`).join('\n')}</ul>
 ${cta(country)}`,
@@ -294,12 +306,12 @@ const TOOLS = [
     slug: 'scan-document-to-text-offline',
     short: 'Scan to text offline',
     title: 'Scan a document to text offline — free, private OCR – Briefly',
-    description: 'Turn a photo or scanned PDF of a letter into text, right on your device. No upload, no account, works offline. Supports German, French, Spanish and Italian.',
+    description: 'Turn a photo or scanned PDF of a letter into text, right on your device. No upload, no account, works offline. Supports English, German, French, Spanish, Italian, Dutch and Polish.',
     h1: 'Scan a document to text — offline and private',
     lead: 'Take a photo or open a scanned PDF. Briefly reads the text on your device with built-in text recognition (OCR). You can copy the text or save it as a file.',
-    points: ['Works in your browser on phones and computers — nothing to install.', 'Your document is never uploaded. There is no server that could see it.', 'Works offline after your first visit.', 'Reads German, French, Spanish and Italian.', 'Copy the text or save it as a .txt file.'],
+    points: ['Works in your browser on phones and computers — nothing to install.', 'Your document is never uploaded. No server ever sees it.', 'Works offline after your first visit.', 'Reads English, German, French, Spanish, Italian, Dutch and Polish.', 'Copy the text or save it as a .txt file.'],
   },
-  ...Object.values(LANGUAGES).map((language) => ({
+  ...Object.values(LANGUAGES).filter((language) => language.model).map((language) => ({
     slug: `translate-${language.name.toLowerCase()}-letter-to-english`,
     short: `Translate ${language.name} letters`,
     title: `Translate a ${language.name} letter to English — private, offline – Briefly`,
@@ -312,7 +324,7 @@ const TOOLS = [
     slug: 'official-letter-deadline-calculator',
     short: 'Deadline calculator',
     title: 'Official letter deadline calculator — when is my deadline? – Briefly',
-    description: 'Letters often say “within one month after delivery”. Briefly finds that phrase and estimates the exact date, using the delivery rules of Germany, Austria, Switzerland, France, Spain and Italy.',
+    description: 'Letters often say “within one month after delivery” or “within 30 days of the date of this notice”. Briefly finds that phrase and estimates the exact date, using each country’s delivery rules.',
     h1: 'When is my deadline? Official letter deadline calculator',
     lead: 'Many letters don’t give a date — they say “within one month after delivery” or “within 10 working days”. Briefly finds these phrases and estimates the last day for you.',
     points: COUNTRIES.map((country) => `${country.name}: ${country.deliveryNote}`),
@@ -342,18 +354,20 @@ function privacyPage() {
   return {
     path,
     title: 'Privacy — your letter never leaves your device – Briefly',
-    description: 'Briefly has no server, no account and no tracking. Text recognition and translation run in your browser, and the page is locked so it cannot send your letter anywhere.',
+    description: 'Briefly has no account and no tracking, and your letter never reaches a server. Text recognition and translation run in your browser, and the page is locked so it cannot send your letter anywhere.',
     crumbs: [['Briefly', '/'], ['Privacy', path]],
     body: `<h1>Privacy</h1>
 <p class="lead">Your letter never leaves your device.</p>
 <h2>What happens to my letter?</h2>
-<p>Briefly reads, explains and translates your letter inside your browser. There is no server that receives it, and nothing is saved. Close the page and the letter is gone.</p>
+<p>Briefly reads, explains and translates your letter inside your browser. No server ever receives it, and nothing is saved. Close the page and the letter is gone.</p>
 <h2>How can I be sure?</h2>
 <p>The page is locked by a security rule (Content Security Policy) that only allows connections to Briefly’s own website, to download the app itself. It cannot send data anywhere else. The code is <a href="https://github.com/adityashukla55/Briefly">open source</a>, so anyone can check it.</p>
 <h2>What is downloaded?</h2>
 <p>The app, the text reader (about 6 MB) and, only if you use it, the translator for your language (20–26 MB). They are stored by your browser so Briefly works offline.</p>
 <h2>Cookies and tracking</h2>
 <p>None. Briefly only remembers which country you picked last, in your own browser.</p>
+<h2>Reporting a problem</h2>
+<p>If you use “Report a problem”, Briefly sends only what you type in that form, the address of the page you are on and your browser name (for example “Chrome on Windows”). Under a result it also sends what Briefly found — the kind of letter, the office and the country — but never the letter itself. Your email address is optional. The message is delivered to the maker of Briefly by email through <a href="https://resend.com/">Resend</a> and is used only to fix problems.</p>
 ${cta(null, 'Try Briefly')}`,
   };
 }
@@ -367,7 +381,7 @@ function notFoundPage() {
     crumbs: [['Briefly', '/'], ['Not found', '/404.html']],
     body: `<h1>Page not found</h1>
 <p class="lead">This page doesn’t exist. Try one of these:</p>
-<ul class="link-list"><li><a href="/">Check a letter</a></li>${COUNTRIES.map((country) => `<li><a href="/${country.slug}/">Letters from ${esc(country.name)}</a></li>`).join('')}</ul>`,
+<ul class="link-list"><li><a href="/">Check a letter</a></li>${COUNTRIES.map((country) => `<li><a href="/${country.slug}/">Letters from ${esc(country.inName ?? country.name)}</a></li>`).join('')}</ul>`,
   };
 }
 

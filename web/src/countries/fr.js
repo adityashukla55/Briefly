@@ -274,7 +274,7 @@ export default {
     { name: 'Tax number', local: 'Numéro fiscal', pattern: /(?:num[ée]ro fiscal|n°\s?fiscal|identifiant fiscal)/gi },
     { name: 'Tax notice reference', local: 'Référence de l’avis', pattern: /(?:référence de l['’]avis|référence avis)/gi },
     { name: 'Claimant number', local: 'Numéro allocataire', pattern: /(?:num[ée]ro (?:d['’])?allocataire|n°\s?(?:d['’])?allocataire|matricule allocataire)/gi },
-    { name: 'Social security number', local: 'Numéro de sécurité sociale', pattern: /(?:num[ée]ro de sécurité sociale|n°\s?de sécurité sociale|num[ée]ro d['’]immatriculation|\bNIR\b)/gi },
+    { name: 'Social security number', local: 'Numéro de sécurité sociale', personal: true, pattern: /(?:num[ée]ro de sécurité sociale|n°\s?de sécurité sociale|num[ée]ro d['’]immatriculation|\bNIR\b)/gi },
     { name: 'Job seeker number', local: 'Identifiant France Travail', pattern: /(?:identifiant (?:france travail|pôle emploi)|identifiant demandeur d['’]emploi)/gi },
     { name: 'Foreigner number', local: 'Numéro étranger', pattern: /(?:num[ée]ro (?:étranger|d['’]étranger|AGDREF)|n°\s?(?:étranger|AGDREF))/gi },
     { name: 'Case number', local: 'Numéro de dossier', pattern: /(?:num[ée]ro de dossier|n°\s?de dossier|dossier n°|référence du dossier)/gi },

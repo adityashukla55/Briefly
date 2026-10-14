@@ -283,7 +283,7 @@ export default {
     { name: 'Contract number', local: 'Número de contrato', pattern: /(?:n[úu]mero de contrato|n[º°]\s?(?:de\s)?contrato|contrato n[º°])/gi },
     { name: 'Foreigner’s identity number', local: 'NIE', pattern: /(?:\bNIE\b|\bN\.I\.E\.|n[úu]mero de identidad de extranjero)/gi },
     { name: 'Tax number', local: 'NIF', pattern: /(?:\bNIF\b|\bN\.I\.F\.|n[úu]mero de identificaci[óo]n fiscal)/gi },
-    { name: 'Social Security number', local: 'NSS', pattern: /(?:n[úu]mero de (?:la )?seguridad social|n[úu]mero de afiliaci[óo]n|\bNAF\b|\bNUSS\b|\bNSS\b)/gi },
+    { name: 'Social Security number', local: 'NSS', personal: true, pattern: /(?:n[úu]mero de (?:la )?seguridad social|n[úu]mero de afiliaci[óo]n|\bNAF\b|\bNUSS\b|\bNSS\b)/gi },
     { name: 'Tax assessment number', local: 'Clave de liquidación', pattern: /(?:clave de liquidaci[óo]n|n[úu]mero de liquidaci[óo]n|n[º°]\s?(?:de\s)?liquidaci[óo]n)/gi },
     { name: 'Reference number', local: 'Número de referencia', pattern: /(?:n[úu]mero de referencia|n[º°]\s?(?:de\s)?referencia|\bsu referencia\b|\bnuestra referencia\b)/gi },
     { name: 'Supply point code', local: 'CUPS', pattern: /(?:\bCUPS\b|c[óo]digo universal (?:del|de) punto de suministro)/gi },

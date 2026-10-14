@@ -115,11 +115,11 @@ const DATE_LABELS = {
   start: 'Starts',
 };
 
-const FROM_LETTER_DATE = /^(?:datum|ausfertigung|date|fecha|data)$/;
+const FROM_LETTER_DATE = /^(?:datum|ausfertigung|dagtekening|verzending|verzenddatum|date|fecha|data)$/;
 
 export function findImportantDates(text, country, today = todayIso()) {
   const language = languageOf(country);
-  const dates = findDates(text, language).map((date) => ({ ...date, type: classifyDate(text, date, language) }));
+  const dates = findDates(text, language, country.dateOrder ?? 'dmy').map((date) => ({ ...date, type: classifyDate(text, date, language) }));
   const letterDate = findLetterDate(text, dates, language, today);
   const important = [];
 
@@ -165,6 +165,9 @@ export function findImportantDates(text, country, today = todayIso()) {
 const CURRENCY = {
   EUR: { words: '€|EUR\\b|Euros?\\b', symbol: '€' },
   CHF: { words: 'CHF|SFr\\.?|Fr\\.|Franken\\b', symbol: 'CHF' },
+  PLN: { words: 'zł|PLN\\b|złotych\\b|złote\\b|zl\\b', symbol: 'PLN' },
+  USD: { words: 'US\\$|\\$|USD\\b|dollars?\\b', symbol: '$' },
+  CAD: { words: 'CA\\$|C\\$|\\$|CAD\\b|dollars?\\b', symbol: '$' },
 };
 
 const amountCache = new Map();
@@ -221,7 +224,7 @@ export function findMoney(text, country, kind = null) {
   return { items: unique, toPay: pick('pay'), toGet: pick('refund') ?? pick('benefit') };
 }
 
-export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21 }) {
+export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21, NL: 18, PL: 28 }) {
   const iban = raw.replace(/\s/g, '').toUpperCase();
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
   const expected = lengths[iban.slice(0, 2)];
@@ -247,6 +250,12 @@ export function findPayment(text, country) {
     const valid = variants.find((variant) => isValidIban(variant));
     if (valid) { iban = formatIban(valid); break; }
   }
+  if (!iban && country.domesticIban) {
+    for (const match of text.matchAll(/(?<!\d[ ]?)(\d{2}(?:[ ]?\d{4}){6})(?![ ]?\d)/g)) {
+      const candidate = `${country.domesticIban}${match[1].replace(/\s/g, '')}`;
+      if (isValidIban(candidate)) { iban = formatIban(candidate); break; }
+    }
+  }
   if (!iban) return null;
   const bic = text.match(/\b(?:BIC|SWIFT)(?:\/SWIFT)?\s*:?\s*([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/)?.[1] ?? null;
   const recipient = text.match(language.payment.recipient)?.[1].trim() ?? null;
@@ -257,17 +266,22 @@ export function findPayment(text, country) {
 function takeValue(rest) {
   const cleaned = rest.replace(/^[\s:.\-–#°]*(?:nr\.?|nummer|no\.?|n[°º.]\.?|núm\.?|num\.?)?[\s:.\-–#°]*/i, '');
   const kept = [];
-  for (const raw of cleaned.split(/\s+/)) {
+  const tokens = cleaned.split(/\s+/);
+  const isDate = (token) => /^\d{1,2}[./]\d{1,2}[./]\d{2,4}$/.test(token);
+  for (const [i, raw] of tokens.entries()) {
     const token = raw.replace(/[,;]$/, '');
     if (!token) break;
-    if (/^\d{1,2}[./]\d{1,2}[./]\d{2,4}$/.test(token)) break;
+    if (isDate(token)) break;
     const looksLikeCode = /^[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9/\-.]*$/.test(token) && (/\d/.test(token) || /^[A-ZÄÖÜ]{1,5}$/.test(token));
-    if (!looksLikeCode) break;
+    const next = tokens[i + 1] ?? '';
+    const shortPrefix = raw === token && /^[A-Z][a-z]{0,2}(?:-[a-z])?$/.test(token) && /\d/.test(next) && !isDate(next.replace(/[,;.]$/, ''));
+    if (!looksLikeCode && !shortPrefix) break;
     kept.push(token);
     if (raw !== token) break;
   }
   const value = kept.join(' ').replace(/[.\-/]+$/, '');
-  return (value.match(/\d/g)?.length ?? 0) >= 3 ? value : null;
+  const digits = value.match(/\d/g)?.length ?? 0;
+  return digits >= 3 || (digits >= 2 && /[A-Za-z]/.test(value) && value.length >= 3) ? value : null;
 }
 
 export function findReferences(text, country) {
@@ -277,7 +291,7 @@ export function findReferences(text, country) {
       const lines = text.slice(match.index + match[0].length, match.index + match[0].length + 140).split('\n');
       const value = takeValue(lines[0]) ?? (/^[\s:.\-–#°]*$/.test(lines[0]) && lines[1] ? takeValue(lines[1]) : null);
       if (value && !found.some((item) => item.value === value)) {
-        found.push({ name: label.name, local: label.local, value, payment: Boolean(label.payment) });
+        found.push({ name: label.name, local: label.local, value, payment: Boolean(label.payment), personal: Boolean(label.personal) });
       }
     }
   }
