@@ -167,7 +167,7 @@ async function readPdf(file, onStep, language) {
       await page.render({ canvas, viewport }).promise;
       texts.push(await recognize(canvas, language));
     }
-    return texts.join('\n\n');
+    return { text: texts.join('\n\n'), total: doc.numPages, read: count };
   } finally {
     await task.destroy();
   }
@@ -225,6 +225,7 @@ export function isSupported(file) {
 
 export async function readFiles(files, { language = 'deu', onProgress = () => {} } = {}) {
   const texts = [];
+  const shortened = [];
   let usedOcr = false;
   const list = [...files];
   for (const [position, file] of list.entries()) {
@@ -234,12 +235,14 @@ export async function readFiles(files, { language = 'deu', onProgress = () => {}
       texts.push(await file.text());
     } else if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
       onProgress(`${prefix}Opening the PDF`, null);
-      texts.push(await readPdf(file, (label) => { usedOcr = true; onProgress(`${prefix}${label}`, null); }, language));
+      const pdf = await readPdf(file, (label) => { usedOcr = true; onProgress(`${prefix}${label}`, null); }, language);
+      texts.push(pdf.text);
+      if (pdf.total > pdf.read) shortened.push({ name: file.name, total: pdf.total, read: pdf.read });
     } else {
       usedOcr = true;
       onProgress(`${prefix}Preparing the photo`, null);
       texts.push(await recognize(await prepareImage(file), language));
     }
   }
-  return { text: texts.join('\n\n').trim(), usedOcr };
+  return { text: texts.join('\n\n').trim(), usedOcr, shortened };
 }

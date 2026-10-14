@@ -1,24 +1,28 @@
-import at from './at.js';
-import be from './be.js';
-import ca from './ca.js';
-import ch from './ch.js';
-import de from './de.js';
-import dk from './dk.js';
-import es from './es.js';
-import fr from './fr.js';
-import ie from './ie.js';
-import it from './it.js';
-import nl from './nl.js';
-import pl from './pl.js';
-import pt from './pt.js';
-import se from './se.js';
-import uk from './uk.js';
-import us from './us.js';
+import META from './meta.js';
 import { LANGUAGES } from '../languages/index.js';
 
-export const COUNTRIES = [de, at, ch, fr, es, pt, it, nl, be, pl, se, dk, uk, ie, us, ca];
+const IDS = ['de', 'at', 'ch', 'fr', 'es', 'pt', 'it', 'nl', 'be', 'pl', 'se', 'dk', 'uk', 'ie', 'us', 'ca'];
+
+export const COUNTRIES = IDS.map((id) => ({ ...(META.find((meta) => meta.id === id) ?? { id }) }));
 
 export const DEFAULT_COUNTRY = 'de';
+
+export function isLoaded(country) {
+  return Boolean(country?.senders);
+}
+
+export async function loadCountry(id) {
+  const index = COUNTRIES.findIndex((country) => country.id === id);
+  if (index < 0) return loadCountry(DEFAULT_COUNTRY);
+  if (!isLoaded(COUNTRIES[index])) COUNTRIES[index] = (await import(`./${id}.js`)).default;
+  return COUNTRIES[index];
+}
+
+export async function loadAllCountries() {
+  await Promise.all(IDS.map(loadCountry));
+}
+
+if (typeof window === 'undefined') await loadAllCountries();
 
 export function countryById(id) {
   return COUNTRIES.find((country) => country.id === id) ?? COUNTRIES.find((country) => country.id === DEFAULT_COUNTRY);

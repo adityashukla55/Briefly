@@ -138,10 +138,12 @@ async function send() {
     parts.form.hidden = true;
     parts.thanks.hidden = false;
     parts.thanks.querySelector('button').focus();
-  } catch {
+  } catch (error) {
     showError(navigator.onLine === false
       ? 'You’re offline. Your message is still here — send it when you’re back online.'
-      : 'Sorry, sending didn’t work. Your message is still here — please try again in a few minutes.');
+      : error.message === 'too-many'
+        ? 'You sent several reports in a short time. Your message is still here — please try again later.'
+        : 'Sorry, sending didn’t work. Your message is still here — please try again in a few minutes.');
   } finally {
     parts.submit.disabled = false;
     parts.submit.textContent = 'Send';

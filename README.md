@@ -60,7 +60,7 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
 - tool pages: scan to text offline, translate letters, deadline calculator
 - `sitemap.xml`, `robots.txt`, structured data (breadcrumbs, FAQ, web app)
 
-After changing a country or language file, run `npm run pages` and commit the result. A test fails if the pages are out of date.
+After changing a country or language file, run `npm run pages` and commit the result. It also rebuilds `web/src/countries/meta.js`, the small country list the app loads first (each full country file is loaded only when needed). A test fails if anything is out of date.
 
 ## Run it locally
 
@@ -113,7 +113,7 @@ Set it up once:
    - `FEEDBACK_EMAIL` = the email you used for Resend
 4. Deploy again (push a commit or use **Retry deployment**). Secrets are only picked up by a new deployment.
 
-Spam protection: a hidden field that only bots fill in, a minimum time before sending, and size limits. When you run it locally without `RESEND_API_KEY`, reports are printed in the terminal instead of being sent.
+Spam protection: a hidden field that only bots fill in, a minimum time before sending, size limits, and — once you add a KV namespace — at most 5 reports per sender per hour and 50 per day in total. To turn the limit on: in Cloudflare go to **Storage & Databases → KV → Create** (any name, for example `briefly-feedback`), then in the **brieflyapp** project open **Settings → Bindings → Add → KV namespace**, name the binding `FEEDBACK_LIMITS`, pick the namespace, save and deploy again. Only a hashed IP address is stored, for about an hour. When you run it locally without `RESEND_API_KEY`, reports are printed in the terminal instead of being sent.
 
 ## Browser support
 

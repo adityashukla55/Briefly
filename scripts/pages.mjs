@@ -5,6 +5,7 @@ import { COUNTRIES, inLanguage, languageOf, languagesOf } from '../web/src/count
 import { LANGUAGES } from '../web/src/languages/index.js';
 import { templateLetters } from '../web/src/replies.js';
 import { datePlaceholder } from '../web/src/dates.js';
+import { META_FILE, metaSource } from './meta.mjs';
 
 export const SITE = 'https://brieflyapp.pages.dev';
 
@@ -454,6 +455,7 @@ function privacyPage() {
 <ul>
 <li><strong>Legal basis:</strong> Art. 6(1)(f) GDPR — my legitimate interest in fixing mistakes and answering questions.</li>
 <li><strong>How long:</strong> I delete the email once the problem is solved, at the latest after 12 months. Resend keeps a copy for a short time to deliver it.</li>
+<li><strong>Spam protection:</strong> to stop bots from flooding the form, the function counts reports per sender. It stores only a scrambled (hashed) form of your IP address, never the address itself, and deletes it after about an hour.</li>
 <li>More in <a href="https://resend.com/legal/privacy-policy">Resend’s privacy policy</a>.</li>
 </ul>
 <p>Please don’t paste your letter or personal details into the form.</p>
@@ -484,6 +486,36 @@ function notFoundPage() {
   };
 }
 
+const TITLE_LIMIT = 65;
+const DESCRIPTION_LIMIT = 160;
+
+export function fitTitle(title) {
+  const steps = [
+    (text) => text.replace(' – free – ', ' – '),
+    (text) => text.replace(' explained in English', ' explained'),
+    (text) => text.replace(/ – Briefly$/, ''),
+    (text) => text.replace(/\? [A-Z][a-z]+ office word \(/, '? ('),
+    (text) => text.replace(/ letter explained \(/, ' letter ('),
+    (text) => text.replace(/ letter template \(/, ' template ('),
+    (text) => text.replace(/^What does “(.+)” mean\? /, '“$1” meaning '),
+    (text) => text.replace(/ \([A-Z]{2,}\)/, ''),
+    (text) => text.replace(/^([^(“]*?) \/ [^(]*? (letter|meaning)/, '$1 $2'),
+    (text) => text.replace(/ template \([A-Z][a-z]+, /, ' template ('),
+    (text) => text.replace(/ \([^()]*\)(?= letter \()/, ''),
+  ];
+  let fitted = title;
+  for (const step of steps) {
+    if (fitted.length <= TITLE_LIMIT) break;
+    fitted = step(fitted);
+  }
+  return fitted.length <= TITLE_LIMIT ? fitted : `${fitted.slice(0, TITLE_LIMIT - 1).replace(/\s+\S*$/, '')}…`;
+}
+
+export function clip(text, limit = DESCRIPTION_LIMIT) {
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit - 1).replace(/\s+\S*$/, '').replace(/[\s,;:—–-]+$/, '')}…`;
+}
+
 export function buildPages() {
   const pages = [];
   for (const country of COUNTRIES) {
@@ -497,7 +529,9 @@ export function buildPages() {
   for (const tool of TOOLS) pages.push(toolPage(tool));
   pages.push(privacyPage());
   const missing = { ...notFoundPage(), noIndex: true };
-  return pages.map((page) => ({ ...page, html: layout(page) })).concat([{ ...missing, html: layout(missing) }]);
+  return [...pages, missing]
+    .map((page) => ({ ...page, title: fitTitle(page.title), description: clip(page.description) }))
+    .map((page) => ({ ...page, html: layout(page) }));
 }
 
 export function sitemap(pages) {
@@ -522,7 +556,8 @@ function write() {
   }
   writeFileSync(join(web, 'sitemap.xml'), sitemap(pages));
   writeFileSync(join(web, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
-  console.log(`Wrote ${pages.length} pages and sitemap.xml`);
+  writeFileSync(META_FILE, metaSource());
+  console.log(`Wrote ${pages.length} pages, sitemap.xml and the country list`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) write();

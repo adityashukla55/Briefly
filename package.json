@@ -1,7 +1,7 @@
 {
   "name": "briefly",
   "version": "1.0.0",
-  "description": "Understand German official letters in plain English. A free web app that runs fully on your device.",
+  "description": "Understand official letters from 16 countries in plain English. A free web app that runs fully on your device.",
   "private": true,
   "type": "module",
   "license": "MIT",

@@ -52,3 +52,8 @@ test('generated files are up to date', () => {
     assert.equal(readFileSync(file, 'utf8'), page.html, `${page.path} is out of date — run npm run pages`);
   }
 });
+
+test('the light country list matches the country packs', async () => {
+  const { META_FILE, metaSource } = await import('../scripts/meta.mjs');
+  assert.equal(readFileSync(META_FILE, 'utf8'), metaSource(), 'web/src/countries/meta.js is out of date — run npm run pages');
+});

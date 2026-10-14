@@ -1,4 +1,4 @@
-const VERSION = '3.4.0';
+const VERSION = '3.5.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -40,6 +40,7 @@ const SHELL = [
   '/src/countries/ie.js',
   '/src/countries/index.js',
   '/src/countries/it.js',
+  '/src/countries/meta.js',
   '/src/countries/nl.js',
   '/src/countries/pl.js',
   '/src/countries/pt.js',

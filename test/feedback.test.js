@@ -71,3 +71,25 @@ test('says when sending failed or is not set up', async () => {
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { ok: false, error: 'not-set-up' });
 });
+
+test('limits reports per person per hour and per day', async () => {
+  const { underLimit } = await import('../functions/api/feedback.js');
+  const data = new Map();
+  const store = { get: async (key) => data.get(key) ?? null, put: async (key, value) => { data.set(key, value); } };
+  const now = Date.UTC(2026, 9, 14, 10, 0);
+  const results = [];
+  for (let i = 0; i < 6; i += 1) results.push(await underLimit(store, '203.0.113.7', now));
+  assert.deepEqual(results, [true, true, true, true, true, false]);
+  assert.equal(await underLimit(store, '203.0.113.7', now + 3_600_000), true);
+  assert.ok([...data.keys()].every((key) => !key.includes('203.0.113.7')));
+  for (let i = 0; i < 60; i += 1) await underLimit(store, `198.51.100.${i}`, now + 3_600_000);
+  assert.equal(await underLimit(store, '192.0.2.1', now + 3_600_000), false);
+});
+
+test('a blocked sender gets a clear answer and nothing is sent', async () => {
+  const sent = [];
+  const response = await handleFeedback(post(good), { to: 'o@example.com', send: async (email) => sent.push(email), limit: async () => false });
+  assert.equal(response.status, 429);
+  assert.deepEqual(await response.json(), { ok: false, error: 'too-many' });
+  assert.equal(sent.length, 0);
+});

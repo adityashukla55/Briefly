@@ -325,6 +325,10 @@ export function decideUrgency(kind, dates) {
   return upcoming.length ? 'medium' : 'low';
 }
 
+export function detectCountryId(rawText, preferred = 'de') {
+  return detectCountry(normalize(rawText), preferred).id;
+}
+
 export function analyze(rawText, { today = todayIso(), country: countryId = null, preferred = 'de' } = {}) {
   const text = normalize(rawText);
   const country = resolveLanguage(countryId ? countryById(countryId) : detectCountry(text, preferred), text);

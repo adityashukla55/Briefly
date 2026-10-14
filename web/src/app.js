@@ -1,11 +1,11 @@
-import { analyze } from './analyze.js';
+import { analyze, detectCountryId } from './analyze.js';
 import { ReadError, friendlyError, missingFeatures } from './errors.js';
 import { makeIcs } from './calendar.js';
 import { describeDaysLeft, formatMoney, formatWhen } from './format.js';
 import { isSupported, missingReaderFiles, prepareReader, readFiles } from './read.js';
 import { detectPlatform, installHelp } from './install.js';
 import { buildReplies } from './replies.js';
-import { COUNTRIES, countryById, detectLanguage, inLanguage, languageOf, languagesOf } from './countries/index.js';
+import { COUNTRIES, countryById, detectLanguage, inLanguage, languageOf, languagesOf, loadCountry } from './countries/index.js';
 import { LANGUAGES } from './languages/index.js';
 import { buildSteps } from './steps.js';
 import { h } from './dom.js';
@@ -76,8 +76,9 @@ function notFor(className) {
   return h('p', { class: className }, h('strong', {}, 'Not for: '), 'personal letters, receipts, contracts, ID cards, handwritten notes or letters from other countries.');
 }
 
-function renderScope() {
-  const country = countryById(selectedCountry);
+async function renderScope() {
+  const country = await loadCountry(selectedCountry);
+  if (country.id !== selectedCountry) return;
   const senders = country.senders;
   const kinds = country.kinds.filter((kind) => !kind.weight || kind.weight >= 1);
   const tag = (sender) => h('li', { class: 'scope-tag' }, h('strong', {}, sender.local), sender.local === sender.name ? null : h('span', {}, ` · ${sender.name}`));
@@ -100,8 +101,9 @@ function renderScope() {
     notFor('scope-not'));
 }
 
-function renderSamples() {
-  const country = countryById(selectedCountry);
+async function renderSamples() {
+  const country = await loadCountry(selectedCountry);
+  if (country.id !== selectedCountry) return;
   $('#samples').replaceChildren(...country.samples.map((sample) => h('button', {
     class: 'chip',
     type: 'button',
@@ -168,14 +170,14 @@ async function processFiles(fileList) {
   setWorking('Reading your letter');
   try {
     const country = countryById(selectedCountry);
-    let { text, usedOcr } = await readFiles(files, { language: languageOf(country).ocr, onProgress: setWorking });
+    let { text, usedOcr, shortened } = await readFiles(files, { language: languageOf(country).ocr, onProgress: setWorking });
     const detected = detectLanguage(text);
     if (usedOcr && detected && !(detected.id === country.language || (languagesOf(country).includes(detected.id) && !detected.confident))) {
       setWorking(`This looks like ${LANGUAGES[detected.id].name}. Reading it again`);
       ({ text } = await readFiles(files, { language: LANGUAGES[detected.id].ocr, onProgress: setWorking }));
     }
     if (text.replace(/\s/g, '').length < 20) throw new ReadError('We couldn’t find any text', 'Try a sharper photo in good light, with the whole page flat and visible. Handwritten letters can’t be read.');
-    showResult(text, 'file');
+    await showResult(text, 'file', null, shortened.map((pdf) => `This PDF has ${pdf.total} pages. Briefly read only the first ${pdf.read}. If a date or amount is on a later page, add a photo of that page too.`));
   } catch (error) {
     console.error(error);
     show('start');
@@ -424,17 +426,20 @@ function countrySwitcher(result) {
   return h('label', { class: 'summary-country' }, 'Letter from ', select);
 }
 
-function showResult(text, source, countryId = null) {
+async function showResult(text, source, countryId = null, notices = []) {
   try {
     localStorage.setItem('briefly-returning', '1');
   } catch {}
-  const result = analyze(text, countryId ? { country: countryId } : { preferred: selectedCountry });
+  const id = countryId ?? detectCountryId(text, selectedCountry);
+  await loadCountry(id);
+  const result = analyze(text, { country: id });
   current = { result, source };
   const facts = [...result.dates.map((date) => dateFact(result, date)), ...moneyFacts(result)];
   const switched = !countryId && result.country.id !== selectedCountry;
   const unknown = !result.sender && !result.kind && !result.dates.length && !result.money.toPay && !result.money.toGet && !result.payment;
   $('#result-body').replaceChildren(...[
     source === 'sample' ? h('p', { class: 'notice' }, 'This is a made-up example letter. Try it with your own letter next.') : null,
+    ...notices.map((notice) => h('p', { class: 'notice' }, notice)),
     unknown ? errorBox({
       title: 'This doesn’t look like an official letter',
       message: `Briefly couldn’t find an office, a deadline or an amount. It works with letters from offices, landlords, insurers and companies in ${result.country.inName ?? result.country.name} — see the list on the start page. If this is such a letter, check that the whole page is in the photo. The translation below may still help.`,
@@ -724,6 +729,7 @@ function renderOffline() {
   }
 
   translator.hidden = !translatorVariants(country).length;
+  if (translator.hidden) return;
   translator.className = `offline-item ${offline.translator}`;
   const size = offline.translatorSize ? ` (${Math.round(offline.translatorSize / 1_000_000)} MB)` : '';
   const plural = translatorVariants(country).length > 1 ? 's' : '';
@@ -810,7 +816,7 @@ async function refreshOffline(warm = false) {
   renderOffline();
   if (!warm || !navigator.onLine) return;
   if (offline.reader !== 'ready') await warmReader(isInstalled());
-  if (isInstalled() && offline.translator === 'missing' && countryById(selectedCountry) === country) await saveTranslatorOffline();
+  if (isInstalled() && offline.translator === 'missing' && selectedCountry === country.id) await saveTranslatorOffline();
 }
 
 function setupOffline() {

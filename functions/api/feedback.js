@@ -6,6 +6,7 @@ export const KINDS = {
 };
 
 const LIMITS = { message: 2000, contact: 200, page: 300, browser: 120, context: 300, body: 8000 };
+const RATE = { perPersonHour: 5, perDay: 50 };
 const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
 
 function clean(value, limit) {
@@ -51,7 +52,22 @@ function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 }
 
-export async function handleFeedback(request, { to, send }) {
+async function hashed(value) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`briefly-feedback:${value}`));
+  return [...new Uint8Array(digest)].slice(0, 12).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function underLimit(store, person, now = Date.now()) {
+  const hour = Math.floor(now / 3_600_000);
+  const day = Math.floor(now / 86_400_000);
+  const counters = [[`person:${await hashed(person)}:${hour}`, RATE.perPersonHour, 3_700], [`day:${day}`, RATE.perDay, 90_000]];
+  const counts = await Promise.all(counters.map(([key]) => store.get(key).then((value) => Number(value ?? 0))));
+  if (counters.some(([, max], index) => counts[index] >= max)) return false;
+  await Promise.all(counters.map(([key, , ttl], index) => store.put(key, String(counts[index] + 1), { expirationTtl: ttl })));
+  return true;
+}
+
+export async function handleFeedback(request, { to, send, limit = null }) {
   const origin = new URL(request.url).origin;
   const sentFrom = request.headers.get('origin');
   if (sentFrom && sentFrom !== origin) return json({ ok: false, error: 'wrong-origin' }, 403);
@@ -67,6 +83,7 @@ export async function handleFeedback(request, { to, send }) {
   if (feedback.spam) return json({ ok: true });
   if (feedback.error) return json({ ok: false, error: feedback.error }, 400);
   if (!send || !to) return json({ ok: false, error: 'not-set-up' }, 503);
+  if (limit && !(await limit(request.headers.get('cf-connecting-ip') ?? 'unknown'))) return json({ ok: false, error: 'too-many' }, 429);
   return (await send(buildEmail(feedback, { to, origin }))) ? json({ ok: true }) : json({ ok: false, error: 'send-failed' }, 502);
 }
 
@@ -82,5 +99,10 @@ async function sendWithResend(email, key) {
 
 export function onRequestPost({ request, env }) {
   const key = env.RESEND_API_KEY;
-  return handleFeedback(request, { to: env.FEEDBACK_EMAIL, send: key ? (email) => sendWithResend(email, key) : null });
+  const store = env.FEEDBACK_LIMITS;
+  return handleFeedback(request, {
+    to: env.FEEDBACK_EMAIL,
+    send: key ? (email) => sendWithResend(email, key) : null,
+    limit: store ? (person) => underLimit(store, person) : null,
+  });
 }

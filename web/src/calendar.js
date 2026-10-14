@@ -29,7 +29,7 @@ export function makeIcs({ title, iso, time = null, description = '', now = new D
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Briefly//German letters explained//EN',
+    'PRODID:-//Briefly//Official letters explained//EN',
     'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
     `UID:${uid}`,
