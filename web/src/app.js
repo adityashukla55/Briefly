@@ -329,12 +329,29 @@ function referencesCard(result) {
     h('dl', { class: 'rows' }, list.map((reference) => row(reference.name.toLowerCase().includes(reference.local.toLowerCase()) ? reference.name : `${reference.name} (${reference.local})`, reference.value, { code: true }))));
 }
 
+const TERMS_PREVIEW = 4;
+
+function moreWordsLabel(details) {
+  const count = details.querySelector('dl').children.length;
+  details.hidden = count === 0;
+  details.querySelector('summary').textContent = details.open ? 'Show fewer words' : `Show ${count} more ${count === 1 ? 'word' : 'words'}`;
+}
+
 function termsCard(result) {
   if (!result.terms.length) return null;
-  return h('div', { class: 'card' },
+  const item = (term) => h('div', {}, h('dt', {}, term.term), h('dd', {}, term.meaning));
+  const more = h('details', { class: 'more-terms' }, h('summary'), h('dl', { class: 'terms' }, result.terms.slice(TERMS_PREVIEW).map(item)));
+  moreWordsLabel(more);
+  more.addEventListener('toggle', () => {
+    moreWordsLabel(more);
+    if (!more.open) balanceColumns();
+  });
+  return h('div', { class: 'card terms-card' },
     h('h2', {}, 'Words in this letter'),
-    h('dl', { class: 'terms' }, result.terms.map((term) => h('div', {}, h('dt', {}, term.term), h('dd', {}, term.meaning)))));
+    h('dl', { class: 'terms' }, result.terms.slice(0, TERMS_PREVIEW).map(item)),
+    more);
 }
+
 
 function translationCard(result) {
   if (!needsTranslator(result.country)) return null;
@@ -407,11 +424,60 @@ function repliesCard(result) {
         h('pre', { class: 'letter', lang: result.country.language }, reply.local)))));
 }
 
-function resultColumns(main, side) {
-  return h('div', { class: `result-columns${side.length ? '' : ' single'}` },
-    h('div', { class: 'result-main' }, main),
-    side.length ? h('div', { class: 'result-side' }, side) : null);
+const WIDE = window.matchMedia('(min-width: 960px)');
+
+function resultColumns(cards) {
+  return h('div', { class: `result-columns${cards.length > 1 ? '' : ' single'}` },
+    h('div', { class: 'result-col' }, cards),
+    h('div', { class: 'result-col' }));
 }
+
+function balanceColumns() {
+  const wrap = $('#result .result-columns');
+  if (!wrap) return;
+  const [left, right] = wrap.children;
+  const cards = [...wrap.querySelectorAll('.result-col > .card')];
+  left.append(...cards);
+  const terms = wrap.querySelector('.terms-card');
+  const more = terms?.querySelector('.more-terms');
+  const flexible = Boolean(more && !more.open);
+  const shown = terms?.querySelector(':scope > dl');
+  const hidden = more?.querySelector('dl');
+  if (flexible) shown.append(...hidden.children);
+  if (!WIDE.matches || cards.length < 2) {
+    if (flexible) hidden.append(...[...shown.children].slice(TERMS_PREVIEW));
+    if (more) moreWordsLabel(more);
+    return;
+  }
+  if (more) moreWordsLabel(more);
+  wrap.classList.add('measuring');
+  const gap = 16;
+  const heights = cards.map((card) => card.getBoundingClientRect().height);
+  const termsIndex = cards.indexOf(terms);
+  const words = flexible ? [...shown.children] : [];
+  const wordHeights = words.map((word) => word.getBoundingClientRect().height + 10);
+  const allWords = wordHeights.reduce((sum, height) => sum + height, 0);
+  const counts = words.length ? Array.from({ length: words.length }, (_, index) => index + 1) : [null];
+  let best = { difference: Infinity };
+  for (let mask = 0; mask < 2 ** (cards.length - 1); mask += 1) {
+    for (const count of counts) {
+      const sides = [-gap, -gap];
+      cards.forEach((card, index) => {
+        let height = heights[index];
+        if (index === termsIndex && count !== null) height += wordHeights.slice(0, count).reduce((sum, value) => sum + value, 0) - allWords + (count < words.length ? 34 : 0);
+        sides[index === 0 ? 0 : (mask >> (index - 1)) & 1] += height + gap;
+      });
+      const difference = Math.abs(sides[0] - sides[1]);
+      if (difference < best.difference) best = { mask, count, difference };
+    }
+  }
+  cards.slice(1).forEach((card, index) => ((best.mask >> index) & 1 ? right : left).append(card));
+  if (flexible && best.count !== null) hidden.append(...words.slice(best.count));
+  if (more) moreWordsLabel(more);
+  wrap.classList.remove('measuring');
+}
+
+WIDE.addEventListener('change', balanceColumns);
 
 const SOURCE_NAMES = { sample: 'example letter', file: 'photo or PDF', paste: 'pasted text', share: 'shared text', edit: 'edited text' };
 
@@ -476,7 +542,7 @@ async function showResult(text, source, countryId = null, notices = []) {
     switched && !unknown ? h('p', { class: 'notice' }, `This letter looks like it’s from ${result.country.inName ?? result.country.name}, so Briefly used the ${result.country.adjective} rules. Wrong? Change the country below.`) : null,
     summaryCard(result),
     facts.length ? h('div', { class: 'facts' }, facts) : null,
-    resultColumns(stepsCard(result), [paymentCard(result), referencesCard(result), termsCard(result)].filter(Boolean)),
+    resultColumns([stepsCard(result), paymentCard(result), referencesCard(result), termsCard(result)].filter(Boolean)),
     translationCard(result),
     repliesCard(result),
     sourceCard(result),
@@ -484,6 +550,7 @@ async function showResult(text, source, countryId = null, notices = []) {
   ].filter(Boolean));
   $('#share').hidden = !navigator.share;
   show('result');
+  balanceColumns();
   $('#result .summary-title')?.focus?.();
 }
 
