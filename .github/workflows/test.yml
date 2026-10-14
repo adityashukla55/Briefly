@@ -16,6 +16,6 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .cache/models
-          key: translation-models-v2
+          key: translation-models-${{ hashFiles('scripts/vendor.mjs') }}
       - run: npm ci
       - run: npm test

@@ -81,13 +81,16 @@ npm test
 
 ## Deploy to Cloudflare Pages
 
-**With Git (recommended):** in the Cloudflare dashboard go to Workers & Pages → Create → “Looking to deploy Pages? Get started”, connect the GitHub repository and use:
+**With Git (recommended):** connect the GitHub repository to a Cloudflare Pages project (Workers & Pages → Create → “Looking to deploy Pages? Get started”, or **Settings → Build → Connect** on an existing project) and use these build settings. Every push to `main` then deploys by itself, up to 20,000 files, including the feedback function in [`functions/`](functions/):
 
 | Setting | Value |
 |---|---|
 | Build command | `npm run vendor` |
 | Build output directory | `web` |
+| Root directory | *(empty)* |
 | Environment variable | `NODE_VERSION` = `22` |
+
+Uploading the `web` folder by hand in the dashboard is limited to 1,000 files and can’t run the feedback function, so use Git or Wrangler instead.
 
 **From your computer:**
 
