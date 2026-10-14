@@ -325,7 +325,7 @@ export function decideUrgency(kind, dates) {
   return upcoming.length ? 'medium' : 'low';
 }
 
-export function detectCountryId(rawText, preferred = 'de') {
+export function detectCountryId(rawText, preferred = null) {
   return detectCountry(normalize(rawText), preferred).id;
 }
 

@@ -674,6 +674,7 @@ html.ready .boot-warning { display: none; }
 .scope-list a { color: var(--ink); font-weight: 650; }
 .scope-not { margin: 12px 0 0; font-size: 14px; color: var(--ink-3); }
 .scope-short, .scope-not-inner { display: none; }
+.scope-hint { margin: 0; color: var(--ink-2); font-size: 15px; }
 
 .summary-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
 .summary-country { color: var(--ink-3); font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }

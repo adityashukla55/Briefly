@@ -68,13 +68,13 @@ export function resolveLanguage(country, text) {
 }
 
 export function detectCountry(text, preferredId = DEFAULT_COUNTRY) {
-  const preferred = countryById(preferredId);
+  const preferred = preferredId ? countryById(preferredId) : null;
   const language = detectLanguage(text);
   const candidates = COUNTRIES.filter((country) => !language || languagesOf(country).includes(language.id));
-  if (!candidates.length) return preferred;
+  if (!candidates.length) return preferred ?? countryById(DEFAULT_COUNTRY);
   const scored = candidates.map((country) => ({
     country,
-    score: country.signals.reduce((sum, signal) => sum + (signal.test(text) ? 1 : 0), 0) + (country.id === preferred.id ? 0.5 : 0),
+    score: country.signals.reduce((sum, signal) => sum + (signal.test(text) ? 1 : 0), 0) + (country.id === preferred?.id ? 0.5 : 0),
   })).sort((a, b) => b.score - a.score);
   return scored[0].country;
 }

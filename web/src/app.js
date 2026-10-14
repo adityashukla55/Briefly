@@ -26,18 +26,13 @@ function guessCountry() {
     const saved = localStorage.getItem(COUNTRY_KEY);
     if (saved && COUNTRIES.some((country) => country.id === saved)) return saved;
   } catch {}
-  const locale = (navigator.language || 'de').toLowerCase();
-  if (locale.startsWith('de-at')) return 'at';
-  if (locale.startsWith('de-ch') || locale.startsWith('gsw')) return 'ch';
-  if (locale.endsWith('-ca')) return 'ca';
-  if (locale.endsWith('-be')) return 'be';
-  if (locale === 'en-us') return 'us';
-  if (locale === 'en-gb' || locale === 'en-uk') return 'uk';
-  if (locale === 'en-ie' || locale === 'ga') return 'ie';
-  const language = locale.slice(0, 2);
-  if (language === 'sv') return 'se';
-  if (language === 'da') return 'dk';
-  return ['fr', 'es', 'it', 'nl', 'pl', 'pt'].includes(language) ? language : 'de';
+  return null;
+}
+
+function readingLanguage() {
+  if (selectedCountry) return languageOf(countryById(selectedCountry));
+  const code = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  return LANGUAGES[code] ?? LANGUAGES.en;
 }
 
 let selectedCountry = guessCountry();
@@ -77,6 +72,12 @@ function notFor(className) {
 }
 
 async function renderScope() {
+  if (!selectedCountry) {
+    $('#scope').replaceChildren(
+      h('p', { class: 'scope-title' }, 'Pick the country your letter is from.'),
+      h('p', { class: 'scope-hint' }, 'Briefly then shows which offices and letters it understands there. You can also just add your letter — Briefly will try to tell the country by itself.'));
+    return;
+  }
   const pending = countryById(selectedCountry);
   if (!isLoaded(pending)) $('#scope').replaceChildren(h('p', { class: 'scope-title' }, `Loading the offices in ${pending.inName ?? pending.name}…`));
   const country = await loadCountry(selectedCountry);
@@ -104,6 +105,10 @@ async function renderScope() {
 }
 
 async function renderSamples() {
+  if (!selectedCountry) {
+    $('#samples').replaceChildren(h('p', { class: 'muted small' }, 'Pick a country above to see example letters.'));
+    return;
+  }
   if (!isLoaded(countryById(selectedCountry))) $('#samples').replaceChildren();
   const country = await loadCountry(selectedCountry);
   if (country.id !== selectedCountry) return;
@@ -172,10 +177,14 @@ async function processFiles(fileList) {
   show('working');
   setWorking('Reading your letter');
   try {
-    const country = countryById(selectedCountry);
-    let { text, usedOcr, shortened } = await readFiles(files, { language: languageOf(country).ocr, onProgress: setWorking });
+    const country = selectedCountry ? countryById(selectedCountry) : null;
+    const first = readingLanguage();
+    let { text, usedOcr, shortened } = await readFiles(files, { language: first.ocr, onProgress: setWorking });
     const detected = detectLanguage(text);
-    if (usedOcr && detected && !(detected.id === country.language || (languagesOf(country).includes(detected.id) && !detected.confident))) {
+    const fits = country
+      ? detected?.id === country.language || (languagesOf(country).includes(detected?.id) && !detected.confident)
+      : detected?.id === first.id;
+    if (usedOcr && detected && !fits) {
       setWorking(`This looks like ${LANGUAGES[detected.id].name}. Reading it again`);
       ({ text } = await readFiles(files, { language: LANGUAGES[detected.id].ocr, onProgress: setWorking }));
     }
@@ -708,6 +717,13 @@ async function translatorsCached(country) {
 }
 
 function renderOffline() {
+  if (!selectedCountry) {
+    $('#offline-title').textContent = isInstalled() ? 'Offline use — saved with the app' : 'Offline use';
+    $('#offline-reader').className = 'offline-item';
+    $('#offline-reader').replaceChildren('Pick your country above, and Briefly saves what it needs to read its letters offline.');
+    $('#offline-translator').hidden = true;
+    return;
+  }
   const country = countryById(selectedCountry);
   const language = { name: namesOf(variantsOf(country)) };
   const translatorName = namesOf(translatorVariants(country));
@@ -743,6 +759,7 @@ function renderOffline() {
 }
 
 async function warmReader(force = false) {
+  if (!selectedCountry) return;
   const country = countryById(selectedCountry);
   const ocr = readerKey(country);
   if (offline.warming === ocr) return;
@@ -780,7 +797,7 @@ async function warmReader(force = false) {
 }
 
 async function saveTranslatorOffline() {
-  if (offline.translator === 'working') return;
+  if (offline.translator === 'working' || !selectedCountry) return;
   const country = countryById(selectedCountry);
   offline.translator = 'working';
   offline.translatorProgress = 0;
@@ -804,7 +821,7 @@ async function saveTranslatorOffline() {
 }
 
 async function refreshOffline(warm = false) {
-  if (!offlineSupported()) {
+  if (!offlineSupported() || !selectedCountry) {
     renderOffline();
     return;
   }
