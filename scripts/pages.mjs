@@ -22,6 +22,10 @@ export function esc(value) {
     .replace(/"/g, '&quot;');
 }
 
+function flag(country, extra = '') {
+  return `<img class="flag${extra}" src="/icons/flags/${country.id}.svg" alt="" width="21" height="14">`;
+}
+
 function jsonLd(data) {
   return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 }
@@ -95,7 +99,7 @@ function layout({ path, title, description, crumbs, body, schema = [], noIndex =
 }
 
 function footer() {
-  const countries = COUNTRIES.map((country) => `<a href="/${country.slug}/">${country.flag} ${esc(country.name)}</a>`).join(' · ');
+  const countries = COUNTRIES.map((country) => `<a href="/${country.slug}/">${flag(country)} ${esc(country.name)}</a>`).join(' · ');
   const tools = TOOLS.map((tool) => `<a href="/${tool.slug}/">${esc(tool.short)}</a>`).join(' · ');
   return `<footer class="footer">
     <p><strong>Letters from:</strong> ${countries}</p>
@@ -146,7 +150,7 @@ function countryPage(country) {
     description: `Understand official letters from ${country.name} in plain English: ${country.senders.slice(0, 4).map((sender) => sender.local).join(', ')} and more. Deadlines, amounts, office words and reply templates. Free and private.`,
     crumbs: [['Briefly', '/'], [country.name, path]],
     schema: [faq(questions)],
-    body: `<h1>${country.flag} Official letters from ${esc(country.name)}, explained in English</h1>
+    body: `<h1>${flag(country, ' flag-large')} Official letters from ${esc(country.name)}, explained in English</h1>
 <p class="lead">${esc(country.intro)}</p>
 ${cta(country, `Check your letter from ${country.name}`)}
 <h2>Offices that write to you</h2>
@@ -311,7 +315,7 @@ const TOOLS = [
     description: 'Letters often say “within one month after delivery”. Briefly finds that phrase and estimates the exact date, using the delivery rules of Germany, Austria, Switzerland, France, Spain and Italy.',
     h1: 'When is my deadline? Official letter deadline calculator',
     lead: 'Many letters don’t give a date — they say “within one month after delivery” or “within 10 working days”. Briefly finds these phrases and estimates the last day for you.',
-    points: COUNTRIES.map((country) => `${country.flag} ${country.name}: ${country.deliveryNote}`),
+    points: COUNTRIES.map((country) => `${country.name}: ${country.deliveryNote}`),
   },
 ];
 
@@ -329,7 +333,7 @@ ${cta(null, 'Try it now')}
 <h2>How it works</h2>
 <ul>${tool.points.map((point) => `<li>${esc(point)}</li>`).join('\n')}</ul>
 <h2>Letters from these countries</h2>
-<p>${COUNTRIES.map((country) => `<a href="/${country.slug}/">${country.flag} ${esc(country.name)}</a>`).join(' · ')}</p>`,
+<p>${COUNTRIES.map((country) => `<a href="/${country.slug}/">${flag(country)} ${esc(country.name)}</a>`).join(' · ')}</p>`,
   };
 }
 

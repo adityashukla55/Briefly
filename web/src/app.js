@@ -54,6 +54,9 @@ function selectCountry(id) {
   try {
     localStorage.setItem(COUNTRY_KEY, id);
   } catch {}
+  const url = new URL(location.href);
+  url.searchParams.set('country', id);
+  history.replaceState(history.state, '', url);
   renderCountryPicker();
   renderSamples();
 }
@@ -64,7 +67,7 @@ function renderCountryPicker() {
     type: 'button',
     'aria-pressed': String(country.id === selectedCountry),
     onclick: () => selectCountry(country.id),
-  }, h('span', { class: 'flag', 'aria-hidden': 'true' }, country.flag), country.name)));
+  }, h('img', { class: 'flag', src: `/icons/flags/${country.id}.svg`, alt: '', width: 21, height: 14 }), country.name)));
 }
 
 function renderSamples() {
@@ -73,7 +76,7 @@ function renderSamples() {
     class: 'chip',
     type: 'button',
     onclick: () => showResult(sample.build(todayLocal()), 'sample', country.id),
-  }, `${country.flag} ${sample.title}`, h('span', {}, sample.subtitle))));
+  }, sample.title, h('span', {}, sample.subtitle))));
 }
 
 function todayLocal() {
@@ -375,7 +378,7 @@ function countrySwitcher(result) {
     class: 'country-select',
     'aria-label': 'Country of the letter',
     onchange: (event) => showResult(result.text, current?.source ?? 'edit', event.target.value),
-  }, COUNTRIES.map((country) => h('option', { value: country.id, selected: country.id === result.country.id }, `${country.flag} ${country.name}`)));
+  }, COUNTRIES.map((country) => h('option', { value: country.id, selected: country.id === result.country.id }, country.name)));
   return h('label', { class: 'summary-country' }, 'Letter from ', select);
 }
 

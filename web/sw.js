@@ -1,4 +1,4 @@
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -9,6 +9,12 @@ const SHELL = [
   '/manifest.json',
   '/icons/icon.svg',
   '/icons/icon-192.png',
+  '/icons/flags/at.svg',
+  '/icons/flags/ch.svg',
+  '/icons/flags/de.svg',
+  '/icons/flags/es.svg',
+  '/icons/flags/fr.svg',
+  '/icons/flags/it.svg',
   '/src/analyze.js',
   '/src/app.js',
   '/src/calendar.js',
