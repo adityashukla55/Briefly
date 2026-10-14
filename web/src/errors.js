@@ -14,7 +14,17 @@ export function friendlyError(error, task = 'read') {
     return { title: error.title, message: error.message, details: null };
   }
   const text = details.toLowerCase();
-  if (/load failed|failed to fetch|networkerror|network error|could not load|err_internet|offline/.test(text)) {
+  const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  if (offline) {
+    return {
+      title: 'You’re offline',
+      message: task === 'translate'
+        ? 'The translator for this language isn’t saved on this device yet. Connect to the internet once and tap “Save the translator for offline” on the start page.'
+        : 'The text reader for this language isn’t saved on this device yet. Connect to the internet once — Briefly then saves it automatically for offline use.',
+      details,
+    };
+  }
+  if (/load failed|failed to fetch|networkerror|network error|could not load|err_internet|offline|importscripts/.test(text)) {
     return {
       title: 'No internet for the first run',
       message: task === 'translate'

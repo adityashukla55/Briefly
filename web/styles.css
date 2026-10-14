@@ -450,7 +450,17 @@ details.source textarea { margin: 12px 0 10px; font-family: var(--mono); font-si
 .promises strong { font-size: 17px; line-height: 1.2; color: var(--ink); }
 .promises span:last-child { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
 
-.save { margin-top: 30px; padding: 20px; }
+.offline { margin-top: 30px; }
+.offline h2 { font-size: 20px; letter-spacing: -0.01em; text-transform: none; color: var(--ink); margin: 0 0 10px; }
+.offline-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.offline-item { color: var(--ink-2); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.offline-item.ready { color: var(--good); font-weight: 650; }
+.offline-item.waiting, .offline-item.failed { color: var(--soon); }
+.offline-item .link { padding: 0; font-weight: 650; color: var(--ink); }
+.offline-tick { font-weight: 800; }
+.mini-spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--surface-2); border-top-color: var(--accent); animation: spin 0.9s linear infinite; }
+
+.save { margin-top: 16px; padding: 20px; }
 .save-head { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; }
 .save-head img { border-radius: 16px; flex: none; }
 .save h2 { font-size: 20px; letter-spacing: -0.01em; text-transform: none; color: var(--ink); margin: 0 0 4px; }

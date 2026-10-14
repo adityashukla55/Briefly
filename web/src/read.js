@@ -173,6 +173,31 @@ async function readPdf(file, onStep, language) {
   }
 }
 
+const PDF_DECODERS = ['pdfjs/wasm/openjpeg.wasm', 'pdfjs/wasm/jbig2.wasm', 'pdfjs/wasm/qcms_bg.wasm'];
+
+export async function prepareReader(language, onStep = () => {}) {
+  const previous = reportProgress;
+  reportProgress = (label) => onStep(label);
+  try {
+    await getOcr(language);
+  } finally {
+    reportProgress = previous;
+  }
+  await Promise.all(PDF_DECODERS.map((path) => fetch(vendor(path)).then((response) => response.arrayBuffer())));
+}
+
+export async function isReaderSaved(language) {
+  if (!('caches' in self)) return false;
+  const needed = [`lang/${language}.traineddata.gz`, 'tesseract/worker.min.js', 'tesseract/tesseract.esm.min.js', 'pdfjs/pdf.min.mjs', 'pdfjs/pdf.worker.min.mjs', ...PDF_DECODERS];
+  const found = await Promise.all(needed.map((path) => caches.match(vendor(path))));
+  if (!found.every(Boolean)) return false;
+  for (const key of await caches.keys()) {
+    const requests = await (await caches.open(key)).keys();
+    if (requests.some((request) => request.url.includes('/vendor/tesseract-core/'))) return true;
+  }
+  return false;
+}
+
 export function isSupported(file) {
   return file.type === 'application/pdf' || file.type.startsWith('image/') || file.type === 'text/plain' || /\.(pdf|png|jpe?g|webp|heic|heif|txt)$/i.test(file.name);
 }

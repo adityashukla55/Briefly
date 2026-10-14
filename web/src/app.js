@@ -2,13 +2,13 @@ import { analyze } from './analyze.js';
 import { ReadError, friendlyError, missingFeatures } from './errors.js';
 import { makeIcs } from './calendar.js';
 import { describeDaysLeft, formatMoney, formatWhen } from './format.js';
-import { isSupported, readFiles } from './read.js';
+import { isReaderSaved, isSupported, prepareReader, readFiles } from './read.js';
 import { detectPlatform, installHelp } from './install.js';
 import { buildReplies } from './replies.js';
 import { COUNTRIES, countryById, detectLanguage, languageOf } from './countries/index.js';
 import { LANGUAGES } from './languages/index.js';
 import { buildSteps } from './steps.js';
-import { isTranslatorCached, prepareTranslator, translateText, translatorSize } from './translate.js';
+import { isTranslatorCached, prepareTranslator, saveTranslator, translateText, translatorSize } from './translate.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -59,6 +59,7 @@ function selectCountry(id) {
   history.replaceState(history.state, '', url);
   renderCountryPicker();
   renderSamples();
+  refreshOffline(true);
 }
 
 function renderCountryPicker() {
@@ -590,6 +591,129 @@ function setupLaunchQueue() {
   });
 }
 
+const offline = { reader: 'checking', readerStep: '', translator: 'checking', translatorProgress: 0, translatorSize: 0, warming: null };
+
+function offlineSupported() {
+  return 'serviceWorker' in navigator && 'caches' in self;
+}
+
+async function controlled() {
+  if (!offlineSupported()) return false;
+  await navigator.serviceWorker.ready;
+  if (navigator.serviceWorker.controller) return true;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(Boolean(navigator.serviceWorker.controller)), 8000);
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      clearTimeout(timer);
+      resolve(true);
+    }, { once: true });
+  });
+}
+
+function renderOffline() {
+  const country = countryById(selectedCountry);
+  const language = languageOf(country);
+  const reader = $('#offline-reader');
+  const translator = $('#offline-translator');
+  const tick = (text) => [h('span', { class: 'offline-tick', 'aria-hidden': 'true' }, '✓'), text];
+  if (!offlineSupported()) {
+    reader.replaceChildren('This browser can’t save Briefly for offline use. Try Chrome, Edge, Firefox or Safari.');
+    translator.replaceChildren();
+    return;
+  }
+  reader.className = `offline-item ${offline.reader}`;
+  if (offline.reader === 'ready') reader.replaceChildren(...tick(`Reading ${language.name} letters works offline.`));
+  else if (offline.reader === 'working') reader.replaceChildren(h('span', { class: 'mini-spinner', 'aria-hidden': 'true' }), `Getting ready to read ${language.name} letters offline… ${offline.readerStep}`);
+  else if (offline.reader === 'waiting') reader.replaceChildren(`You’re offline. Connect to the internet once so Briefly can save its ${language.name} text reader (about 6 MB).`);
+  else if (offline.reader === 'missing') reader.replaceChildren(`To read ${language.name} letters offline, Briefly needs to save its text reader (about 6 MB). `, h('button', { class: 'link', type: 'button', onclick: () => warmReader(true) }, 'Save it now'));
+  else if (offline.reader === 'failed') reader.replaceChildren('Couldn’t save the text reader for offline use. ', h('button', { class: 'link', type: 'button', onclick: () => warmReader(true) }, 'Try again'));
+  else reader.replaceChildren('Checking…');
+
+  translator.className = `offline-item ${offline.translator}`;
+  const size = offline.translatorSize ? ` (${Math.round(offline.translatorSize / 1_000_000)} MB)` : '';
+  if (offline.translator === 'ready') translator.replaceChildren(...tick(`The ${language.name} translator works offline.`));
+  else if (offline.translator === 'working') translator.replaceChildren(h('span', { class: 'mini-spinner', 'aria-hidden': 'true' }), `Saving the ${language.name} translator… ${Math.round(offline.translatorProgress * 100)}%`);
+  else if (offline.translator === 'checking') translator.replaceChildren();
+  else translator.replaceChildren(`Translating the whole letter offline needs the ${language.name} translator${size}. `, h('button', { class: 'link', type: 'button', onclick: saveTranslatorOffline, disabled: navigator.onLine === false }, 'Save it for offline'));
+}
+
+async function warmReader(force = false) {
+  const country = countryById(selectedCountry);
+  const ocr = languageOf(country).ocr;
+  if (offline.warming === ocr) return;
+  if (!navigator.onLine) {
+    offline.reader = 'waiting';
+    renderOffline();
+    return;
+  }
+  if (!force && navigator.connection?.saveData) {
+    offline.reader = 'missing';
+    renderOffline();
+    return;
+  }
+  offline.warming = ocr;
+  offline.reader = 'working';
+  offline.readerStep = '';
+  renderOffline();
+  try {
+    await controlled();
+    await prepareReader(ocr, (step) => {
+      offline.readerStep = step;
+      if (countryById(selectedCountry).language === country.language) renderOffline();
+    });
+  } catch (error) {
+    console.warn('Offline preparation failed', error);
+  }
+  offline.warming = null;
+  if (countryById(selectedCountry).language === country.language) {
+    offline.reader = (await isReaderSaved(ocr)) ? 'ready' : 'failed';
+    renderOffline();
+  }
+}
+
+async function saveTranslatorOffline() {
+  const country = countryById(selectedCountry);
+  offline.translator = 'working';
+  offline.translatorProgress = 0;
+  renderOffline();
+  try {
+    await controlled();
+    await saveTranslator(country, (progress) => {
+      offline.translatorProgress = progress;
+      renderOffline();
+    });
+    offline.translator = (await isTranslatorCached(country)) ? 'ready' : 'missing';
+  } catch (error) {
+    console.warn('Saving the translator failed', error);
+    offline.translator = 'missing';
+    toast(navigator.onLine ? 'Couldn’t save the translator. Try again.' : 'You’re offline. Connect to the internet and try again.');
+  }
+  renderOffline();
+}
+
+async function refreshOffline(warm = false) {
+  if (!offlineSupported()) {
+    renderOffline();
+    return;
+  }
+  const country = countryById(selectedCountry);
+  const ocr = languageOf(country).ocr;
+  if (offline.warming !== ocr) offline.reader = (await isReaderSaved(ocr)) ? 'ready' : (navigator.onLine ? 'missing' : 'waiting');
+  offline.translator = (await isTranslatorCached(country)) ? 'ready' : 'missing';
+  offline.translatorSize = await translatorSize(country).catch(() => 0);
+  renderOffline();
+  if (warm && offline.reader !== 'ready') warmReader();
+}
+
+function setupOffline() {
+  renderOffline();
+  window.addEventListener('online', () => refreshOffline(true));
+  window.addEventListener('offline', () => refreshOffline());
+  const start = () => refreshOffline(true);
+  if ('requestIdleCallback' in window) requestIdleCallback(start, { timeout: 4000 });
+  else setTimeout(start, 1500);
+}
+
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker.register('/sw.js').catch((error) => console.warn('Offline mode unavailable', error));
@@ -611,4 +735,5 @@ setupStart();
 setupInstall();
 setupLaunchQueue();
 registerServiceWorker();
+setupOffline();
 takeSharedFiles();

@@ -34,6 +34,8 @@ let translator = null;
 const downloads = new Map();
 let registry = null;
 
+const ENGINE = ['bergamot/translator.js', 'bergamot/worker/translator-worker.js', 'bergamot/worker/bergamot-translator-worker.js', 'bergamot/worker/bergamot-translator-worker.wasm'];
+
 async function modelFiles(pair) {
   registry ??= await (await fetch(vendor('models/registry.json'))).json();
   return Object.values(registry[pair]);
@@ -56,6 +58,12 @@ async function download(pair, onProgress) {
   }
 }
 
+export async function saveTranslator(country, onProgress = () => {}) {
+  await download(languageOf(country).model, (progress) => onProgress(progress * 0.95));
+  await Promise.all(ENGINE.map((path) => fetch(vendor(path)).then((response) => response.arrayBuffer())));
+  onProgress(1);
+}
+
 export async function translatorSize(country) {
   const files = await modelFiles(languageOf(country).model);
   return files.reduce((sum, file) => sum + file.size, 0);
@@ -65,7 +73,7 @@ export async function isTranslatorCached(country) {
   if (!('caches' in self)) return false;
   const files = await modelFiles(languageOf(country).model).catch(() => []);
   if (!files.length) return false;
-  const hits = await Promise.all(files.map((file) => caches.match(file.name)));
+  const hits = await Promise.all([...files.map((file) => caches.match(file.name)), ...ENGINE.map((path) => caches.match(vendor(path)))]);
   return hits.every(Boolean);
 }
 
@@ -74,6 +82,7 @@ export function prepareTranslator(country, onProgress = () => {}) {
   if (!downloads.has(pair)) {
     downloads.set(pair, (async () => {
       await download(pair, onProgress);
+      await Promise.all(ENGINE.map((path) => fetch(vendor(path)).catch(() => null)));
       if (!translator) {
         const { BatchTranslator } = await import(vendor('bergamot/translator.js'));
         translator = new BatchTranslator({
