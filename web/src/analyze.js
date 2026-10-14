@@ -1,4 +1,4 @@
-import { countryById, detectCountry, languageOf } from './countries/index.js';
+import { countryById, detectCountry, languageOf, resolveLanguage } from './countries/index.js';
 import { addDays, addPeriod, daysBetween, describePeriod, findDates, findPeriods, todayIso } from './dates.js';
 
 export function normalize(text) {
@@ -125,6 +125,7 @@ export function findImportantDates(text, country, today = todayIso()) {
 
   for (const date of dates) {
     if (!DATE_LABELS[date.type]) continue;
+    if (date.type === 'appointment' && letterDate && date.iso < letterDate) continue;
     if (important.some((item) => item.iso === date.iso && item.type === date.type)) continue;
     important.push({
       type: date.type,
@@ -137,7 +138,7 @@ export function findImportantDates(text, country, today = todayIso()) {
     });
   }
 
-  const term = objectionTerm(text, country);
+  const term = objectionTerm(text, country) ?? country.objectionDefault ?? null;
   const seenPurposes = new Set();
   for (const period of findPeriods(text, language)) {
     const purpose = periodPurpose(text, period, language);
@@ -168,6 +169,7 @@ const CURRENCY = {
   PLN: { words: 'zł|PLN\\b|złotych\\b|złote\\b|zl\\b', symbol: 'PLN' },
   USD: { words: 'US\\$|\\$|USD\\b|dollars?\\b', symbol: '$' },
   CAD: { words: 'CA\\$|C\\$|\\$|CAD\\b|dollars?\\b', symbol: '$' },
+  GBP: { words: '£|GBP\\b|pounds?(?: sterling)?\\b', symbol: '£' },
 };
 
 const amountCache = new Map();
@@ -224,7 +226,7 @@ export function findMoney(text, country, kind = null) {
   return { items: unique, toPay: pick('pay'), toGet: pick('refund') ?? pick('benefit') };
 }
 
-export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21, NL: 18, PL: 28 }) {
+export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21, NL: 18, PL: 28, BE: 16, GB: 22 }) {
   const iban = raw.replace(/\s/g, '').toUpperCase();
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
   const expected = lengths[iban.slice(0, 2)];
@@ -256,11 +258,12 @@ export function findPayment(text, country) {
       if (isValidIban(candidate)) { iban = formatIban(candidate); break; }
     }
   }
-  if (!iban) return null;
+  const account = iban ? null : country.localAccount?.(text) ?? null;
+  if (!iban && !account) return null;
   const bic = text.match(/\b(?:BIC|SWIFT)(?:\/SWIFT)?\s*:?\s*([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/)?.[1] ?? null;
   const recipient = text.match(language.payment.recipient)?.[1].trim() ?? null;
-  const reference = text.match(language.payment.reference)?.[1].trim() ?? null;
-  return { iban, bic, recipient, reference };
+  const reference = (country.paymentReference ? text.match(country.paymentReference)?.[1].replace(/\s+/g, '') : text.match(language.payment.reference)?.[1].trim()) ?? null;
+  return { iban, account, bic, recipient, reference };
 }
 
 function takeValue(rest) {
@@ -288,8 +291,11 @@ export function findReferences(text, country) {
   const found = [];
   for (const label of country.references) {
     for (const match of text.matchAll(globalize(label.pattern))) {
-      const lines = text.slice(match.index + match[0].length, match.index + match[0].length + 140).split('\n');
-      const value = takeValue(lines[0]) ?? (/^[\s:.\-–#°]*$/.test(lines[0]) && lines[1] ? takeValue(lines[1]) : null);
+      const window = text.slice(match.index + match[0].length, match.index + match[0].length + 140);
+      const lines = window.split('\n');
+      const value = label.value
+        ? window.match(label.value)?.[0].replace(/\s+/g, '') ?? null
+        : takeValue(lines[0]) ?? (/^[\s:.\-–#°]*$/.test(lines[0]) && lines[1] ? takeValue(lines[1]) : null);
       if (value && !found.some((item) => item.value === value)) {
         found.push({ name: label.name, local: label.local, value, payment: Boolean(label.payment), personal: Boolean(label.personal) });
       }
@@ -317,7 +323,7 @@ export function decideUrgency(kind, dates) {
 
 export function analyze(rawText, { today = todayIso(), country: countryId = null, preferred = 'de' } = {}) {
   const text = normalize(rawText);
-  const country = countryId ? countryById(countryId) : detectCountry(text, preferred);
+  const country = resolveLanguage(countryId ? countryById(countryId) : detectCountry(text, preferred), text);
   const sender = detectSender(text, country);
   const kind = detectKind(text, country);
   const { letterDate, dates } = findImportantDates(text, country, today);

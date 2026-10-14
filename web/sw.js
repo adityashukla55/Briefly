@@ -1,4 +1,4 @@
-const VERSION = '3.1.0';
+const VERSION = '3.2.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -10,6 +10,7 @@ const SHELL = [
   '/icons/icon.svg',
   '/icons/icon-192.png',
   '/icons/flags/at.svg',
+  '/icons/flags/be.svg',
   '/icons/flags/ca.svg',
   '/icons/flags/ch.svg',
   '/icons/flags/de.svg',
@@ -18,12 +19,14 @@ const SHELL = [
   '/icons/flags/it.svg',
   '/icons/flags/nl.svg',
   '/icons/flags/pl.svg',
+  '/icons/flags/uk.svg',
   '/icons/flags/us.svg',
   '/src/analyze.js',
   '/src/app.js',
   '/src/boot.js',
   '/src/calendar.js',
   '/src/countries/at.js',
+  '/src/countries/be.js',
   '/src/countries/ca.js',
   '/src/countries/ch.js',
   '/src/countries/de.js',
@@ -33,6 +36,7 @@ const SHELL = [
   '/src/countries/it.js',
   '/src/countries/nl.js',
   '/src/countries/pl.js',
+  '/src/countries/uk.js',
   '/src/countries/us.js',
   '/src/dates.js',
   '/src/dom.js',

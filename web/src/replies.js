@@ -11,7 +11,7 @@ function templatesFor(country) {
 }
 
 function localMoney(money, country) {
-  const locale = { de: 'de-DE', at: 'de-AT', ch: 'de-CH', fr: 'fr-FR', es: 'es-ES', it: 'it-IT', nl: 'nl-NL', pl: 'pl-PL', us: 'en-US', ca: 'en-CA' }[country.id] ?? 'de-DE';
+  const locale = country.locale ?? { de: 'de-DE', at: 'de-AT', ch: 'de-CH', fr: 'fr-FR', es: 'es-ES', it: 'it-IT', nl: 'nl-NL', pl: 'pl-PL', us: 'en-US', ca: 'en-CA' }[country.id] ?? 'de-DE';
   return new Intl.NumberFormat(locale, { style: 'currency', currency: money.currency ?? country.currency }).format(money.amount);
 }
 
@@ -45,7 +45,7 @@ function letterOf(result, templates) {
 }
 
 function objection(result, templates) {
-  const term = result.objection ?? result.country.objection[0].word;
+  const term = result.objection ?? result.country.objectionDefault ?? result.country.objection[0].word;
   const of = letterOf(result, templates);
   return {
     id: 'objection',
@@ -119,7 +119,7 @@ export function templateLetters(country) {
     dates: [],
     money: { toPay: null },
     references: [],
-    objection: country.objection[0].word,
+    objection: country.objectionDefault ?? country.objection[0].word,
   };
   return [
     objection(result, templates),

@@ -1,7 +1,7 @@
 import { formatDate } from './dates.js';
 
 const formatters = new Map();
-const MONEY_LOCALE = { USD: 'en-US', CAD: 'en-CA' };
+const MONEY_LOCALE = { USD: 'en-US', CAD: 'en-CA', GBP: 'en-GB' };
 const DATE_LOCALE = { us: 'en-US', ca: 'en-CA' };
 const TWELVE_HOUR = new Set(['us', 'ca']);
 

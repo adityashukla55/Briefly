@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { COUNTRIES, languageOf } from '../web/src/countries/index.js';
+import { COUNTRIES, inLanguage, languageOf, languagesOf } from '../web/src/countries/index.js';
 import { LANGUAGES } from '../web/src/languages/index.js';
 import { templateLetters } from '../web/src/replies.js';
 import { datePlaceholder } from '../web/src/dates.js';
@@ -24,6 +24,11 @@ export function esc(value) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function namesOf(country, joiner = 'and') {
+  const names = languagesOf(country).map((id) => LANGUAGES[id].name);
+  return names.length > 1 ? `${names.slice(0, -1).join(', ')} ${joiner} ${names.at(-1)}` : names[0];
 }
 
 function flag(country, extra = '') {
@@ -152,7 +157,7 @@ function countryPage(country) {
   const questions = [
     [`How long do I have to answer an official letter in ${country.inName ?? country.name}?`, deadlineAnswer(country)],
     language.model
-      ? [`Can I understand a ${language.name} letter without speaking ${language.name}?`, `Yes. Take a photo of the letter with Briefly. It reads the ${language.name} text on your device, explains it in plain English, finds deadlines and amounts, and can translate the whole letter.`]
+      ? [`Can I understand a ${namesOf(country, 'or')} letter without speaking ${namesOf(country, 'or')}?`, `Yes. Take a photo of the letter with Briefly. It reads the ${namesOf(country, 'or')} text on your device, explains it in plain English, finds deadlines and amounts, and can translate the whole letter.`]
       : [`How does Briefly help with official letters in ${country.inName ?? country.name}?`, 'Take a photo of the letter with Briefly. It explains the letter in plain words, finds the deadline and the amount, tells you what to do and gives you a ready-made reply.'],
     ['Is my letter uploaded anywhere?', 'No. Briefly runs completely in your browser. The letter never leaves your device, there is no account, and it works offline after the first visit.'],
   ];
@@ -169,9 +174,9 @@ ${cta(country, `Check your letter from ${country.inName ?? country.name}`)}
 <ul class="link-list">${offices}</ul>
 <h2>Common kinds of letters</h2>
 <ul>${kinds}</ul>
-<h2>${esc(language.name)} office words</h2>
+<h2>${esc(namesOf(country))} office words</h2>
 <p>${words} — <a href="/${country.slug}/words/">see all ${country.glossary.length} words</a>.</p>
-<h2>Reply templates in ${esc(language.name)}</h2>
+<h2>Reply templates in ${esc(namesOf(country))}</h2>
 <ul class="link-list">${templates}</ul>
 <h2>Questions</h2>
 ${questions.map(([question, answer]) => `<h3>${esc(question)}</h3>\n<p>${esc(answer)}</p>`).join('\n')}`,
@@ -187,7 +192,7 @@ function senderPage(country, sender) {
   const questions = [
     [`What is the ${sender.local}?`, `${sender.name}. ${sender.about}`],
     [`How long do I have to answer a letter from the ${sender.local}?`, deadlineAnswer(country)],
-    [`Can I read a ${sender.local} letter in English?`, `Yes. Take a photo of the letter with Briefly. It explains the letter in plain English, finds the deadline and the amount, and gives you ready-made replies in ${language.name}. Your letter never leaves your device.`],
+    [`Can I read a ${sender.local} letter in English?`, `Yes. Take a photo of the letter with Briefly. It explains the letter in plain English, finds the deadline and the amount, and gives you ready-made replies in ${namesOf(country, 'or')}. Your letter never leaves your device.`],
   ];
   return {
     path,
@@ -221,10 +226,10 @@ function wordsIndex(country) {
   const sorted = [...country.glossary].sort((a, b) => a.term.localeCompare(b.term, language.id));
   return {
     path,
-    title: `${language.name} office words explained (${country.name}) – Briefly`,
+    title: `${namesOf(country)} office words explained (${country.name}) – Briefly`,
     description: `${country.glossary.length} words from official letters in ${country.inName ?? country.name}, explained in plain English: ${sorted.slice(0, 6).map((entry) => entry.term).join(', ')} and more.`,
     crumbs: [['Briefly', '/'], [country.name, `/${country.slug}/`], ['Office words', path]],
-    body: `<h1>${esc(language.name)} office words from ${esc(country.inName ?? country.name)}, explained</h1>
+    body: `<h1>${esc(namesOf(country))} office words from ${esc(country.inName ?? country.name)}, explained</h1>
 <p class="lead">The words you see in official letters in ${esc(country.inName ?? country.name)}, in plain English.</p>
 <dl class="terms">${sorted.map((entry) => `<div id="${entry.slug}"><dt>${wordLink(country, entry)}</dt><dd>${esc(entry.meaning)}</dd></div>`).join('\n')}</dl>
 ${cta(country)}`,
@@ -232,7 +237,7 @@ ${cta(country)}`,
 }
 
 function wordPage(country, entry) {
-  const language = languageOf(country);
+  const language = LANGUAGES[entry.language ?? country.language];
   const path = `/${country.slug}/words/${entry.slug}/`;
   const senders = country.senders.filter((sender) => entry.pattern.test([sender.local, sender.about, ...(sender.letters ?? []), ...(sender.tips ?? [])].join(' '))).slice(0, 6);
   const index = country.glossary.indexOf(entry);
@@ -255,20 +260,25 @@ ${cta(country, 'Got a letter with this word?')}
 }
 
 export function templatePages(country) {
+  return languagesOf(country).flatMap((id, index) => templatePagesIn(inLanguage(country, id), index ? `-${id}` : ''));
+}
+
+function templatePagesIn(country, suffix) {
   const language = languageOf(country);
   const letters = templateLetters(country);
   for (const extra of country.extraReplies ?? []) {
-    const result = { country, today: null, sender: null, kind: null, letterDate: null, dates: [], money: { toPay: null }, references: [], objection: country.objection[0].word };
+    const result = { country, today: null, sender: null, kind: null, letterDate: null, dates: [], money: { toPay: null }, references: [], objection: country.objectionDefault ?? country.objection[0].word };
     const templates = { ...language.replies, ...(country.replies ?? {}) };
     const header = [templates.you.name, templates.you.street, templates.you.city, '', `[${templates.officeFallback}]`, templates.officeAddress, '', `${templates.you.place}, ${datePlaceholder(country.dateSeparator ?? '.', country.dateOrder ?? 'dmy')}`, '', extra.subject, '', templates.greeting, ''];
     letters.push({ id: extra.id, title: extra.title, when: extra.advice, english: extra.english, local: [...header, ...extra.body(result), '', ...templates.closing].join('\n') });
   }
   return letters.map((letter) => {
     const name = letter.title.match(/\(([^)]+)\)/)?.[1] ?? letter.title;
-    const path = `/${country.slug}/templates/${letter.id}/`;
+    const path = `/${country.slug}/templates/${letter.id}${suffix}/`;
     return {
       path,
       letter,
+      language,
       title: `${name} letter template (${language.name}, ${country.name}) – free – Briefly`,
       description: `Free ${language.name} letter template: ${letter.title.toLowerCase()}. ${letter.when} With an English explanation.`,
       crumbs: [['Briefly', '/'], [country.name, `/${country.slug}/`], ['Templates', `/${country.slug}/templates/`], [name, path]],
@@ -291,12 +301,12 @@ function templatesIndex(country) {
   const pages = templatePages(country);
   return {
     path,
-    title: `${language.name} reply letter templates for ${country.inName ?? country.name} – free – Briefly`,
-    description: `Free ${language.name} templates for replying to official letters in ${country.inName ?? country.name}: objection, more time, payment plan and new appointment.`,
+    title: `${namesOf(country)} reply letter templates for ${country.inName ?? country.name} – free – Briefly`,
+    description: `Free ${namesOf(country)} templates for replying to official letters in ${country.inName ?? country.name}: objection, more time, payment plan and new appointment.`,
     crumbs: [['Briefly', '/'], [country.name, `/${country.slug}/`], ['Templates', path]],
     body: `<h1>Reply letter templates for ${esc(country.inName ?? country.name)}</h1>
-<p class="lead">Ready-made letters in ${esc(language.name)}, with an English explanation.</p>
-<ul class="link-list">${pages.map((page) => `<li><a href="${page.path}">${esc(page.letter.title)}</a> — ${esc(page.letter.when)}</li>`).join('\n')}</ul>
+<p class="lead">Ready-made letters in ${esc(namesOf(country))}, with an English explanation.</p>
+<ul class="link-list">${pages.map((page) => `<li><a href="${page.path}">${esc(page.letter.title)}${languagesOf(country).length > 1 ? ` (${esc(page.language.name)})` : ''}</a> — ${esc(page.letter.when)}</li>`).join('\n')}</ul>
 ${cta(country)}`,
   };
 }

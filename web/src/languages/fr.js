@@ -20,10 +20,10 @@ export default {
   },
   numberWords: {
     un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9, dix: 10,
-    quinze: 15, vingt: 20, trente: 30, 'quarante-cinq': 45, soixante: 60, 'quatre-vingt-dix': 90,
+    quinze: 15, vingt: 20, trente: 30, 'quarante-cinq': 45, soixante: 60, septante: 70, 'quatre-vingt-dix': 90, nonante: 90,
   },
   time: /^[\s,]*(?:à)?\s*(\d{1,2})\s*(?:h|:)\s*(\d{2})?/i,
-  period: /(?:(?:dans un|dans le|sous un)\s+délai\s+d(?:e\s+|['’]\s?)|délai\s+d(?:e\s+|['’]\s?)|sous\s+|dans les\s+)(?<amount>\d+|[a-zéèêûô-]+)(?:\s*\(\d+\))?\s+(?<unit>jours?|mois|semaines?)(?:\s+(?<qualifier>francs|calendaires|ouvrés|ouvrables))?(?:\s+(?:à compter de|à partir de|suivant|après)\s+(?:la\s+date\s+de\s+(?:la\s+|sa\s+|l['’]\s?)?)?(?:la\s+|sa\s+|l['’]\s?|cette\s+)?(?<from>notification|réception|date|présentation))?/giu,
+  period: /(?:(?:dans un|dans le|sous un)\s+délai\s+d(?:e\s+|['’]\s?)|délai\s+d(?:e\s+|['’]\s?)|sous\s+|dans les\s+|endéans\s+(?:(?:un|le)\s+délai\s+d(?:e\s+|['’]\s?)|les\s+)?)(?<amount>\d+|[a-zéèêûô-]+)(?:\s*\(\d+\))?\s+(?<unit>jours?|mois|semaines?)(?:\s+(?<qualifier>francs|calendaires|ouvrés|ouvrables))?(?:\s+(?:à compter de|à partir de|suivant|après)\s+(?:la\s+date\s+de\s+(?:la\s+|sa\s+|l['’]\s?)?)?(?:la\s+|sa\s+|l['’]\s?|cette\s+)?(?<from>notification|réception|date|présentation))?/giu,
   units: { month: /^mois/, week: /^semaine/, workday: /^(?:ouvr)/ },
   context: {
     range: /(?:du|entre le)\s+[\d\/.\s]+\s*(?:au|et le)\s*$/,

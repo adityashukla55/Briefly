@@ -5,7 +5,7 @@ import { describeDaysLeft, formatMoney, formatWhen } from './format.js';
 import { isSupported, missingReaderFiles, prepareReader, readFiles } from './read.js';
 import { detectPlatform, installHelp } from './install.js';
 import { buildReplies } from './replies.js';
-import { COUNTRIES, countryById, detectLanguage, languageOf } from './countries/index.js';
+import { COUNTRIES, countryById, detectLanguage, inLanguage, languageOf, languagesOf } from './countries/index.js';
 import { LANGUAGES } from './languages/index.js';
 import { buildSteps } from './steps.js';
 import { h } from './dom.js';
@@ -30,7 +30,9 @@ function guessCountry() {
   if (locale.startsWith('de-at')) return 'at';
   if (locale.startsWith('de-ch') || locale.startsWith('gsw')) return 'ch';
   if (locale.endsWith('-ca')) return 'ca';
+  if (locale.endsWith('-be')) return 'be';
   if (locale === 'en-us') return 'us';
+  if (locale === 'en-gb' || locale === 'en-uk') return 'uk';
   const language = locale.slice(0, 2);
   return ['fr', 'es', 'it', 'nl', 'pl'].includes(language) ? language : 'de';
 }
@@ -163,7 +165,7 @@ async function processFiles(fileList) {
     const country = countryById(selectedCountry);
     let { text, usedOcr } = await readFiles(files, { language: languageOf(country).ocr, onProgress: setWorking });
     const detected = detectLanguage(text);
-    if (usedOcr && detected && detected.id !== country.language) {
+    if (usedOcr && detected && !(detected.id === country.language || (languagesOf(country).includes(detected.id) && !detected.confident))) {
       setWorking(`This looks like ${LANGUAGES[detected.id].name}. Reading it again`);
       ({ text } = await readFiles(files, { language: LANGUAGES[detected.id].ocr, onProgress: setWorking }));
     }
@@ -269,7 +271,7 @@ function summaryCard(result) {
       countrySwitcher(result)),
     h('h1', { class: 'summary-title', tabindex: '-1' },
       kind ? kind.name : 'Letter',
-      kind ? h('span', { class: 'local' }, ` · ${kind.local}`) : null),
+      kind && !kind.local.toLowerCase().startsWith(kind.name.toLowerCase()) ? h('span', { class: 'local' }, ` · ${kind.local}`) : null),
     kind ? h('p', {}, kind.about) : h('p', {}, 'We couldn’t tell exactly what kind of letter this is. The dates, amounts and translation below can still help.'),
     sender ? h('p', { class: 'muted small' }, sender.about) : null,
     h('span', { class: `badge ${result.urgency}` }, urgencyText(result.urgency)));
@@ -291,14 +293,16 @@ function paymentCard(result) {
     h('h2', {}, 'Bank transfer details'),
     h('dl', { class: 'rows' },
       payment.recipient ? row('Recipient', payment.recipient) : null,
-      row('IBAN', payment.iban, { code: true }),
+      payment.iban ? row('IBAN', payment.iban, { code: true }) : null,
+      ...(payment.account?.rows ?? []).map(([label, value]) => row(label, value, { code: true })),
       payment.bic ? row('BIC', payment.bic, { code: true }) : null,
       payment.reference ? row('Reference', payment.reference) : null,
       result.money.toPay ? row('Amount', result.money.toPay.amount.toFixed(2).replace('.', result.country.decimal)) : null));
 }
 
 function referencesCard(result) {
-  const list = result.references.filter((reference) => reference.value !== result.payment?.reference);
+  const shown = new Set([result.payment?.reference, ...(result.payment?.account?.rows ?? []).map(([, value]) => value)]);
+  const list = result.references.filter((reference) => !shown.has(reference.value));
   if (!list.length) return null;
   return h('div', { class: 'card' },
     h('h2', {}, 'Your reference numbers'),
@@ -665,9 +669,35 @@ async function controlled() {
   });
 }
 
+function variantsOf(country) {
+  return languagesOf(country).map((id) => inLanguage(country, id));
+}
+
+function namesOf(variants) {
+  return variants.map((variant) => languageOf(variant).name).join(' and ');
+}
+
+function readerKey(country) {
+  return variantsOf(country).map((variant) => languageOf(variant).ocr).join('+');
+}
+
+async function missingFor(country) {
+  return (await Promise.all(variantsOf(country).map((variant) => missingReaderFiles(languageOf(variant).ocr)))).flat();
+}
+
+function translatorVariants(country) {
+  return variantsOf(country).filter((variant) => needsTranslator(variant));
+}
+
+async function translatorsCached(country) {
+  const list = translatorVariants(country);
+  return (await Promise.all(list.map((variant) => isTranslatorCached(variant)))).every(Boolean);
+}
+
 function renderOffline() {
   const country = countryById(selectedCountry);
-  const language = languageOf(country);
+  const language = { name: namesOf(variantsOf(country)) };
+  const translatorName = namesOf(translatorVariants(country));
   const reader = $('#offline-reader');
   const translator = $('#offline-translator');
   const tick = (text) => [h('span', { class: 'offline-tick', 'aria-hidden': 'true' }, '✓'), text];
@@ -688,18 +718,19 @@ function renderOffline() {
     reader.append(h('details', { class: 'offline-missing' }, h('summary', {}, 'What’s missing'), h('p', {}, offline.missing.map((path) => path.split('/').pop()).join(', '))));
   }
 
-  translator.hidden = !needsTranslator(country);
+  translator.hidden = !translatorVariants(country).length;
   translator.className = `offline-item ${offline.translator}`;
   const size = offline.translatorSize ? ` (${Math.round(offline.translatorSize / 1_000_000)} MB)` : '';
-  if (offline.translator === 'ready') translator.replaceChildren(...tick(`The ${language.name} translator works offline.`));
-  else if (offline.translator === 'working') translator.replaceChildren(h('span', { class: 'mini-spinner', 'aria-hidden': 'true' }), `Saving the ${language.name} translator… ${Math.round(offline.translatorProgress * 100)}%`);
+  const plural = translatorVariants(country).length > 1 ? 's' : '';
+  if (offline.translator === 'ready') translator.replaceChildren(...tick(`The ${translatorName} translator${plural} work${plural ? '' : 's'} offline.`));
+  else if (offline.translator === 'working') translator.replaceChildren(h('span', { class: 'mini-spinner', 'aria-hidden': 'true' }), `Saving the ${translatorName} translator${plural}… ${Math.round(offline.translatorProgress * 100)}%`);
   else if (offline.translator === 'checking') translator.replaceChildren();
-  else translator.replaceChildren(`Translating the whole letter offline needs the ${language.name} translator${size}. `, h('button', { class: 'link', type: 'button', onclick: saveTranslatorOffline, disabled: navigator.onLine === false }, 'Save it for offline'));
+  else translator.replaceChildren(`Translating the whole letter offline needs the ${translatorName} translator${plural}${size}. `, h('button', { class: 'link', type: 'button', onclick: saveTranslatorOffline, disabled: navigator.onLine === false }, 'Save it for offline'));
 }
 
 async function warmReader(force = false) {
   const country = countryById(selectedCountry);
-  const ocr = languageOf(country).ocr;
+  const ocr = readerKey(country);
   if (offline.warming === ocr) return;
   if (!navigator.onLine) {
     offline.reader = 'waiting';
@@ -717,16 +748,18 @@ async function warmReader(force = false) {
   renderOffline();
   try {
     if (!(await controlled())) throw new Error('Offline saving is not active yet');
-    await prepareReader(ocr, (step) => {
-      offline.readerStep = step;
-      if (countryById(selectedCountry).language === country.language) renderOffline();
-    });
+    for (const variant of variantsOf(country)) {
+      await prepareReader(languageOf(variant).ocr, (step) => {
+        offline.readerStep = step;
+        if (readerKey(countryById(selectedCountry)) === ocr) renderOffline();
+      });
+    }
   } catch (error) {
     console.warn('Offline preparation failed', error);
   }
   offline.warming = null;
-  if (countryById(selectedCountry).language === country.language) {
-    offline.missing = await missingReaderFiles(ocr);
+  if (readerKey(countryById(selectedCountry)) === ocr) {
+    offline.missing = await missingFor(country);
     offline.reader = offline.missing.length ? 'failed' : 'ready';
     renderOffline();
   }
@@ -740,11 +773,14 @@ async function saveTranslatorOffline() {
   renderOffline();
   try {
     if (!(await controlled())) throw new Error('Offline saving is not active yet');
-    await saveTranslator(country, (progress) => {
-      offline.translatorProgress = progress;
-      renderOffline();
-    });
-    offline.translator = (await isTranslatorCached(country)) ? 'ready' : 'missing';
+    const list = translatorVariants(country);
+    for (const [index, variant] of list.entries()) {
+      await saveTranslator(variant, (progress) => {
+        offline.translatorProgress = (index + progress) / list.length;
+        renderOffline();
+      });
+    }
+    offline.translator = (await translatorsCached(country)) ? 'ready' : 'missing';
   } catch (error) {
     console.warn('Saving the translator failed', error);
     offline.translator = 'missing';
@@ -759,13 +795,13 @@ async function refreshOffline(warm = false) {
     return;
   }
   const country = countryById(selectedCountry);
-  const ocr = languageOf(country).ocr;
+  const ocr = readerKey(country);
   if (offline.warming !== ocr) {
-    offline.missing = await missingReaderFiles(ocr);
+    offline.missing = await missingFor(country);
     offline.reader = !offline.missing.length ? 'ready' : (navigator.onLine ? 'missing' : 'waiting');
   }
-  offline.translator = (await isTranslatorCached(country)) ? 'ready' : 'missing';
-  offline.translatorSize = await translatorSize(country).catch(() => 0);
+  offline.translator = (await translatorsCached(country)) ? 'ready' : 'missing';
+  offline.translatorSize = (await Promise.all(translatorVariants(country).map((variant) => translatorSize(variant).catch(() => 0)))).reduce((sum, size) => sum + size, 0);
   renderOffline();
   if (!warm || !navigator.onLine) return;
   if (offline.reader !== 'ready') await warmReader(isInstalled());

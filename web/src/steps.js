@@ -14,7 +14,8 @@ function payStep(result) {
   const { toPay } = result.money;
   if (!toPay) return null;
   const due = firstOf(result, 'payment');
-  const where = result.payment ? ` to the account ${result.payment.iban}` : '';
+  const { payment } = result;
+  const where = payment?.iban ? ` to the account ${payment.iban}` : payment?.account ? ` to ${payment.account.text}` : '';
   return `Pay ${formatMoney(toPay)}${toPay.monthly ? ' a month' : ''}${byWhen(due, result.country)}${where}.`;
 }
 
@@ -82,7 +83,7 @@ export function buildSteps(result) {
 
   if (objection && result.kind?.objection !== false) {
     const when = objection.iso ? ` by ${formatWhen(objection, country)} (estimated)` : ` within ${objection.period} after you received the letter`;
-    add(`If you disagree with this decision, send a written objection (${result.objection ?? country.objection[0]?.word ?? 'objection'})${when}.`);
+    add(`If you disagree with this decision, send a written objection (${result.objection ?? country.objectionDefault ?? country.objection[0]?.word ?? 'objection'})${when}.`);
   }
 
   if (!steps.length) {

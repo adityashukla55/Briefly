@@ -41,7 +41,7 @@ export default {
     appointment: /(?:appointment|interview|hearing|appear|report to|biometrics|court date|jury|scheduled)[^\n]{0,80}$/,
     deadline: /(?:\bby|\bbefore|no later than|on or before|deadline|respond by|reply by|received by|postmarked by|not later than)\s*:?\s*$/,
     letterDate: /(?:\bdate|notice date|letter date|,)\s*:?\s*$/,
-    objection: /appeal|dispute|\bobject|objection|reconsideration|protest|request a hearing|\breview\b|disagree|don[’']t agree|do not agree|\bcontest/,
+    objection: /appeal|dispute|\bobject|objection|reconsideration|protest|request a hearing|\breview\b|disagree|don[’']t agree|do not agree|\bcontest|\bchallenge|representations/,
     paymentNear: /\bpay|payment|remit|balance/,
   },
   money: {
@@ -51,10 +51,10 @@ export default {
     benefit: /monthly benefit|per month|a month|benefit amount|your benefit/,
     monthly: /per month|a month|monthly|\/mo\b/,
     pay: /\bpay|payment|amount due|balance|\bowe|owing|\bdebt\b|installment|\bdue|penalt|interest|\bfee|\bfine|\btax|bill|charge|total due|total amount/,
-    total: /(?:amount due|balance due|balance owing|amount owing|total amount due|total due|total balance|amount you owe|you owe)[^\n]{0,25}$/,
+    total: /(?:amount due|balance due|balance owing|amount owing|total amount due|total due|total balance|amount you owe|you owe|please pay)[^\n]{0,25}$/,
   },
   payment: {
-    recipient: /(?:make (?:your )?(?:check|money order) payable to|payable to|pay to the order of)\s*:?\s*([^\n]{3,70})/i,
+    recipient: /(?:make (?:your )?(?:check|cheque|money order) payable to|payable to|pay to the order of|account name)\s*:?\s*([^\n]{3,70})/i,
     reference: /(?:payment reference|reference number)\s*:\s*([^\n]{3,70})/i,
   },
   greeting: /^(?:dear|to whom it may concern|hello)/i,
