@@ -343,9 +343,7 @@ function toolPage(tool) {
 <p class="lead">${esc(tool.lead)}</p>
 ${cta(null, 'Try it now')}
 <h2>How it works</h2>
-<ul>${tool.points.map((point) => `<li>${esc(point)}</li>`).join('\n')}</ul>
-<h2>Letters from these countries</h2>
-<p>${COUNTRIES.map((country) => `<a href="/${country.slug}/">${flag(country)} ${esc(country.name)}</a>`).join(' · ')}</p>`,
+<ul>${tool.points.map((point) => `<li>${esc(point)}</li>`).join('\n')}</ul>`,
   };
 }
 

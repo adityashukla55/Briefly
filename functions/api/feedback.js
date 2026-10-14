@@ -76,6 +76,7 @@ async function sendWithResend(email, key) {
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', 'user-agent': 'briefly-feedback' },
     body: JSON.stringify(email),
   });
+  if (!response.ok) console.error('Resend refused the feedback email', response.status, await response.text());
   return response.ok;
 }
 
