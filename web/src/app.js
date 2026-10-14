@@ -5,7 +5,7 @@ import { describeDaysLeft, formatMoney, formatWhen } from './format.js';
 import { isSupported, missingReaderFiles, prepareReader, readFiles } from './read.js';
 import { detectPlatform, installHelp } from './install.js';
 import { buildReplies } from './replies.js';
-import { COUNTRIES, countryById, detectLanguage, inLanguage, languageOf, languagesOf, loadCountry } from './countries/index.js';
+import { COUNTRIES, countryById, detectLanguage, inLanguage, isLoaded, languageOf, languagesOf, loadCountry } from './countries/index.js';
 import { LANGUAGES } from './languages/index.js';
 import { buildSteps } from './steps.js';
 import { h } from './dom.js';
@@ -77,6 +77,8 @@ function notFor(className) {
 }
 
 async function renderScope() {
+  const pending = countryById(selectedCountry);
+  if (!isLoaded(pending)) $('#scope').replaceChildren(h('p', { class: 'scope-title' }, `Loading the offices in ${pending.inName ?? pending.name}…`));
   const country = await loadCountry(selectedCountry);
   if (country.id !== selectedCountry) return;
   const senders = country.senders;
@@ -102,6 +104,7 @@ async function renderScope() {
 }
 
 async function renderSamples() {
+  if (!isLoaded(countryById(selectedCountry))) $('#samples').replaceChildren();
   const country = await loadCountry(selectedCountry);
   if (country.id !== selectedCountry) return;
   $('#samples').replaceChildren(...country.samples.map((sample) => h('button', {
