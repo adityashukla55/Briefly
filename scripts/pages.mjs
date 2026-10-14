@@ -352,20 +352,69 @@ function privacyPage() {
   return {
     path,
     title: 'Privacy — your letter never leaves your device – Briefly',
-    description: 'Briefly has no account and no tracking, and your letter never reaches a server. Text recognition and translation run in your browser, and the page is locked so it cannot send your letter anywhere.',
+    description: 'Briefly has no account, no cookies and no tracking, and your letter never reaches a server. What the hosting and the feedback form process, why, and your rights under the GDPR.',
     crumbs: [['Briefly', '/'], ['Privacy', path]],
     body: `<h1>Privacy</h1>
 <p class="lead">Your letter never leaves your device.</p>
-<h2>What happens to my letter?</h2>
-<p>Briefly reads, explains and translates your letter inside your browser. No server ever receives it, and nothing is saved. Close the page and the letter is gone.</p>
-<h2>How can I be sure?</h2>
-<p>The page is locked by a security rule (Content Security Policy) that only allows connections to Briefly’s own website, to download the app itself. It cannot send data anywhere else. The code is <a href="https://github.com/adityashukla55/Briefly">open source</a>, so anyone can check it.</p>
-<h2>What is downloaded?</h2>
-<p>The app, the text reader (about 6 MB) and, only if you use it, the translator for your language (20–26 MB). They are stored by your browser so Briefly works offline.</p>
-<h2>Cookies and tracking</h2>
-<p>None. Briefly only remembers which country you picked last, in your own browser.</p>
-<h2>Reporting a problem</h2>
-<p>If you use “Report a problem”, Briefly sends only what you type in that form, the address of the page you are on and your browser name (for example “Chrome on Windows”). Under a result it also sends what Briefly found — the kind of letter, the office and the country — but never the letter itself. Your email address is optional. The message is delivered to the maker of Briefly by email through <a href="https://resend.com/">Resend</a> and is used only to fix problems.</p>
+<p class="muted small">Last updated: 14 October 2026</p>
+
+<h2>The short version</h2>
+<ul>
+<li>Your letter is read, explained and translated <strong>inside your browser</strong>. It is never uploaded, never sent anywhere and never saved.</li>
+<li>No account, no cookies, no tracking, no ads, no analytics.</li>
+<li>Like every website, Briefly is delivered by a hosting company (Cloudflare), which sees your IP address for a short time.</li>
+<li>Only if you use <strong>Report a problem</strong>, the text you type is sent to me by email.</li>
+</ul>
+
+<h2>Who is responsible</h2>
+<p>Briefly is a free, non-commercial project by Aditya Shukla. To contact me about your data, use <button class="link inline" type="button" data-feedback>Report a problem</button> and add your email address so I can answer, or open an issue on <a href="https://github.com/adityashukla55/Briefly/issues">GitHub</a>.</p>
+
+<h2>Your letter</h2>
+<p>Text recognition (OCR), the explanation and the translation all run on your device. No server ever receives your letter, and nothing is saved. Close the page and the letter is gone.</p>
+<p>How you can be sure: the page is locked by a security rule (Content Security Policy) that only allows connections to Briefly’s own website. It cannot send your letter anywhere else. The code is <a href="https://github.com/adityashukla55/Briefly">open source</a>, so anyone can check it.</p>
+
+<h2>Visiting the website (hosting)</h2>
+<p>Briefly is hosted on Cloudflare Pages by Cloudflare, Inc. (101 Townsend St, San Francisco, CA 94107, USA). When your browser loads a page, Cloudflare necessarily processes technical data: your IP address, the date and time, the page requested, and your browser and operating system. This is needed to deliver the website and protect it from attacks.</p>
+<ul>
+<li><strong>Legal basis:</strong> Art. 6(1)(f) GDPR — my legitimate interest in a working and secure website.</li>
+<li><strong>How long:</strong> Cloudflare keeps these logs only for a short time. I don’t receive them and don’t use them.</li>
+<li>More in <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s privacy policy</a>.</li>
+</ul>
+<p>Briefly loads nothing from other websites: no external fonts, scripts, maps or videos.</p>
+
+<h2>What is stored on your device</h2>
+<p>Briefly uses no cookies. Your browser stores only:</p>
+<ul>
+<li>the country you picked last, and a note that you have used Briefly before (so the start page can be shorter);</li>
+<li>the app itself, the text reader (about 6 MB) and, only if you use it, the translator for your language (20–26 MB), so Briefly works offline.</li>
+</ul>
+<p>This is needed for the features you use and is never sent to me or anyone else (in Germany: § 25(2) no. 2 TDDDG). You can delete it at any time in your browser settings (“site data”) or by removing the installed app.</p>
+
+<h2 id="reporting-a-problem">Reporting a problem</h2>
+<p>If you use <strong>Report a problem</strong>, Briefly sends:</p>
+<ul>
+<li>what you type into the form;</li>
+<li>your email address, only if you enter one;</li>
+<li>the address of the page you are on and your browser name (for example “Chrome on Windows”);</li>
+<li>under a result: what Briefly found — the kind of letter, the office and the country. <strong>Never the letter itself.</strong></li>
+</ul>
+<p>The form is handled by a small function on Cloudflare and delivered to my inbox as an email by Resend (Resend, Inc., USA). I use it only to fix problems and, if you gave your email, to answer you.</p>
+<ul>
+<li><strong>Legal basis:</strong> Art. 6(1)(f) GDPR — my legitimate interest in fixing mistakes and answering questions.</li>
+<li><strong>How long:</strong> I delete the email once the problem is solved, at the latest after 12 months. Resend keeps a copy for a short time to deliver it.</li>
+<li>More in <a href="https://resend.com/legal/privacy-policy">Resend’s privacy policy</a>.</li>
+</ul>
+<p>Please don’t paste your letter or personal details into the form.</p>
+
+<h2>Data in the USA</h2>
+<p>Cloudflare and Resend are US companies, so data may be processed in the USA. These transfers are protected by the EU–US Data Privacy Framework and/or the EU Standard Contractual Clauses in their data processing agreements.</p>
+
+<h2>Links to other websites</h2>
+<p>Links such as “Buy me a coffee” and GitHub open other websites. Nothing is sent to them until you click, and then their own privacy policies apply.</p>
+
+<h2>Your rights</h2>
+<p>You have the right to access your data, to have it corrected or deleted, to restrict its use, to receive it in a common format, and to object to its use (Art. 15–18, 20 and 21 GDPR). Contact me as described above. You can also complain to a data protection authority, for example the one where you live (Art. 77 GDPR).</p>
+<p>Because Briefly keeps no accounts and never receives your letter, the only data I can have about you is a feedback message you sent.</p>
 ${cta(null, 'Try Briefly')}`,
   };
 }

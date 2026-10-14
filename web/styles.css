@@ -167,6 +167,7 @@ main {
 }
 
 .dropzone .link { margin-top: 12px; }
+.link.inline { padding: 0; font: inherit; color: var(--ink); }
 
 .report-line { margin: 18px 4px 0; color: var(--ink-3); font-size: 15px; }
 .report-line .link { padding: 0; }
@@ -191,6 +192,8 @@ main {
 .feedback-privacy { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--info-bg); font-size: 14px; color: var(--ink-2); }
 .feedback-privacy p { margin: 0; }
 .feedback-sent-with { margin: 4px 0 0; padding-left: 18px; }
+.feedback-more { margin-top: 6px !important; }
+.feedback-more a { color: var(--ink-2); }
 .feedback-sent-with code { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
 .feedback-error { margin: 8px 0 0; color: var(--urgent); font-weight: 600; font-size: 15px; }
 .feedback-actions { display: flex; justify-content: flex-end; margin-top: 12px; }

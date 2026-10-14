@@ -61,7 +61,8 @@ function build() {
     trap,
     h('div', { class: 'feedback-privacy' },
       h('p', {}, h('strong', {}, 'Please don’t paste your letter or personal details.'), ' Briefly sends only what you type here, and:'),
-      sentWith),
+      sentWith,
+      h('p', { class: 'feedback-more' }, h('a', { href: '/privacy/#reporting-a-problem', target: '_blank', rel: 'noopener' }, 'How your message is handled'))),
     error,
     h('div', { class: 'feedback-actions' }, submit));
   const thanks = h('div', { class: 'feedback-thanks', hidden: true },
