@@ -743,6 +743,133 @@
   <url><loc>https://brieflyapp.pages.dev/poland/templates/debt-relief/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/poland/templates/already-paid/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/poland/templates/send-documents/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/skatteverket/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/forsakringskassan/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/kronofogden/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/arbetsformedlingen/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/a-kassa/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/migrationsverket/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/kommun/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/transportstyrelsen/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/polisen/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/domstol/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/csn/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/inkassobolag/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/hyresvard/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/elbolag/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/region-vard/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/skatteverket/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/slutskattebesked/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/restskatt/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/skattekonto/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/folkbokforing/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/personnummer/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/samordningsnummer/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/ocr-nummer/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/bankgiro/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/plusgiro/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/forfallodag/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/omprovning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/overklaga/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/fick-del-av-beslutet/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/forvaltningsratt/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/forsakringskassan/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/aterkrav/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/barnbidrag/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/foraldrapenning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/bostadsbidrag/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/kronofogden/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/betalningsforelaggande/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/bestrida/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/utmatning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/betalningsanmarkning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/skuldsanering/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/inkassokrav/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/paminnelseavgift/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/avbetalningsplan/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/anstand/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/ekonomiskt-bistand/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/a-kassa-ord/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/aktivitetsrapport/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/uppehallstillstand/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/kallelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/komplettering/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/ordningsbot/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/strafforelaggande/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/trangselskatt/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/uppsagning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/words/hyresnamnden/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/templates/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/templates/objection/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/templates/more-time/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/templates/instalments/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/templates/reschedule/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/sweden/templates/bestrida/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/skattestyrelsen/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/gaeldsstyrelsen/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/udbetaling-danmark/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/kommune/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/jobcenter/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/a-kasse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/udlaendingemyndigheder/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/politi/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/domstol/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/inkassobureau/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/udlejer/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/forsyning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/region-sundhed/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/su/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/digital-post/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/mitid/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/cpr-nummer/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/skattestyrelsen/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/aarsopgoerelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/forskudsopgoerelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/restskat/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/overskydende-skat/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/tastselv/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/gaeldsstyrelsen-ord/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/loenindeholdelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/modregning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/afdragsordning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/betalingsfrist/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/fi-kort/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/udbetaling-danmark-ord/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/boligstoette/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/boerne-og-ungeydelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/kontanthjaelp/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/dagpenge/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/a-kasse-ord/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/jobsamtale/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/sanktion/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/afgoerelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/klage/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/klagevejledning/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/ankestyrelsen/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/partshoering/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/aktindsigt/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/opholdstilladelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/biometri/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/boedeforelaeg/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/betalingspaakrav/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/fogedretten/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/udlaeg/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/rykker/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/inkasso/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/paakrav/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/opsigelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/words/depositum/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/templates/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/templates/objection/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/templates/more-time/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/templates/instalments/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/templates/reschedule/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/templates/indsigelse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/denmark/templates/partshoering-svar/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/united-kingdom/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/united-kingdom/hmrc/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/united-kingdom/dwp/</loc></url>
@@ -1041,6 +1168,8 @@
   <url><loc>https://brieflyapp.pages.dev/translate-dutch-letter-to-english/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/translate-polish-letter-to-english/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/translate-portuguese-letter-to-english/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/translate-swedish-letter-to-english/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/translate-danish-letter-to-english/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/official-letter-deadline-calculator/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/privacy/</loc></url>
 </urlset>

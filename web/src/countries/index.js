@@ -3,6 +3,7 @@ import be from './be.js';
 import ca from './ca.js';
 import ch from './ch.js';
 import de from './de.js';
+import dk from './dk.js';
 import es from './es.js';
 import fr from './fr.js';
 import ie from './ie.js';
@@ -10,11 +11,12 @@ import it from './it.js';
 import nl from './nl.js';
 import pl from './pl.js';
 import pt from './pt.js';
+import se from './se.js';
 import uk from './uk.js';
 import us from './us.js';
 import { LANGUAGES } from '../languages/index.js';
 
-export const COUNTRIES = [de, at, ch, fr, es, pt, it, nl, be, pl, uk, ie, us, ca];
+export const COUNTRIES = [de, at, ch, fr, es, pt, it, nl, be, pl, se, dk, uk, ie, us, ca];
 
 export const DEFAULT_COUNTRY = 'de';
 

@@ -188,7 +188,7 @@ export default {
       name: 'Water company',
       local: 'Serviços de água (SMAS, EPAL, Águas de…)',
       about: 'Your local water company.',
-      patterns: [/\bSMAS\b|\bEPAL\b|Águas d[eo]/i, /abastecimento de água/i, /\bsaneamento\b/i, /consumo de água/i, /\bm3\b|\bm³\b/],
+      patterns: [/\bSMAS\b|\bEPAL\b|Águas d[eo]/i, /abastecimento de água/i, /\bsaneamento\b/i, /consumo de água/i, /\bm3\b|\bm³(?![A-Za-zÀ-ɏ])/],
       letters: ['Fatura de água — your water bill', 'Aviso de corte — unpaid bills; they may cut the supply'],
       tips: ['Ask your water company about a social tariff if your income is low.'],
     },
@@ -270,7 +270,7 @@ export default {
       steps: ['Check the notice period and the reason. Ask a tenants’ association or a lawyer before you agree to leave.'],
     },
     {
-      id: 'utility-bill', type: 'utility-bill', local: 'Fatura de energia ou água', name: 'Energy or water bill', about: 'A bill for electricity, gas or water.', urgency: 'medium', patterns: [/\bkWh\b/i, /\bCPE\b/, /leitura (?:real|estimada)/i, /consumo de (?:água|eletricidade|gás)/i, /\bm3\b|\bm³\b/, /potência contratada/i],
+      id: 'utility-bill', type: 'utility-bill', local: 'Fatura de energia ou água', name: 'Energy or water bill', about: 'A bill for electricity, gas or water.', urgency: 'medium', patterns: [/\bkWh\b/i, /\bCPE\b/, /leitura (?:real|estimada)/i, /consumo de (?:água|eletricidade|gás)/i, /\bm3\b|\bm³(?![A-Za-zÀ-ɏ])/, /potência contratada/i],
       steps: ['Check the meter readings. If the bill is estimated, send a real reading (leitura).'],
     },
     { id: 'bill', type: 'bill', local: 'Fatura', name: 'Bill', about: 'A bill. It tells you how much to pay and by when.', urgency: 'medium', weight: 0.6, patterns: [/\bfatura\b/i, /data (?:limite|de vencimento)/i, /\bvalor a pagar\b/i, /\bmontante a pagar\b/i, /\bMultibanco\b/i] },

@@ -172,6 +172,8 @@ const CURRENCY = {
   USD: { words: 'US\\$|\\$|USD\\b|dollars?\\b', symbol: '$' },
   CAD: { words: 'CA\\$|C\\$|\\$|CAD\\b|dollars?\\b', symbol: '$' },
   GBP: { words: '£|GBP\\b|pounds?(?: sterling)?\\b', symbol: '£' },
+  SEK: { words: 'kr\\.?(?![a-zåäö])|kronor\\b|SEK\\b', symbol: 'kr' },
+  DKK: { words: 'kr\\.?(?![a-zæøå])|kroner\\b|DKK\\b', symbol: 'kr.' },
 };
 
 const amountCache = new Map();
@@ -228,7 +230,7 @@ export function findMoney(text, country, kind = null) {
   return { items: unique, toPay: pick('pay'), toGet: pick('refund') ?? pick('benefit') };
 }
 
-export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21, NL: 18, PL: 28, BE: 16, GB: 22, IE: 22, PT: 25 }) {
+export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21, NL: 18, PL: 28, BE: 16, GB: 22, IE: 22, PT: 25, SE: 24, DK: 18 }) {
   const iban = raw.replace(/\s/g, '').toUpperCase();
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
   const expected = lengths[iban.slice(0, 2)];

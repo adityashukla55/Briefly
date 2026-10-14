@@ -167,7 +167,7 @@ export default {
       name: 'National Health Fund',
       local: 'NFZ (Narodowy Fundusz Zdrowia)',
       about: 'Pays for public health care. It checks if you are insured and issues the European Health Insurance Card (EKUZ).',
-      patterns: [/\bNFZ\b/, /narodow(?:y|ego|ym)\s+fundusz(?:u|em)?\s+zdrowia/i, /\beWUŚ\b/i, /\bEKUZ\b/, /ubezpieczeni(?:e|a|u)\s+zdrowotn/i, /dobrowoln(?:e|ego)\s+ubezpieczeni/i, /koszt(?:y|ów)\s+(?:leczenia|świadczeń\s+opieki\s+zdrowotnej)/i],
+      patterns: [/\bNFZ\b/, /narodow(?:y|ego|ym)\s+fundusz(?:u|em)?\s+zdrowia/i, /\beWUŚ(?![A-Za-zÀ-ɏ])/i, /\bEKUZ\b/, /ubezpieczeni(?:e|a|u)\s+zdrowotn/i, /dobrowoln(?:e|ego)\s+ubezpieczeni/i, /koszt(?:y|ów)\s+(?:leczenia|świadczeń\s+opieki\s+zdrowotnej)/i],
       letters: ['Wezwanie do zwrotu kosztów leczenia — you were treated while not insured and must pay', 'Decyzja — a decision about your right to public health care', 'EKUZ — your European Health Insurance Card'],
       tips: ['You are usually insured through your job, ZUS, the job centre or a family member. If you are not, you can sign a voluntary insurance agreement with the NFZ.', 'You can check your insurance status in your online patient account (Internetowe Konto Pacjenta).'],
     },

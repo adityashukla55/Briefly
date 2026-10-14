@@ -1,6 +1,6 @@
 # Briefly
 
-**Official letters, explained.** Take a photo of an official letter from **Germany, Austria, Switzerland, France, Spain, Portugal, Italy, the Netherlands, Belgium, Poland, the United Kingdom, Ireland, the United States or Canada** and understand it in plain English: who sent it, what they want, the deadline, the amount, and what to do next.
+**Official letters, explained.** Take a photo of an official letter from **Germany, Austria, Switzerland, France, Spain, Portugal, Italy, the Netherlands, Belgium, Poland, Sweden, Denmark, the United Kingdom, Ireland, the United States or Canada** and understand it in plain English: who sent it, what they want, the deadline, the amount, and what to do next.
 
 **Try it: [brieflyapp.pages.dev](https://brieflyapp.pages.dev)** — no sign-up, nothing to install.
 
@@ -8,8 +8,8 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 
 ## What it does
 
-- **Reads the letter** from a photo, a scanned PDF, a normal PDF or pasted text — in German, French, Spanish, Portuguese, Italian, Dutch, Polish or English.
-- **Knows each country:** the offices (Finanzamt, AMS, Betreibungsamt, CAF, Agencia Tributaria, Agenzia delle Entrate, Belastingdienst, FOD Financiën / SPF Finances, Finanças, Urząd Skarbowy, HMRC, Revenue, IRS, CRA…), the kinds of letters, how deadlines are counted, money formats and reference numbers.
+- **Reads the letter** from a photo, a scanned PDF, a normal PDF or pasted text — in German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish, Danish or English.
+- **Knows each country:** the offices (Finanzamt, AMS, Betreibungsamt, CAF, Agencia Tributaria, Agenzia delle Entrate, Belastingdienst, FOD Financiën / SPF Finances, Finanças, Urząd Skarbowy, Skatteverket, Skattestyrelsen, HMRC, Revenue, IRS, CRA…), the kinds of letters, how deadlines are counted, money formats and reference numbers.
 - **Detects the country by itself** from the language, IBAN and office names — and switches if you picked the wrong one.
 - **Finds the important dates**: payment deadlines, appointments, and the last day to object — including deadlines like “within one month after delivery” or “within 10 working days”, estimated with each country’s delivery rule.
 - **Finds the money**: what you must pay, or what you get back, plus IBAN and payment reference with copy buttons. Euros and Swiss francs.
@@ -44,9 +44,9 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
                                                               └──► translator (Bergamot, WebAssembly) ──► English
 ```
 
-- **Text reading:** [Tesseract.js](https://github.com/naptha/tesseract.js) with German, French, Spanish, Portuguese, Italian, Dutch, Polish and English models, and [pdf.js](https://github.com/mozilla/pdf.js) for PDFs that already contain text.
+- **Text reading:** [Tesseract.js](https://github.com/naptha/tesseract.js) with German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish, Danish and English models, and [pdf.js](https://github.com/mozilla/pdf.js) for PDFs that already contain text.
 - **Understanding:** hand-written rules. Each **language** ([`web/src/languages/`](web/src/languages/)) knows dates, deadline phrases, amounts and reply letters. Each **country** ([`web/src/countries/`](web/src/countries/)) knows its offices, letter types, legal delivery rules, office words and example letters. The engine is [`web/src/analyze.js`](web/src/analyze.js). Rules are predictable and testable, which matters when the result is a legal deadline.
-- **Translation:** [Bergamot](https://browser.mt/) models (the engine behind Firefox Translations) for German, French, Spanish, Portuguese, Italian, Dutch and Polish → English, 20–26 MB each, downloaded only when used. Letters from the UK, Ireland, the United States and Canada are already in English, so they need no translator. Belgian letters can be in Dutch or French; Briefly picks the right language by itself.
+- **Translation:** [Bergamot](https://browser.mt/) models (the engine behind Firefox Translations) for German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish and Danish → English, 20–26 MB each, downloaded only when used. Letters from the UK, Ireland, the United States and Canada are already in English, so they need no translator. Belgian letters can be in Dutch or French; Briefly picks the right language by itself.
 - **No framework, no build step.** Plain HTML, CSS and JavaScript modules.
 
 ## Search pages

@@ -9,7 +9,7 @@ const vendor = join(root, 'web', 'vendor');
 const cache = join(root, '.cache', 'models');
 
 const MODEL_HOST = 'https://bergamot.s3.amazonaws.com/models/';
-const OCR_LANGUAGES = ['deu', 'fra', 'spa', 'ita', 'nld', 'pol', 'por', 'eng'];
+const OCR_LANGUAGES = ['deu', 'fra', 'spa', 'ita', 'nld', 'pol', 'por', 'swe', 'dan', 'eng'];
 const MOZILLA = 'https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/';
 const MODELS = {
   deen: {
@@ -36,6 +36,16 @@ const MODELS = {
     model: { file: 'model.pten.intgemm.alphas.bin', sha256: 'b4a1fd101f59ca258bfb051a3a4e5762497b9f91d7e74f28b7a2d68dc075f8fa', url: `${MOZILLA}dc4327ec-9ebc-4c12-8037-48cd30f3076d.bin` },
     lex: { file: 'lex.50.50.pten.s2t.bin', sha256: '702d9b09fbc020168998bb81afc927e74262f5a1455e9b443608a5d8efa4b52d', url: `${MOZILLA}013e0ebf-3d6b-4723-b83e-0e00ed29477f.bin` },
     vocab: { file: 'vocab.pten.spm', sha256: '2326a27577b5ffa0b822c55fe850986961728097521de35fcc186f7d6dce72d4', url: `${MOZILLA}75fa56af-540e-4a56-8a9f-1317ae7a9c61.spm` },
+  },
+  sven: {
+    model: { file: 'model.sven.intgemm.alphas.bin', sha256: '92d79e2725718b84aed486473bdfcbe6bba3e7094922d4bead8a121cfa346372', url: `${MOZILLA}c9320d7a-0b85-444f-8b8e-4b83ddf86cbb.bin` },
+    lex: { file: 'lex.50.50.sven.s2t.bin', sha256: '1c4640765e806d905cdc4f51158f6f869c78709b9e8a43070877965fa13c160e', url: `${MOZILLA}346b91bf-2540-43fa-a7d2-684e02f19252.bin` },
+    vocab: { file: 'vocab.sven.spm', sha256: '93427195fac4125722ed778707478ef78cb77b3fdf1ed5b93bee9fd36e30a8ec', url: `${MOZILLA}60d6442e-ef60-4074-b1b3-330b916d619b.spm` },
+  },
+  daen: {
+    model: { file: 'model.daen.intgemm.alphas.bin', sha256: '2c1ace24220c905404bbb1de14bfeda8a391ef8d6c56f3b193a9d3e340d99b12', url: `${MOZILLA}80b27539-da6a-4e69-90b5-138975866a2d.bin` },
+    lex: { file: 'lex.50.50.daen.s2t.bin', sha256: 'e5f50fba646e0d3cedf2957575aa84c3bdca6798ce32ccd63c956fc043d774a3', url: `${MOZILLA}f5eb2acc-9170-4ad6-9251-019dc107692a.bin` },
+    vocab: { file: 'vocab.daen.spm', sha256: 'b9392fcd9c53b802628d33a160f6eb52ca3d25a07ec9e015ab93b6bd5c7e8033', url: `${MOZILLA}492756d4-6932-4465-9ebf-dd402fb2e487.spm` },
   },
   plen: {
     model: { file: 'model.plen.intgemm.alphas.bin', sha256: '172a5f1d44bf8dd6a6eec3868b13b33ce265f3530e898fe11a80b739b821726e', url: `${MOZILLA}b26a428b-a136-469d-91dd-9389f72c053e.bin` },

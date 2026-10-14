@@ -35,6 +35,8 @@ function guessCountry() {
   if (locale === 'en-gb' || locale === 'en-uk') return 'uk';
   if (locale === 'en-ie' || locale === 'ga') return 'ie';
   const language = locale.slice(0, 2);
+  if (language === 'sv') return 'se';
+  if (language === 'da') return 'dk';
   return ['fr', 'es', 'it', 'nl', 'pl', 'pt'].includes(language) ? language : 'de';
 }
 

@@ -1,4 +1,4 @@
-const VERSION = '3.3.0';
+const VERSION = '3.4.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -14,6 +14,7 @@ const SHELL = [
   '/icons/flags/ca.svg',
   '/icons/flags/ch.svg',
   '/icons/flags/de.svg',
+  '/icons/flags/dk.svg',
   '/icons/flags/es.svg',
   '/icons/flags/fr.svg',
   '/icons/flags/ie.svg',
@@ -21,6 +22,7 @@ const SHELL = [
   '/icons/flags/nl.svg',
   '/icons/flags/pl.svg',
   '/icons/flags/pt.svg',
+  '/icons/flags/se.svg',
   '/icons/flags/uk.svg',
   '/icons/flags/us.svg',
   '/src/analyze.js',
@@ -32,6 +34,7 @@ const SHELL = [
   '/src/countries/ca.js',
   '/src/countries/ch.js',
   '/src/countries/de.js',
+  '/src/countries/dk.js',
   '/src/countries/es.js',
   '/src/countries/fr.js',
   '/src/countries/ie.js',
@@ -40,6 +43,7 @@ const SHELL = [
   '/src/countries/nl.js',
   '/src/countries/pl.js',
   '/src/countries/pt.js',
+  '/src/countries/se.js',
   '/src/countries/uk.js',
   '/src/countries/us.js',
   '/src/dates.js',
@@ -48,6 +52,7 @@ const SHELL = [
   '/src/feedback.js',
   '/src/format.js',
   '/src/install.js',
+  '/src/languages/da.js',
   '/src/languages/de.js',
   '/src/languages/en.js',
   '/src/languages/es.js',
@@ -57,6 +62,7 @@ const SHELL = [
   '/src/languages/nl.js',
   '/src/languages/pl.js',
   '/src/languages/pt.js',
+  '/src/languages/sv.js',
   '/src/pdf-worker.js',
   '/src/polyfills.js',
   '/src/read.js',

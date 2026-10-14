@@ -4,14 +4,16 @@ import { formatShortDate, toIso } from './dates.js';
 
 const vendor = (path) => new URL(`../vendor/${path}`, import.meta.url).href;
 
-const MONEY_OUT = /(?<![\w.])(€|EUR ?|CHF ?|PLN ?)(\d+)(?:\.(\d{2}))?(?!\d)/g;
-const MONEY_OUT_AFTER = /(?<![\w.])(\d+)(?:\.(\d{2}))? ?(EUR|CHF|PLN)\b/g;
-const SYMBOL_IN = { CHF: 'CHF ', PLN: 'PLN ', EUR: 'EUR ' };
+const CODES = ['CHF', 'PLN', 'SEK', 'DKK'];
+const MONEY_OUT = /(?<![\w.])(€|EUR ?|CHF ?|PLN ?|SEK ?|DKK ?)(\d+)(?:\.(\d{2}))?(?!\d)/g;
+const MONEY_OUT_AFTER = /(?<![\w.])(\d+)(?:\.(\d{2}))? ?(EUR|CHF|PLN|SEK|DKK)\b/g;
+const SYMBOL_IN = { CHF: 'CHF ', PLN: 'PLN ', SEK: 'SEK ', DKK: 'DKK ', EUR: 'EUR ' };
 const DATE_OUT = /(?<![\d.\/-])(\d{1,2})([./-])(\d{1,2})\2(\d{4})(?!\d)/g;
+const ISO_OUT = /(?<![\d.\/-])(\d{4})-(\d{2})-(\d{2})(?![\d-])/g;
 
 export function beforeTranslation(line, country) {
   const language = languageOf(country);
-  let out = line.replace(/[·•]/g, '-');
+  let out = line.replace(/[·•]/g, '-').replace(ISO_OUT, (match, year, month, day) => `${day}.${month}.${year}`);
   for (const [pattern, replace] of language.rewrite) out = out.replace(new RegExp(pattern.source, pattern.flags), replace);
   return out.replace(amountPattern(country), (match, before, whole, cents, after) => {
     if (!before && !after) return match;
@@ -24,8 +26,12 @@ export function beforeTranslation(line, country) {
 export function afterTranslation(english) {
   return english
     .replace(MONEY_OUT_AFTER, (match, whole, cents, code) => `${code} ${whole}${cents ? `.${cents}` : ''}`)
-    .replace(MONEY_OUT, (match, symbol, whole, cents) => `${['CHF', 'PLN'].includes(symbol.trim()) ? `${symbol.trim()} ` : '€'}${Number(whole).toLocaleString('en-IE')}${cents ? `.${cents}` : ''}`)
+    .replace(MONEY_OUT, (match, symbol, whole, cents) => `${CODES.includes(symbol.trim()) ? `${symbol.trim()} ` : '€'}${Number(whole).toLocaleString('en-IE')}${cents ? `.${cents}` : ''}`)
     .replace(DATE_OUT, (match, day, separator, month, year) => {
+      const iso = toIso(Number(year), Number(month), Number(day));
+      return iso ? formatShortDate(iso) : match;
+    })
+    .replace(ISO_OUT, (match, year, month, day) => {
       const iso = toIso(Number(year), Number(month), Number(day));
       return iso ? formatShortDate(iso) : match;
     });

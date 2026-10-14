@@ -16,6 +16,8 @@ const DEADLINE_WORDS = {
   nl: ['termijn', 'uiterlijk', 'binnen'],
   pl: ['termin', 'do dnia', 'w terminie'],
   pt: ['prazo', 'até', 'data limite'],
+  sv: ['senast', 'inom', 'sista dag'],
+  da: ['senest', 'inden', 'frist'],
   en: ['deadline', 'by', 'within'],
 };
 
@@ -317,10 +319,10 @@ const TOOLS = [
     slug: 'scan-document-to-text-offline',
     short: 'Scan to text offline',
     title: 'Scan a document to text offline — free, private OCR – Briefly',
-    description: 'Turn a photo or scanned PDF of a letter into text, right on your device. No upload, no account, works offline. Supports English, German, French, Spanish, Portuguese, Italian, Dutch and Polish.',
+    description: 'Turn a photo or scanned PDF of a letter into text, right on your device. No upload, no account, works offline. Supports English, German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish and Danish.',
     h1: 'Scan a document to text — offline and private',
     lead: 'Take a photo or open a scanned PDF. Briefly reads the text on your device with built-in text recognition (OCR). You can copy the text or save it as a file.',
-    points: ['Works in your browser on phones and computers — nothing to install.', 'Your document is never uploaded. No server ever sees it.', 'Works offline after your first visit.', 'Reads English, German, French, Spanish, Portuguese, Italian, Dutch and Polish.', 'Copy the text or save it as a .txt file.'],
+    points: ['Works in your browser on phones and computers — nothing to install.', 'Your document is never uploaded. No server ever sees it.', 'Works offline after your first visit.', 'Reads English, German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish and Danish.', 'Copy the text or save it as a .txt file.'],
   },
   ...Object.values(LANGUAGES).filter((language) => language.model).map((language) => ({
     slug: `translate-${language.name.toLowerCase()}-letter-to-english`,

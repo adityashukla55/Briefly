@@ -804,7 +804,7 @@ html.ready .boot-warning { display: none; }
   .work { padding-top: 8px; }
   .countries { gap: 6px; }
   .country { min-height: 36px; padding: 5px 10px; gap: 6px; font-size: 14px; }
-  .scope-tag:nth-child(n+7) { display: none; }
+  .scope-tag:nth-child(n+5) { display: none; }
   #working, #result { max-width: 760px; width: 100%; margin: 0 auto; }
   .page .topbar, .page main, .page .footer { max-width: 760px; }
 }
