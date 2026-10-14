@@ -116,6 +116,7 @@ const DATE_LABELS = {
 };
 
 const FROM_LETTER_DATE = /^(?:datum|ausfertigung|dagtekening|verzending|verzenddatum|date|fecha|data)$/;
+const FROM_PAYMENT_END = /^termo$/;
 
 export function findImportantDates(text, country, today = todayIso()) {
   const language = languageOf(country);
@@ -145,7 +146,8 @@ export function findImportantDates(text, country, today = todayIso()) {
     if (seenPurposes.has(purpose)) continue;
     if (purpose !== 'objection' && important.some((item) => item.type === purpose)) continue;
     seenPurposes.add(purpose);
-    const base = letterDate ? (FROM_LETTER_DATE.test(period.from ?? '') ? letterDate : addDays(letterDate, country.deliveryDays)) : null;
+    const paymentEnd = FROM_PAYMENT_END.test(period.from ?? '') ? important.find((item) => item.type === 'payment' && item.iso)?.iso : null;
+    const base = paymentEnd ?? (letterDate ? (FROM_LETTER_DATE.test(period.from ?? '') ? letterDate : addDays(letterDate, country.deliveryDays)) : null);
     const iso = base ? addPeriod(base, period) : null;
     important.push({
       type: purpose,
@@ -226,7 +228,7 @@ export function findMoney(text, country, kind = null) {
   return { items: unique, toPay: pick('pay'), toGet: pick('refund') ?? pick('benefit') };
 }
 
-export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21, NL: 18, PL: 28, BE: 16, GB: 22 }) {
+export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21, NL: 18, PL: 28, BE: 16, GB: 22, IE: 22, PT: 25 }) {
   const iban = raw.replace(/\s/g, '').toUpperCase();
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
   const expected = lengths[iban.slice(0, 2)];

@@ -1,4 +1,4 @@
-const VERSION = '3.2.0';
+const VERSION = '3.3.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -16,9 +16,11 @@ const SHELL = [
   '/icons/flags/de.svg',
   '/icons/flags/es.svg',
   '/icons/flags/fr.svg',
+  '/icons/flags/ie.svg',
   '/icons/flags/it.svg',
   '/icons/flags/nl.svg',
   '/icons/flags/pl.svg',
+  '/icons/flags/pt.svg',
   '/icons/flags/uk.svg',
   '/icons/flags/us.svg',
   '/src/analyze.js',
@@ -32,10 +34,12 @@ const SHELL = [
   '/src/countries/de.js',
   '/src/countries/es.js',
   '/src/countries/fr.js',
+  '/src/countries/ie.js',
   '/src/countries/index.js',
   '/src/countries/it.js',
   '/src/countries/nl.js',
   '/src/countries/pl.js',
+  '/src/countries/pt.js',
   '/src/countries/uk.js',
   '/src/countries/us.js',
   '/src/dates.js',
@@ -52,6 +56,7 @@ const SHELL = [
   '/src/languages/it.js',
   '/src/languages/nl.js',
   '/src/languages/pl.js',
+  '/src/languages/pt.js',
   '/src/pdf-worker.js',
   '/src/polyfills.js',
   '/src/read.js',

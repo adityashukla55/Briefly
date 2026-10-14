@@ -33,8 +33,9 @@ function guessCountry() {
   if (locale.endsWith('-be')) return 'be';
   if (locale === 'en-us') return 'us';
   if (locale === 'en-gb' || locale === 'en-uk') return 'uk';
+  if (locale === 'en-ie' || locale === 'ga') return 'ie';
   const language = locale.slice(0, 2);
-  return ['fr', 'es', 'it', 'nl', 'pl'].includes(language) ? language : 'de';
+  return ['fr', 'es', 'it', 'nl', 'pl', 'pt'].includes(language) ? language : 'de';
 }
 
 let selectedCountry = guessCountry();
@@ -59,7 +60,9 @@ function renderCountryPicker() {
     type: 'button',
     'aria-pressed': String(country.id === selectedCountry),
     onclick: () => selectCountry(country.id),
-  }, h('img', { class: 'flag', src: `/icons/flags/${country.id}.svg`, alt: '', width: 21, height: 14 }), country.name)));
+    title: country.short ? country.name : null,
+    'aria-label': country.short ? country.name : null,
+  }, h('img', { class: 'flag', src: `/icons/flags/${country.id}.svg`, alt: '', width: 21, height: 14 }), country.short ?? country.name)));
   const selected = $('#countries .selected');
   const row = $('#countries');
   if (selected && row.scrollWidth > row.clientWidth) row.scrollLeft = selected.offsetLeft - row.offsetLeft - 16;

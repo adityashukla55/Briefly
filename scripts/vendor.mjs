@@ -9,7 +9,7 @@ const vendor = join(root, 'web', 'vendor');
 const cache = join(root, '.cache', 'models');
 
 const MODEL_HOST = 'https://bergamot.s3.amazonaws.com/models/';
-const OCR_LANGUAGES = ['deu', 'fra', 'spa', 'ita', 'nld', 'pol', 'eng'];
+const OCR_LANGUAGES = ['deu', 'fra', 'spa', 'ita', 'nld', 'pol', 'por', 'eng'];
 const MOZILLA = 'https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-models/';
 const MODELS = {
   deen: {
@@ -31,6 +31,11 @@ const MODELS = {
     model: { file: 'model.nlen.intgemm.alphas.bin', sha256: '187f9c8f1ffbcc8ecf0724b608ffed9f15bde262b9de5c4754f8d763b585969d', url: `${MOZILLA}1db60932-8656-41a8-a00f-191eb925cef8.bin` },
     lex: { file: 'lex.50.50.nlen.s2t.bin', sha256: '15c473e6e5aef1fa3fe5cc804844e19a2c671d2e39169dcbc06f456ca4f9b2c0', url: `${MOZILLA}eeba1c98-e44a-4d97-8b5c-44c0a56edc3c.bin` },
     vocab: { file: 'vocab.nlen.spm', sha256: '48a6331cb8a69d21dd24c6c2a15de44a07bcfd4a4470eaf4616849d77945f6b9', url: `${MOZILLA}e16e52fe-1c21-48ab-9b7f-af1183a99d1a.spm` },
+  },
+  pten: {
+    model: { file: 'model.pten.intgemm.alphas.bin', sha256: 'b4a1fd101f59ca258bfb051a3a4e5762497b9f91d7e74f28b7a2d68dc075f8fa', url: `${MOZILLA}dc4327ec-9ebc-4c12-8037-48cd30f3076d.bin` },
+    lex: { file: 'lex.50.50.pten.s2t.bin', sha256: '702d9b09fbc020168998bb81afc927e74262f5a1455e9b443608a5d8efa4b52d', url: `${MOZILLA}013e0ebf-3d6b-4723-b83e-0e00ed29477f.bin` },
+    vocab: { file: 'vocab.pten.spm', sha256: '2326a27577b5ffa0b822c55fe850986961728097521de35fcc186f7d6dce72d4', url: `${MOZILLA}75fa56af-540e-4a56-8a9f-1317ae7a9c61.spm` },
   },
   plen: {
     model: { file: 'model.plen.intgemm.alphas.bin', sha256: '172a5f1d44bf8dd6a6eec3868b13b33ce265f3530e898fe11a80b739b821726e', url: `${MOZILLA}b26a428b-a136-469d-91dd-9389f72c053e.bin` },

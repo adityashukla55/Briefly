@@ -35,7 +35,7 @@ export default {
   context: {
     range: /(?:\bfrom|\bbetween)\s+[\w,\/.\s-]{4,30}\s*(?:to|through|and|-)\s*$/,
     mention: /(?:\bdated|\breceived date|\bdate received|\bpriority date|\bdate of birth|\bborn on|\bdob|\bsince|\bas of|\byour letter of|\bfiled on|\breceived on|\bperiod ended|\bperiod ending|\bperiod ended on|\btax year ended)\s*:?\s*$/,
-    start: /(?:\bstarting|\bbeginning|\beffective|\bstarting on|\bbegins on|\beffective on|\beffective date)\s*:?\s*$/,
+    start: /(?:\bstarting|\bbeginning|\beffective|\bstarting on|\bbegins on|\beffective on|\beffective date|(?:paid|payable|reduced|increased|stopped|changed)[^\n]{0,30}\bfrom)\s*:?\s*$/,
     payment: /(?:\bpay\b|payment|amount due|balance due|due date|due by|\bremit|autopay|direct debit|to avoid (?:additional )?(?:penalty|penalties|interest))[^\n]{0,70}$/,
     paymentAfter: /^[^\n]{0,30}(?:to avoid|is due|payment due)/,
     appointment: /(?:appointment|interview|hearing|appear|report to|biometrics|court date|jury|scheduled)[^\n]{0,80}$/,
@@ -51,7 +51,7 @@ export default {
     benefit: /monthly benefit|per month|a month|benefit amount|your benefit/,
     monthly: /per month|a month|monthly|\/mo\b/,
     pay: /\bpay|payment|amount due|balance|\bowe|owing|\bdebt\b|installment|\bdue|penalt|interest|\bfee|\bfine|\btax|bill|charge|total due|total amount/,
-    total: /(?:amount due|balance due|balance owing|amount owing|total amount due|total due|total balance|amount you owe|you owe|please pay)[^\n]{0,25}$/,
+    total: /(?:amount due|balance due|balance owing|amount owing|total amount due|total due|total balance|amount you owe|you owe|please pay|fixed charge)[^\n]{0,25}$/,
   },
   payment: {
     recipient: /(?:make (?:your )?(?:check|cheque|money order) payable to|payable to|pay to the order of|account name)\s*:?\s*([^\n]{3,70})/i,

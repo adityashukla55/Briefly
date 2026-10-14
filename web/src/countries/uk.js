@@ -40,6 +40,7 @@ export default {
   slug: 'united-kingdom',
   name: 'United Kingdom',
   inName: 'the United Kingdom',
+  short: 'UK',
   adjective: 'British',
   flag: '🇬🇧',
   language: 'en',

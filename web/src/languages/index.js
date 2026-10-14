@@ -5,5 +5,6 @@ import fr from './fr.js';
 import it from './it.js';
 import nl from './nl.js';
 import pl from './pl.js';
+import pt from './pt.js';
 
-export const LANGUAGES = { de, fr, es, it, nl, pl, en };
+export const LANGUAGES = { de, fr, es, it, nl, pl, pt, en };

@@ -42,7 +42,8 @@ export function buildSteps(result) {
   if (PAYING.includes(type) || (result.money.toPay && type !== 'hearing')) {
     if (['reminder', 'fee-decision', 'enforcement'].includes(type)) add('First check whether you already paid this. If you did, send them proof (a bank statement).');
     add(payStep(result), type === 'reminder' || type === 'enforcement' ? 'urgent' : 'normal');
-    if (result.payment?.reference) add(`Put this in the payment reference field so they know it’s from you: ${result.payment.reference}`);
+    const paymentReference = result.payment?.reference ?? result.references.find((reference) => reference.payment)?.value;
+    if (paymentReference) add(`Put this in the payment reference field so they know it’s from you: ${paymentReference}`);
     if (result.money.toPay && result.money.toPay.amount >= 200 && type !== 'enforcement' && result.kind?.instalments !== false) {
       add(`If you can’t pay it all at once, ask for a payment plan (${country.help.instalments}) before the deadline. There is a ready-made letter below.`);
     }
@@ -63,7 +64,7 @@ export function buildSteps(result) {
   }
 
   if (type === 'hearing') {
-    add(`You can explain your side in writing${byWhen(deadline, country)}. You don’t have to, but it can change their decision.`);
+    add(`You can explain your side in writing${byWhen(deadline ?? objection, country)}. You don’t have to, but it can change their decision.`);
   }
 
   if (type === 'documents') {
@@ -92,7 +93,8 @@ export function buildSteps(result) {
 
   const caseNumber = result.references.find((reference) => !reference.payment && !reference.personal) ?? result.references.find((reference) => !reference.payment);
   const sameName = caseNumber && caseNumber.name.toLowerCase().includes(caseNumber.local.toLowerCase());
-  if (caseNumber) add(`Write the ${caseNumber.name.toLowerCase()}${sameName ? '' : ` (${caseNumber.local})`} ${caseNumber.value} on every reply.`);
+  const caseName = /\b\p{Lu}{2,}/u.test(caseNumber?.name ?? '') ? caseNumber.name : caseNumber?.name.toLowerCase();
+  if (caseNumber) add(`Write the ${caseName}${sameName ? '' : ` (${caseNumber.local})`} ${caseNumber.value} on every reply.`);
   add('Keep this letter and the envelope. The envelope can prove when it arrived.');
   return steps;
 }

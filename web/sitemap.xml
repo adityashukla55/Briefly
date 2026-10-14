@@ -370,6 +370,75 @@
   <url><loc>https://brieflyapp.pages.dev/spain/templates/reschedule/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/spain/templates/alegaciones/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/spain/templates/send-documents/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/financas-autoridade-tributaria/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/seguranca-social/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/iefp/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/aima/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/camara-municipal/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/tribunal/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/agente-de-execucao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/ansr-coimas/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/portagens/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/fornecedor-energia/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/agua/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/senhorio/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/sns/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/cobrancas/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/financas/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/portal-das-financas/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/nif/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/niss/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/irs/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/imi/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/iuc/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/nota-de-liquidacao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/nota-de-cobranca/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/referencia-para-pagamento/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/multibanco/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/reclamacao-graciosa/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/impugnacao-judicial/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/execucao-fiscal/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/penhora/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/citacao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/notificacao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/injuncao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/contestacao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/oposicao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/agente-de-execucao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/coima/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/auto-de-contraordenacao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/pagamento-voluntario/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/defesa/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/audiencia-previa/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/deferimento/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/indeferimento/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/recurso-hierarquico/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/dias-uteis/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/prazo/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/pagamento-em-prestacoes/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/seguranca-social-direta/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/subsidio-de-desemprego/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/abono-de-familia/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/restituicao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/convocatoria/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/autorizacao-de-residencia/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/apoio-judiciario/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/carta-registada/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/senhorio/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/renda/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/despejo/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/words/prescricao/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/objection/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/more-time/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/instalments/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/reschedule/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/reclamacao-graciosa/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/defesa/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/audiencia-previa/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/portugal/templates/contestar-divida/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/italy/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/italy/agenzia-delle-entrate/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/italy/agenzia-entrate-riscossione/</loc></url>
@@ -751,6 +820,73 @@
   <url><loc>https://brieflyapp.pages.dev/united-kingdom/templates/mandatory-reconsideration/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/united-kingdom/templates/pcn-challenge/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/united-kingdom/templates/dispute-debt/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/revenue/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/department-of-social-protection/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/local-council/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/courts/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/sheriff/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/debt-collector/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/garda/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/motor-tax-and-licences/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/tv-licence/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/immigration-service/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/energy-supplier/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/uisce-eireann/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/landlord/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/hse/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/revenue/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/myaccount/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/ros/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/pps-number/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/statement-of-liability/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/underpayment/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/tax-credits/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/usc/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/prsi/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/local-property-tax/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/phased-payment-arrangement/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/tax-appeals-commission/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/intreo/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/mywelfare/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/jobseekers-allowance/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/deciding-officer/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/social-welfare-appeals-office/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/review/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/overpayment/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/penalty-rate/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/means-test/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/child-benefit/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/hap/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/medical-card/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/civil-bill/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/civil-summons/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/appearance/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/judgment/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/sheriff/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/attachment-of-earnings/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/statute-barred/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/fixed-charge-notice/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/penalty-points/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/nct/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/motor-tax/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/tv-licence/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/irp/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/rtb/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/notice-of-termination/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/rent-review/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/mprn/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/arrears/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/mabs/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/words/citizens-information/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/templates/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/templates/objection/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/templates/more-time/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/templates/instalments/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/templates/reschedule/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/templates/welfare-appeal/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/ireland/templates/dispute-debt/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/united-states/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/united-states/irs/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/united-states/state-tax-agency/</loc></url>
@@ -904,6 +1040,7 @@
   <url><loc>https://brieflyapp.pages.dev/translate-italian-letter-to-english/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/translate-dutch-letter-to-english/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/translate-polish-letter-to-english/</loc></url>
+  <url><loc>https://brieflyapp.pages.dev/translate-portuguese-letter-to-english/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/official-letter-deadline-calculator/</loc></url>
   <url><loc>https://brieflyapp.pages.dev/privacy/</loc></url>
 </urlset>

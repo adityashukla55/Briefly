@@ -35,6 +35,7 @@ export default {
   slug: 'united-states',
   name: 'United States',
   inName: 'the United States',
+  short: 'USA',
   adjective: 'American',
   flag: '🇺🇸',
   language: 'en',
