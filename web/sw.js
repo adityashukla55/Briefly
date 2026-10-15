@@ -1,4 +1,4 @@
-const VERSION = '3.7.0';
+const VERSION = '3.8.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -68,6 +68,9 @@ const SHELL = [
   '/src/languages/pt.js',
   '/src/languages/sv.js',
   '/src/letters.js',
+  '/src/names-core.js',
+  '/src/names-worker.js',
+  '/src/names.js',
   '/src/pdf-worker.js',
   '/src/polyfills.js',
   '/src/read.js',

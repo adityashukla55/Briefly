@@ -61,7 +61,7 @@ const IDS = [
   /(?<![\p{L}\p{N}])A-?\d{8,9}(?![\p{N}])/gu,
 ];
 
-const KIND_ORDER = ['address', 'name', 'id', 'bank', 'number', 'birth', 'phone', 'email'];
+const KIND_ORDER = ['address', 'name', 'ainame', 'id', 'bank', 'number', 'birth', 'phone', 'email'];
 
 const quantile = (values, share) => {
   const sorted = [...values].sort((a, b) => a - b);
@@ -411,6 +411,45 @@ export function findPrivate(pages, country) {
     ...patternRanges(layout.text),
   ]);
   layouts.forEach((layout, index) => ranges[index].push(...knownRanges(layout.text, known)));
+  return layouts.flatMap((layout, index) => mergeBoxes(ranges[index].flatMap((range) => rangeBoxes(layout, range)))
+    .sort((a, b) => a.y0 - b.y0 || a.x0 - b.x0)
+    .map((box) => ({ page: index, ...box })));
+}
+
+export function pageWords(pages) {
+  return pages.map((page) => readLayout(page).spans.map((span) => span.word.text));
+}
+
+function taggedName(word, tag, minScore) {
+  if (!tag || !/-PER$/.test(tag.label) || tag.score < minScore) return null;
+  const clean = word.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
+  if (clean.length < 2 || !/^\p{Lu}/u.test(clean)) return null;
+  if (NOT_NAMES.has(clean.toLowerCase()) || TITLE.test(clean) || GREETING.test(`${clean} `) || ORG.test(clean)) return null;
+  return clean;
+}
+
+export function findTaggedNames(pages, tags, minScore = 0.6) {
+  const layouts = pages.map(readLayout);
+  const known = { names: new Set(), strings: new Map() };
+  const ranges = layouts.map((layout, index) => {
+    const list = [];
+    let open = null;
+    layout.spans.forEach((span, position) => {
+      const name = taggedName(span.word.text, tags[index]?.[position], minScore);
+      if (!name) {
+        open = null;
+        return;
+      }
+      if (open && open.line === span.line) open.range.end = span.end;
+      else {
+        open = { line: span.line, range: { start: span.start, end: span.end, kind: 'ainame' } };
+        list.push(open.range);
+      }
+      if (name.length > 2) known.names.add(name);
+    });
+    return list;
+  });
+  layouts.forEach((layout, index) => ranges[index].push(...knownRanges(layout.text, known).map((range) => ({ ...range, kind: 'ainame' }))));
   return layouts.flatMap((layout, index) => mergeBoxes(ranges[index].flatMap((range) => rangeBoxes(layout, range)))
     .sort((a, b) => a.y0 - b.y0 || a.x0 - b.x0)
     .map((box) => ({ page: index, ...box })));

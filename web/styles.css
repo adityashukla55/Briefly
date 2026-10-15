@@ -892,6 +892,9 @@ html.ready .boot-warning { display: none; }
 .hide-canvas { display: block; width: 100%; height: auto; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); cursor: crosshair; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .hide-drawing .hide-canvas { touch-action: pinch-zoom; outline: 3px solid var(--focus); outline-offset: 2px; }
 .hide-kinds { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.hide-ai p { margin: 0 0 10px; }
+.hide-ai .progress { max-width: none; margin: 0 0 10px; }
+.hide-ai-working { display: flex; align-items: center; gap: 8px; }
 .hide-kinds li { display: flex; align-items: center; gap: 10px; min-height: 38px; }
 .hide-kinds input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--brand); }
 .hide-kinds label { display: flex; flex: 1; justify-content: space-between; gap: 8px; cursor: pointer; }

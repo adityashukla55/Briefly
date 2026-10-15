@@ -434,6 +434,7 @@ const TOOLS = [
     points: [
       'Finds the name and address block, names after “Dear …” or “Sehr geehrte …”, IBANs and bank accounts, reference and customer numbers, tax and ID numbers, birth dates, phone numbers and email addresses.',
       `Knows the reference numbers and ID formats of ${listOf(COUNTRIES.map((country) => country.name))}.`,
+      'Optional AI name finder: a small AI model finds names the rules miss, like a child’s name in the middle of the letter. It downloads once (about 150 MB) and runs only on your device.',
       'Tap a box to remove it. Drag over anything else you want to hide.',
       'The black boxes are part of the picture. The hidden text is really gone, not just covered, and so is photo data like the place a photo was taken.',
       'Save each page as an image, share it, or print it and save it as a PDF.',
@@ -510,7 +511,7 @@ function privacyPage() {
 <p>Briefly uses no cookies. Your browser stores only:</p>
 <ul>
 <li>the country you picked last, and a note that you have used Briefly before (so the start page can be shorter);</li>
-<li>the app itself, the text reader (about 6 MB) and, only if you use it, the translator for your language (20–26 MB), so Briefly works offline;</li>
+<li>the app itself, the text reader (about 6 MB) and, only if you use them, the translator for your language (20–26 MB) and the AI name finder (about 150 MB), so Briefly works offline;</li>
 <li>only if you keep a letter: your encrypted letter folder (see <a href="#my-letters">My letters</a>).</li>
 </ul>
 <p>This is needed for the features you use and is never sent to me or anyone else (in Germany: § 25(2) no. 2 TDDDG). You can delete it at any time in your browser settings (“site data”) or by removing the installed app.</p>

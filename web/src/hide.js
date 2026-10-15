@@ -1,6 +1,7 @@
 import { h } from './dom.js';
 import { decodeImage, renderPdfPage } from './read.js';
-import { findPrivate } from './redact.js';
+import { NAME_FINDER_SIZE, findNames, nameFinderSaved } from './names.js';
+import { findPrivate, findTaggedNames, pageWords } from './redact.js';
 
 const MAX_SIDE = 2200;
 const PDF_WIDTH = 1700;
@@ -8,6 +9,7 @@ const PDF_WIDTH = 1700;
 const KINDS = [
   ['address', 'Name and address'],
   ['name', 'Names'],
+  ['ainame', 'More names (found by AI)'],
   ['bank', 'Bank accounts'],
   ['number', 'Reference and customer numbers'],
   ['id', 'Tax and ID numbers'],
@@ -324,6 +326,67 @@ function header(back) {
   ];
 }
 
+function covered(boxes, box) {
+  const area = (box.x1 - box.x0) * (box.y1 - box.y0);
+  return boxes.some((other) => {
+    const width = Math.min(other.x1, box.x1) - Math.max(other.x0, box.x0);
+    const height = Math.min(other.y1, box.y1) - Math.max(other.y0, box.y0);
+    return width > 0 && height > 0 && width * height >= area * 0.6;
+  });
+}
+
+function renderAi(view) {
+  const percent = Math.round((view.share ?? 0) * 100);
+  const bar = h('div', { class: 'progress-bar' });
+  bar.style.width = `${percent}%`;
+  const parts = {
+    offer: [
+      h('p', {}, 'The rules can miss a name in the middle of the letter, like your child’s name. A small AI model can find those too.'),
+      h('p', { class: 'muted small' }, `It downloads once (${NAME_FINDER_SIZE}) and then works offline. It runs only on this device. Your letter is never sent anywhere.`),
+      h('button', { class: 'button secondary', type: 'button', onclick: runAi }, 'Find more names'),
+    ],
+    download: [
+      h('p', {}, `Downloading the AI model… ${percent}%`),
+      h('div', { class: 'progress', 'aria-hidden': 'true' }, bar),
+      h('p', { class: 'muted small' }, 'This happens only once. Next time it starts right away, even offline.'),
+    ],
+    working: [h('p', { class: 'hide-ai-working' }, h('span', { class: 'mini-spinner', 'aria-hidden': 'true' }), 'Looking for names…')],
+    done: [
+      h('p', {}, view.added ? `The AI found ${view.added} more ${view.added === 1 ? 'name' : 'names'}. They are listed as “More names (found by AI)”.` : 'The AI found no other names.'),
+      h('p', { class: 'muted small' }, 'AI can be wrong too. Check every page before you share.'),
+    ],
+    error: [
+      h('p', {}, navigator.onLine === false ? 'You’re offline. Connect to the internet once to download the AI model.' : 'The AI model couldn’t start in this browser.'),
+      h('button', { class: 'button secondary', type: 'button', onclick: runAi }, 'Try again'),
+    ],
+  };
+  state.ai.replaceChildren(h('h2', {}, 'Find more names with AI'), ...parts[view.step]);
+}
+
+async function runAi() {
+  const current = state;
+  renderAi({ step: 'download', share: 0 });
+  try {
+    const tags = await findNames(pageWords(current.pages), (step, share) => {
+      if (state === current) renderAi({ step, share });
+    });
+    if (state !== current) return;
+    let added = 0;
+    for (const found of findTaggedNames(current.pages, tags)) {
+      const item = current.items[found.page];
+      const box = { x0: found.x0 * item.scale, y0: found.y0 * item.scale, x1: found.x1 * item.scale, y1: found.y1 * item.scale, kind: 'ainame', auto: true, on: true };
+      if (covered(item.boxes, box)) continue;
+      item.boxes.push(box);
+      added += 1;
+    }
+    renderAi({ step: 'done', added });
+    changed();
+  } catch (error) {
+    console.error(error);
+    if (state === current) renderAi({ step: 'error' });
+  }
+}
+
 function free() {
   for (const item of state?.items ?? []) {
     item.base.width = 0;
@@ -355,7 +418,7 @@ export async function openHide(container, pages, country, { back, toast }) {
       }
       const scale = base.width / page.width;
       const boxes = found.filter((box) => box.page === index).map((box) => ({ x0: box.x0 * scale, y0: box.y0 * scale, x1: box.x1 * scale, y1: box.y1 * scale, kind: box.kind, auto: true, on: true }));
-      items.push({ base, boxes, view: null, preview: null });
+      items.push({ base, boxes, scale, view: null, preview: null });
     }
   } catch (error) {
     console.error(error);
@@ -366,7 +429,9 @@ export async function openHide(container, pages, country, { back, toast }) {
   }
 
   const touch = TOUCH.matches;
-  state = { root: container, items, undo: [], blobs: null, draw: false, toast };
+  state = { root: container, items, pages, undo: [], blobs: null, draw: false, toast };
+  state.ai = h('div', { class: 'card hide-ai' });
+  renderAi({ step: 'offer' });
   state.status = h('p', { class: 'hide-status', 'aria-live': 'polite' });
   state.undoButton = h('button', { class: 'button ghost small', type: 'button', onclick: undo }, 'Undo');
   state.drawButton = touch ? h('button', { class: 'button ghost small hide-draw', type: 'button', 'aria-pressed': 'false', onclick: () => setDraw(!state.draw) }, 'Draw boxes') : null;
@@ -396,6 +461,7 @@ export async function openHide(container, pages, country, { back, toast }) {
         figures),
       h('div', { class: 'hide-side' },
         h('div', { class: 'card' }, h('h2', {}, 'What is hidden'), state.kinds),
+        state.ai,
         h('div', { class: 'card' },
           h('h2', {}, 'Save or share'),
           h('p', { class: 'notice hide-check' }, h('strong', {}, 'Check before you share. '), 'Look at every page. Briefly can miss things, like handwriting, stamps or text it couldn’t read.'),
@@ -403,4 +469,6 @@ export async function openHide(container, pages, country, { back, toast }) {
           h('p', { class: 'muted small hide-safe' }, 'The saved pages are plain pictures. The hidden text is really gone, and so is photo data like the place a photo was taken. Nothing is kept after you close Briefly.')))));
   container.querySelector('.hide-title').focus();
   changed();
+  const current = state;
+  if (await nameFinderSaved() && state === current) runAi();
 }

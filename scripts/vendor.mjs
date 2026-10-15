@@ -7,6 +7,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const modules = join(root, 'node_modules');
 const vendor = join(root, 'web', 'vendor');
 const cache = join(root, '.cache', 'models');
+const namesCache = join(root, '.cache', 'ner');
 
 const MODEL_HOST = 'https://bergamot.s3.amazonaws.com/models/';
 const OCR_LANGUAGES = ['deu', 'fra', 'spa', 'ita', 'nld', 'pol', 'por', 'swe', 'dan', 'eng'];
@@ -59,6 +60,15 @@ const MODELS = {
   },
 };
 
+const NAMES_HOST = 'https://huggingface.co/Xenova/distilbert-base-multilingual-cased-ner-hrl/resolve/c2a4dbf593c57f47004c5bc2d3770d311aee9c43/';
+const NAMES = [
+  { file: 'config.json', sha256: '38847be4dc6699b1218a749ed69f888c2ccc7b4deba98e3c4a1cac8cb34d54c8' },
+  { file: 'tokenizer.json', sha256: 'bf1b59b7b11c95f194f51708d918eea378e09d05f84c0e1656dc5180e8117088' },
+  { file: 'tokenizer_config.json', sha256: '2d61ce6c7646881e0e7ef08e3b5dd655a19553ab85c41b1a3c27090a63ff6f49' },
+  { file: 'onnx/model_quantized.onnx', sha256: '24a0b98f4dd4cd92842f5a541272f86f760225a64a29928eddef14bdb2edb986', split: true },
+];
+const PART_SIZE = 20 * 1024 * 1024;
+
 rmSync(vendor, { recursive: true, force: true });
 
 function copy(from, to) {
@@ -70,17 +80,20 @@ function sha256(buffer) {
   return createHash('sha256').update(buffer).digest('hex');
 }
 
-async function download(pair, { file, sha256: expected, url }) {
-  const target = join(cache, pair, file);
+async function fetchChecked(target, url, expected, label) {
   if (existsSync(target) && sha256(readFileSync(target)) === expected) return target;
-  console.log(`Downloading translation model ${pair}/${file}`);
-  const response = await fetch(url ?? `${MODEL_HOST}${pair}/${file}`);
-  if (!response.ok) throw new Error(`Download failed for ${pair}/${file}: ${response.status}`);
+  console.log(`Downloading ${label}`);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Download failed for ${label}: ${response.status}`);
   const buffer = Buffer.from(await response.arrayBuffer());
-  if (sha256(buffer) !== expected) throw new Error(`Checksum mismatch for ${pair}/${file}`);
+  if (sha256(buffer) !== expected) throw new Error(`Checksum mismatch for ${label}`);
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, buffer);
   return target;
+}
+
+function download(pair, { file, sha256: expected, url }) {
+  return fetchChecked(join(cache, pair, file), url ?? `${MODEL_HOST}${pair}/${file}`, expected, `translation model ${pair}/${file}`);
 }
 
 copy('tesseract.js/dist/tesseract.esm.min.js', 'tesseract/tesseract.esm.min.js');
@@ -120,5 +133,31 @@ for (const [pair, files] of Object.entries(MODELS)) {
   }
 }
 writeFileSync(join(vendor, 'models', 'registry.json'), JSON.stringify(registry, null, 2));
+
+copy('@huggingface/transformers/dist/transformers.min.js', 'transformers/transformers.min.js');
+copy('@huggingface/transformers/LICENSE', 'transformers/LICENSE');
+copy('onnxruntime-web/dist/ort-wasm-simd-threaded.mjs', 'ort/ort-wasm-simd-threaded.mjs');
+copy('onnxruntime-web/dist/ort-wasm-simd-threaded.wasm', 'ort/ort-wasm-simd-threaded.wasm');
+
+const namesDir = join(vendor, 'ner', 'names');
+const parts = {};
+for (const info of NAMES) {
+  const source = await fetchChecked(join(namesCache, info.file), `${NAMES_HOST}${info.file}`, info.sha256, `name finder ${info.file}`);
+  const buffer = readFileSync(source);
+  mkdirSync(dirname(join(namesDir, info.file)), { recursive: true });
+  if (!info.split) {
+    cpSync(source, join(namesDir, info.file));
+    continue;
+  }
+  const list = [];
+  for (let offset = 0, index = 0; offset < buffer.length; offset += PART_SIZE, index += 1) {
+    const name = `${info.file}.${index}`;
+    const chunk = buffer.subarray(offset, offset + PART_SIZE);
+    writeFileSync(join(namesDir, name), chunk);
+    list.push({ name, size: chunk.length });
+  }
+  parts[info.file] = { size: buffer.length, sha256: info.sha256, parts: list };
+}
+writeFileSync(join(namesDir, 'parts.json'), JSON.stringify(parts, null, 2));
 
 console.log('Copied libraries into web/vendor');

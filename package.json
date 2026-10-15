@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@browsermt/bergamot-translator": "0.4.9",
+    "@huggingface/transformers": "4.3.0",
     "@tesseract.js-data/dan": "1.0.0",
     "@tesseract.js-data/deu": "1.0.0",
     "@tesseract.js-data/eng": "1.0.0",
