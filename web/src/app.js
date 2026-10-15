@@ -12,12 +12,14 @@ import { LANGUAGES } from './languages/index.js';
 import { buildSteps } from './steps.js';
 import { h } from './dom.js';
 import { openFeedback } from './feedback.js';
+import { closeHide, hideCard, openHide } from './hide.js';
 import { isTranslatorCached, needsTranslator, prepareTranslator, saveTranslator, translateText, translatorSize } from './translate.js';
 
 const $ = (selector) => document.querySelector(selector);
 
-const views = { start: $('#start'), working: $('#working'), result: $('#result'), cancel: $('#cancel') };
+const views = { start: $('#start'), working: $('#working'), result: $('#result'), cancel: $('#cancel'), hide: $('#hide') };
 let current = null;
+let letterPages = [];
 
 const COUNTRY_KEY = 'briefly-country';
 
@@ -192,16 +194,17 @@ async function processFiles(fileList) {
   try {
     const country = selectedCountry ? countryById(selectedCountry) : null;
     const first = readingLanguage();
-    let { text, usedOcr, shortened } = await readFiles(files, { language: first.ocr, onProgress: setWorking });
+    let { text, usedOcr, shortened, pages } = await readFiles(files, { language: first.ocr, onProgress: setWorking });
     const detected = detectLanguage(text);
     const fits = country
       ? detected?.id === country.language || (languagesOf(country).includes(detected?.id) && !detected.confident)
       : detected?.id === first.id;
     if (usedOcr && detected && !fits) {
       setWorking(`This looks like ${LANGUAGES[detected.id].name}. Reading it again`);
-      ({ text } = await readFiles(files, { language: LANGUAGES[detected.id].ocr, onProgress: setWorking }));
+      ({ text, pages } = await readFiles(files, { language: LANGUAGES[detected.id].ocr, onProgress: setWorking }));
     }
     if (text.replace(/\s/g, '').length < 20) throw new ReadError('We couldn’t find any text', 'Try a sharper photo in good light, with the whole page flat and visible. Handwritten letters can’t be read.');
+    letterPages = pages;
     await showResult(text, 'file', null, shortened.map((pdf) => `This PDF has ${pdf.total} pages. Briefly read only the first ${pdf.read}. If a date or amount is on a later page, add a photo of that page too.`));
   } catch (error) {
     console.error(error);
@@ -541,7 +544,7 @@ async function showResult(text, source, countryId = null, notices = []) {
   const id = countryId ?? detectCountryId(text, selectedCountry);
   await loadCountry(id);
   const result = analyze(text, { country: id });
-  current = { result, source };
+  current = { result, source, pages: source === 'file' ? letterPages : [] };
   const facts = [...result.dates.map((date) => dateFact(result, date)), ...moneyFacts(result)];
   const switched = !countryId && result.country.id !== selectedCountry;
   const unknown = !result.sender && !result.kind && !result.dates.length && !result.money.toPay && !result.money.toGet && !result.payment;
@@ -559,6 +562,7 @@ async function showResult(text, source, countryId = null, notices = []) {
     resultColumns([stepsCard(result), paymentCard(result), referencesCard(result), termsCard(result)].filter(Boolean)),
     translationCard(result),
     repliesCard(result),
+    current.pages.length ? hideCard(() => { if (location.hash === '#hide') routeHide(); else location.hash = 'hide'; }) : null,
     sourceCard(result),
     reportLine(result, source),
   ].filter(Boolean));
@@ -766,6 +770,30 @@ function setupCancel() {
     routeCancel();
   });
   routeCancel();
+}
+
+let resultScroll = 0;
+
+function routeHide() {
+  if (location.hash === '#hide') {
+    if (!current?.pages.length) {
+      history.replaceState(history.state, '', `${location.pathname}${location.search}`);
+      return;
+    }
+    if (!views.hide.hidden) return;
+    resultScroll = window.scrollY;
+    show('hide');
+    openHide(views.hide, current.pages, current.result.country, { back: () => history.back(), toast });
+  } else if (!views.hide.hidden) {
+    closeHide(views.hide);
+    show('result');
+    window.scrollTo({ top: resultScroll });
+  }
+}
+
+function setupHide() {
+  window.addEventListener('hashchange', routeHide);
+  routeHide();
 }
 
 function setupStart() {
@@ -1162,6 +1190,7 @@ document.documentElement.classList.add('ready');
 checkSupport();
 setupStart();
 setupCancel();
+setupHide();
 setupInstall();
 setupLaunchQueue();
 registerServiceWorker();
