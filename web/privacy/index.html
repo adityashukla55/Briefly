@@ -33,11 +33,12 @@
       <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Briefly</a> › <span>Privacy</span></nav>
       <h1>Privacy</h1>
 <p class="lead">Your letter never leaves your device.</p>
-<p class="muted small">Last updated: 14 October 2026</p>
+<p class="muted small">Last updated: 15 October 2026</p>
 
 <h2>The short version</h2>
 <ul>
-<li>Your letter is read, explained and translated <strong>inside your browser</strong>. It is never uploaded, never sent anywhere and never saved.</li>
+<li>Your letter is read, explained and translated <strong>inside your browser</strong>. It is never uploaded and never sent anywhere.</li>
+<li>Nothing is saved unless you choose <strong>Keep this letter</strong>. Then the letter is encrypted with your password and stays only on this device.</li>
 <li>No account, no cookies, no tracking, no ads, no analytics.</li>
 <li>Like every website, Briefly is delivered by a hosting company (Cloudflare), which sees your IP address for a short time.</li>
 <li>Only if you use <strong>Report a problem</strong>, the text you type is sent to me by email.</li>
@@ -47,8 +48,18 @@
 <p>Briefly is a free, non-commercial project by Aditya Shukla. To contact me about your data, use <button class="link inline" type="button" data-feedback>Report a problem</button> and add your email address so I can answer, or open an issue on <a href="https://github.com/adityashukla55/Briefly/issues">GitHub</a>.</p>
 
 <h2>Your letter</h2>
-<p>Text recognition (OCR), the explanation and the translation all run on your device. No server ever receives your letter, and nothing is saved. Close the page and the letter is gone.</p>
+<p>Text recognition (OCR), the explanation and the translation all run on your device. No server ever receives your letter. Nothing is saved unless you choose to keep a letter. If you don’t, close the page and the letter is gone.</p>
 <p>How you can be sure: the page is locked by a security rule (Content Security Policy) that only allows connections to Briefly’s own website. It cannot send your letter anywhere else. The code is <a href="https://github.com/adityashukla55/Briefly">open source</a>, so anyone can check it.</p>
+
+<h2 id="my-letters">My letters (only if you keep a letter)</h2>
+<p>If you press <strong>Keep this letter</strong>, Briefly saves the letter in a private folder in your browser, on this device. It is never uploaded, and I can’t see it.</p>
+<ul>
+<li><strong>What is saved:</strong> the text of the letter, the country, what Briefly found (the kind of letter, the sender, dates, amounts and reference numbers), the day you kept it, your note, and whether you marked it as done.</li>
+<li><strong>Encrypted:</strong> all of it is locked with a password you choose (AES-256-GCM, with a key made from your password by PBKDF2 with 600,000 rounds). The password itself is never saved. Without it, nobody can open the letters — not even me — and nobody can reset it.</li>
+<li><strong>Locks by itself</strong> after 5 minutes without use, and when you close Briefly.</li>
+<li><strong>You decide:</strong> delete one letter or everything at any time in My letters. Clearing your browser’s site data also deletes the folder.</li>
+<li><strong>Backup file:</strong> only if you download one. It stays encrypted with your password, and you decide where to keep it.</li>
+</ul>
 
 <h2>Visiting the website (hosting)</h2>
 <p>Briefly is hosted on Cloudflare Pages by Cloudflare, Inc. (101 Townsend St, San Francisco, CA 94107, USA). When your browser loads a page, Cloudflare necessarily processes technical data: your IP address, the date and time, the page requested, and your browser and operating system. This is needed to deliver the website and protect it from attacks.</p>
@@ -63,7 +74,8 @@
 <p>Briefly uses no cookies. Your browser stores only:</p>
 <ul>
 <li>the country you picked last, and a note that you have used Briefly before (so the start page can be shorter);</li>
-<li>the app itself, the text reader (about 6 MB) and, only if you use it, the translator for your language (20–26 MB), so Briefly works offline.</li>
+<li>the app itself, the text reader (about 6 MB) and, only if you use it, the translator for your language (20–26 MB), so Briefly works offline;</li>
+<li>only if you keep a letter: your encrypted letter folder (see <a href="#my-letters">My letters</a>).</li>
 </ul>
 <p>This is needed for the features you use and is never sent to me or anyone else (in Germany: § 25(2) no. 2 TDDDG). You can delete it at any time in your browser settings (“site data”) or by removing the installed app.</p>
 

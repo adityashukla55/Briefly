@@ -19,6 +19,7 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 - **Cancels a contract**: enter when a phone, internet, gym, streaming or insurance contract started, its minimum term and its notice period. Briefly shows the last day to cancel, when the contract ends and what happens if it renews, and writes the cancellation letter in the country’s language. It also gives short tips on local consumer law for each country, like Germany’s 2022 law for fair consumer contracts.
 - **Translates the whole letter** to English on the device, with amounts and dates protected from translation mistakes.
 - **Copy or save the text** it read — a private, offline document-to-text scanner.
+- **Keeps letters, only if you want**: press *Keep this letter* to save it in *My letters*, a private folder on the device, locked with your password. It shows all open deadlines with the next one on top, lets you search, add a short note, mark a letter as done, delete one letter or everything, and download an encrypted backup. It locks by itself after 5 minutes without use and when the page closes.
 
 ## Privacy by design
 
@@ -26,7 +27,7 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 |---|---|
 | No server sees your letter | A static site. The only backend is a tiny feedback function that receives what a visitor types into “Report a problem” — never a letter. |
 | Locked down | The Content Security Policy only allows connections to the site itself (`connect-src 'self'`), so the page *cannot* send your letter anywhere. |
-| No storage | Nothing is saved. Close the tab and the letter is gone. |
+| Saved only if you choose | Nothing is saved unless you press **Keep this letter**. Kept letters are encrypted with your password (AES-256-GCM, key from PBKDF2-SHA-256 with 600,000 rounds and a random salt) and stay in the browser’s IndexedDB on this device. The password and the key are never stored. |
 | Offline | A service worker keeps the app, the text reader and the translator on the device after first use. |
 
 ## Works with your phone and computer
@@ -48,6 +49,7 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
 - **Text reading:** [Tesseract.js](https://github.com/naptha/tesseract.js) with German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish, Danish and English models, and [pdf.js](https://github.com/mozilla/pdf.js) for PDFs that already contain text.
 - **Understanding:** hand-written rules. Each **language** ([`web/src/languages/`](web/src/languages/)) knows dates, deadline phrases, amounts and reply letters. Each **country** ([`web/src/countries/`](web/src/countries/)) knows its offices, letter types, legal delivery rules, office words and example letters. The engine is [`web/src/analyze.js`](web/src/analyze.js). Rules are predictable and testable, which matters when the result is a legal deadline.
 - **Translation:** [Bergamot](https://browser.mt/) models (the engine behind Firefox Translations) for German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish and Danish → English, 20–26 MB each, downloaded only when used. Letters from the UK, Ireland, the United States and Canada are already in English, so they need no translator. Belgian letters can be in Dutch or French; Briefly picks the right language by itself.
+- **My letters:** [`web/src/vault.js`](web/src/vault.js) encrypts with the browser’s Web Crypto, [`web/src/folder.js`](web/src/folder.js) stores the encrypted letters in IndexedDB, and [`web/src/letters.js`](web/src/letters.js) is the screen. The key lives only in memory while the folder is open. The tests run the same code in Node with a small in-memory stand-in for IndexedDB.
 - **No framework, no build step.** Plain HTML, CSS and JavaScript modules.
 
 ## Search pages
