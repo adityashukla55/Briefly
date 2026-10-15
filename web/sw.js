@@ -52,6 +52,7 @@ const SHELL = [
   '/src/dom.js',
   '/src/errors.js',
   '/src/feedback.js',
+  '/src/folder.js',
   '/src/format.js',
   '/src/hide.js',
   '/src/install.js',
@@ -66,6 +67,7 @@ const SHELL = [
   '/src/languages/pl.js',
   '/src/languages/pt.js',
   '/src/languages/sv.js',
+  '/src/letters.js',
   '/src/pdf-worker.js',
   '/src/polyfills.js',
   '/src/read.js',
@@ -73,6 +75,7 @@ const SHELL = [
   '/src/replies.js',
   '/src/steps.js',
   '/src/translate.js',
+  '/src/vault.js',
 ];
 
 const OCR = [

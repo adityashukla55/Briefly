@@ -20,6 +20,7 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 - **Translates the whole letter** to English on the device, with amounts and dates protected from translation mistakes.
 - **Hides private details before you share**: want a friend or an advice centre to look at a letter? Briefly shows each page with black boxes already over the name and address, IBANs and bank accounts, reference and customer numbers, tax and ID numbers, birth dates, phone numbers and email addresses. Tap a box to remove it, drag to add one, then save the pages as images, share them, or print them as a PDF.
 - **Copy or save the text** it read — a private, offline document-to-text scanner.
+- **Keeps letters, only if you want**: press *Keep this letter* to save it in *My letters*, a private folder on the device, locked with your password. It shows all open deadlines with the next one on top, lets you search, add a short note, mark a letter as done, delete one letter or everything, and download an encrypted backup. It locks by itself after 5 minutes without use and when the page closes.
 
 ## Privacy by design
 
@@ -27,7 +28,7 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 |---|---|
 | No server sees your letter | A static site. The only backend is a tiny feedback function that receives what a visitor types into “Report a problem” — never a letter. |
 | Locked down | The Content Security Policy only allows connections to the site itself (`connect-src 'self'`), so the page *cannot* send your letter anywhere. |
-| No storage | Nothing is saved. Close the tab and the letter is gone. |
+| Saved only if you choose | Nothing is saved unless you press **Keep this letter**. Kept letters are encrypted with your password (AES-256-GCM, key from PBKDF2-SHA-256 with 600,000 rounds and a random salt) and stay in the browser’s IndexedDB on this device. The password and the key are never stored. |
 | Offline | A service worker keeps the app, the text reader and the translator on the device after first use. |
 
 ## Works with your phone and computer
@@ -50,6 +51,7 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
 - **Understanding:** hand-written rules. Each **language** ([`web/src/languages/`](web/src/languages/)) knows dates, deadline phrases, amounts and reply letters. Each **country** ([`web/src/countries/`](web/src/countries/)) knows its offices, letter types, legal delivery rules, office words and example letters. The engine is [`web/src/analyze.js`](web/src/analyze.js). Rules are predictable and testable, which matters when the result is a legal deadline.
 - **Hiding private details:** the text reader also keeps where each word is on the page (Tesseract word boxes, or pdf.js text positions for PDFs with text). [`web/src/redact.js`](web/src/redact.js) groups the words into lines and blocks by their position, so a second column next to the address stays apart, and then finds what to hide with rules: the address block (a title like “Herrn” or “Mr”, or a name over a street and a postcode line in the format of each country), names after greetings, IBANs checked with their checksum, the country’s own reference number labels, ID formats like the Swiss AHV number or the Italian codice fiscale, birth dates, phone numbers and emails. A name found once is hidden on every page. The black boxes are drawn into the pixels of a canvas and the pages are saved from that canvas, so the hidden text is really gone and no photo data (like location) is kept.
 - **Translation:** [Bergamot](https://browser.mt/) models (the engine behind Firefox Translations) for German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish and Danish → English, 20–26 MB each, downloaded only when used. Letters from the UK, Ireland, the United States and Canada are already in English, so they need no translator. Belgian letters can be in Dutch or French; Briefly picks the right language by itself.
+- **My letters:** [`web/src/vault.js`](web/src/vault.js) encrypts with the browser’s Web Crypto, [`web/src/folder.js`](web/src/folder.js) stores the encrypted letters in IndexedDB, and [`web/src/letters.js`](web/src/letters.js) is the screen. The key lives only in memory while the folder is open. The tests run the same code in Node with a small in-memory stand-in for IndexedDB.
 - **No framework, no build step.** Plain HTML, CSS and JavaScript modules.
 
 ## Search pages

@@ -13,11 +13,12 @@ import { buildSteps } from './steps.js';
 import { h } from './dom.js';
 import { openFeedback } from './feedback.js';
 import { closeHide, hideCard, openHide } from './hide.js';
+import { setupLetters, showKeep } from './letters.js';
 import { isTranslatorCached, needsTranslator, prepareTranslator, saveTranslator, translateText, translatorSize } from './translate.js';
 
 const $ = (selector) => document.querySelector(selector);
 
-const views = { start: $('#start'), working: $('#working'), result: $('#result'), cancel: $('#cancel'), hide: $('#hide') };
+const views = { start: $('#start'), working: $('#working'), result: $('#result'), cancel: $('#cancel'), hide: $('#hide'), letters: $('#letters') };
 let current = null;
 let letterPages = [];
 
@@ -567,6 +568,7 @@ async function showResult(text, source, countryId = null, notices = []) {
     reportLine(result, source),
   ].filter(Boolean));
   $('#share').hidden = !navigator.share;
+  showKeep(result, source);
   show('result');
   balanceColumns();
   $('#result .summary-title')?.focus?.();
@@ -1191,6 +1193,17 @@ checkSupport();
 setupStart();
 setupCancel();
 setupHide();
+setupLetters({
+  show,
+  showResult,
+  toast,
+  download,
+  leave: () => show(current ? 'result' : 'start'),
+  closeResult: () => {
+    current = null;
+    $('#result-body').replaceChildren();
+  },
+});
 setupInstall();
 setupLaunchQueue();
 registerServiceWorker();
