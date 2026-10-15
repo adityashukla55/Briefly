@@ -1,4 +1,4 @@
-const VERSION = '3.6.0';
+const VERSION = '3.7.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -53,6 +53,7 @@ const SHELL = [
   '/src/errors.js',
   '/src/feedback.js',
   '/src/format.js',
+  '/src/hide.js',
   '/src/install.js',
   '/src/languages/da.js',
   '/src/languages/de.js',
@@ -68,6 +69,7 @@ const SHELL = [
   '/src/pdf-worker.js',
   '/src/polyfills.js',
   '/src/read.js',
+  '/src/redact.js',
   '/src/replies.js',
   '/src/steps.js',
   '/src/translate.js',

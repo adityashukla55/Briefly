@@ -419,6 +419,28 @@ const TOOLS = [
       'Nothing you type is saved or sent.',
     ],
   },
+  {
+    slug: 'hide-private-details-in-a-letter',
+    short: 'Hide private details',
+    title: 'Hide private details in a letter before you share it – Briefly',
+    description: 'Black out your name, address, IBAN, reference numbers, tax ID, birth date, phone and email on a photo or PDF of a letter. Free, on your device, no upload.',
+    h1: 'Hide private details in a letter before you share it',
+    lead: 'Want a friend or an advice centre to look at a letter? Briefly covers your name, address, bank and reference numbers with black boxes, then you save or share the pages.',
+    cta: `<aside class="page-cta">
+  <p class="page-cta-title">Try it now</p>
+  <p>Add a photo or PDF of your letter. On the result, tap “Hide private details and share”. No account, no upload, works offline.</p>
+  <a class="button primary" href="/">Open Briefly — it’s free</a>
+</aside>`,
+    points: [
+      'Finds the name and address block, names after “Dear …” or “Sehr geehrte …”, IBANs and bank accounts, reference and customer numbers, tax and ID numbers, birth dates, phone numbers and email addresses.',
+      `Knows the reference numbers and ID formats of ${listOf(COUNTRIES.map((country) => country.name))}.`,
+      'Tap a box to remove it. Drag over anything else you want to hide.',
+      'The black boxes are part of the picture. The hidden text is really gone, not just covered, and so is photo data like the place a photo was taken.',
+      'Save each page as an image, share it, or print it and save it as a PDF.',
+      'Everything happens on your device. Your letter is never uploaded, and nothing is kept after you close the page.',
+      'Always check every page before you share it. Briefly can miss things, like handwriting or stamps.',
+    ],
+  },
 ];
 
 function toolPage(tool) {

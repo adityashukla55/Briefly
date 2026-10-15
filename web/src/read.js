@@ -65,7 +65,7 @@ async function loadWithImageElement(file) {
   }
 }
 
-async function decodeImage(file) {
+export async function decodeImage(file) {
   const attempts = [
     () => createImageBitmap(file, { imageOrientation: 'from-image' }),
     () => createImageBitmap(file),
@@ -99,10 +99,16 @@ async function prepareImage(file) {
   return canvas;
 }
 
+function ocrLines(blocks) {
+  return (blocks ?? []).flatMap((block) => block.paragraphs.flatMap((paragraph) => paragraph.lines.map((line) => ({
+    words: line.words.map(({ text, bbox }) => ({ text, x0: bbox.x0, y0: bbox.y0, x1: bbox.x1, y1: bbox.y1 })),
+  }))));
+}
+
 async function recognize(canvas, language) {
   const worker = await getOcr(language);
-  const { data } = await worker.recognize(canvas, { rotateAuto: true });
-  return data.text;
+  const { data } = await worker.recognize(canvas, { rotateAuto: true }, { text: true, blocks: true });
+  return { text: data.text, lines: ocrLines(data.blocks), angle: data.rotateRadians ?? 0, width: canvas.width, height: canvas.height };
 }
 
 let pdfjs = null;
@@ -117,6 +123,51 @@ async function getPdfjs() {
 
 function pageText(content) {
   return content.items.map((item) => `${item.str ?? ''}${item.hasEOL ? '\n' : ''}`).join('').replace(/[ \t]+\n/g, '\n');
+}
+
+let measurer = null;
+
+function splitWords(text, box, family) {
+  measurer ??= document.createElement('canvas').getContext('2d');
+  measurer.font = `100px ${family || 'sans-serif'}`;
+  const scale = (box.x1 - box.x0) / (measurer.measureText(text).width || 1);
+  return [...text.matchAll(/\S+/g)].map((match) => {
+    const before = measurer.measureText(text.slice(0, match.index)).width * scale;
+    const width = measurer.measureText(match[0]).width * scale;
+    return { text: match[0], x0: box.x0 + before, x1: box.x0 + before + width, y0: box.y0, y1: box.y1 };
+  });
+}
+
+function pdfLines(content, viewport, lib) {
+  const lines = [];
+  let line = null;
+  let previous = null;
+  for (const item of content.items) {
+    if (typeof item.str !== 'string') continue;
+    const matrix = lib.Util.transform(viewport.transform, item.transform);
+    const size = Math.hypot(matrix[2], matrix[3]);
+    if (item.str.trim() && size && Math.abs(matrix[1]) < size * 0.01 && Math.abs(matrix[2]) < size * 0.01) {
+      const style = content.styles[item.fontName] ?? {};
+      const ascent = style.ascent || (style.descent ? 1 + style.descent : 0.8);
+      const top = matrix[5] - size * ascent;
+      const box = { x0: matrix[4], y0: top, x1: matrix[4] + item.width * viewport.scale, y1: top + size };
+      if (!line || Math.abs(top - previous.box.y0) > size * 0.5 || box.x0 < previous.box.x1 - size) {
+        line = { words: [] };
+        lines.push(line);
+      }
+      const words = splitWords(item.str, box, style.fontFamily);
+      const last = line.words.at(-1);
+      if (last && box.x0 - last.x1 < size * 0.15 && /\S$/.test(previous.str) && /^\S/.test(item.str)) {
+        const first = words.shift();
+        last.text += first.text;
+        last.x1 = first.x1;
+      }
+      line.words.push(...words);
+      previous = { box, str: item.str };
+    }
+    if (item.hasEOL) line = null;
+  }
+  return lines;
 }
 
 async function openPdf(file) {
@@ -150,13 +201,18 @@ async function readPdf(file, onStep, language) {
     const pages = [];
     for (let number = 1; number <= count; number += 1) {
       const page = await doc.getPage(number);
-      pages.push({ page, number, text: pageText(await page.getTextContent()) });
+      const content = await page.getTextContent();
+      pages.push({ page, number, content, text: pageText(content) });
     }
     const hasTextLayer = pages.some(({ text }) => text.replace(/\s/g, '').length >= 60);
+    const lib = await getPdfjs();
     const texts = [];
-    for (const { page, number, text } of pages) {
+    const layouts = [];
+    for (const { page, number, content, text } of pages) {
       if (hasTextLayer) {
+        const viewport = page.getViewport({ scale: 1 });
         texts.push(text);
+        layouts.push({ kind: 'pdf', file, number, width: viewport.width, height: viewport.height, angle: 0, lines: pdfLines(content, viewport, lib) });
         continue;
       }
       onStep(`Reading page ${number} of ${count}`);
@@ -165,9 +221,11 @@ async function readPdf(file, onStep, language) {
       canvas.width = Math.floor(viewport.width);
       canvas.height = Math.floor(viewport.height);
       await page.render({ canvas, viewport }).promise;
-      texts.push(await recognize(canvas, language));
+      const read = await recognize(canvas, language);
+      texts.push(read.text);
+      layouts.push({ kind: 'pdf', file, number, width: read.width, height: read.height, angle: read.angle, lines: read.lines });
     }
-    return { text: texts.join('\n\n'), total: doc.numPages, read: count };
+    return { text: texts.join('\n\n'), total: doc.numPages, read: count, pages: layouts };
   } finally {
     await task.destroy();
   }
@@ -223,8 +281,24 @@ export function isSupported(file) {
   return file.type === 'application/pdf' || file.type.startsWith('image/') || file.type === 'text/plain' || /\.(pdf|png|jpe?g|webp|heic|heif|txt)$/i.test(file.name);
 }
 
+export async function renderPdfPage(file, number, width) {
+  const { task, doc } = await openPdf(file);
+  try {
+    const page = await doc.getPage(number);
+    const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    await page.render({ canvas, viewport }).promise;
+    return canvas;
+  } finally {
+    await task.destroy();
+  }
+}
+
 export async function readFiles(files, { language = 'deu', onProgress = () => {} } = {}) {
   const texts = [];
+  const pages = [];
   const shortened = [];
   let usedOcr = false;
   const list = [...files];
@@ -237,12 +311,15 @@ export async function readFiles(files, { language = 'deu', onProgress = () => {}
       onProgress(`${prefix}Opening the PDF`, null);
       const pdf = await readPdf(file, (label) => { usedOcr = true; onProgress(`${prefix}${label}`, null); }, language);
       texts.push(pdf.text);
+      pages.push(...pdf.pages);
       if (pdf.total > pdf.read) shortened.push({ name: file.name, total: pdf.total, read: pdf.read });
     } else {
       usedOcr = true;
       onProgress(`${prefix}Preparing the photo`, null);
-      texts.push(await recognize(await prepareImage(file), language));
+      const read = await recognize(await prepareImage(file), language);
+      texts.push(read.text);
+      pages.push({ kind: 'image', file, width: read.width, height: read.height, angle: read.angle, lines: read.lines });
     }
   }
-  return { text: texts.join('\n\n').trim(), usedOcr, shortened };
+  return { text: texts.join('\n\n').trim(), usedOcr, shortened, pages };
 }

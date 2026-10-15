@@ -18,6 +18,7 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 - **Writes the reply for you**: ready-made letters in the letter’s language to object, ask for more time, pay in instalments, or move an appointment. Print them or save them as a PDF.
 - **Cancels a contract**: enter when a phone, internet, gym, streaming or insurance contract started, its minimum term and its notice period. Briefly shows the last day to cancel, when the contract ends and what happens if it renews, and writes the cancellation letter in the country’s language. It also gives short tips on local consumer law for each country, like Germany’s 2022 law for fair consumer contracts.
 - **Translates the whole letter** to English on the device, with amounts and dates protected from translation mistakes.
+- **Hides private details before you share**: want a friend or an advice centre to look at a letter? Briefly shows each page with black boxes already over the name and address, IBANs and bank accounts, reference and customer numbers, tax and ID numbers, birth dates, phone numbers and email addresses. Tap a box to remove it, drag to add one, then save the pages as images, share them, or print them as a PDF.
 - **Copy or save the text** it read — a private, offline document-to-text scanner.
 
 ## Privacy by design
@@ -47,6 +48,7 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
 
 - **Text reading:** [Tesseract.js](https://github.com/naptha/tesseract.js) with German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish, Danish and English models, and [pdf.js](https://github.com/mozilla/pdf.js) for PDFs that already contain text.
 - **Understanding:** hand-written rules. Each **language** ([`web/src/languages/`](web/src/languages/)) knows dates, deadline phrases, amounts and reply letters. Each **country** ([`web/src/countries/`](web/src/countries/)) knows its offices, letter types, legal delivery rules, office words and example letters. The engine is [`web/src/analyze.js`](web/src/analyze.js). Rules are predictable and testable, which matters when the result is a legal deadline.
+- **Hiding private details:** the text reader also keeps where each word is on the page (Tesseract word boxes, or pdf.js text positions for PDFs with text). [`web/src/redact.js`](web/src/redact.js) groups the words into lines and blocks by their position, so a second column next to the address stays apart, and then finds what to hide with rules: the address block (a title like “Herrn” or “Mr”, or a name over a street and a postcode line in the format of each country), names after greetings, IBANs checked with their checksum, the country’s own reference number labels, ID formats like the Swiss AHV number or the Italian codice fiscale, birth dates, phone numbers and emails. A name found once is hidden on every page. The black boxes are drawn into the pixels of a canvas and the pages are saved from that canvas, so the hidden text is really gone and no photo data (like location) is kept.
 - **Translation:** [Bergamot](https://browser.mt/) models (the engine behind Firefox Translations) for German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish and Danish → English, 20–26 MB each, downloaded only when used. Letters from the UK, Ireland, the United States and Canada are already in English, so they need no translator. Belgian letters can be in Dutch or French; Briefly picks the right language by itself.
 - **No framework, no build step.** Plain HTML, CSS and JavaScript modules.
 
@@ -58,7 +60,7 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
 - a page per office, e.g. [/germany/finanzamt/](https://brieflyapp.pages.dev/germany/finanzamt/)
 - a page per office word, e.g. [/germany/words/bescheid/](https://brieflyapp.pages.dev/germany/words/bescheid/)
 - reply templates, e.g. [/germany/templates/objection/](https://brieflyapp.pages.dev/germany/templates/objection/)
-- tool pages: scan to text offline, translate letters, deadline calculator, cancel a contract
+- tool pages: scan to text offline, translate letters, deadline calculator, cancel a contract, hide private details
 - `sitemap.xml`, `robots.txt`, structured data (breadcrumbs, FAQ, web app)
 
 After changing a country or language file, run `npm run pages` and commit the result. It also rebuilds `web/src/countries/meta.js`, the small country list the app loads first (each full country file is loaded only when needed). A test fails if anything is out of date.
