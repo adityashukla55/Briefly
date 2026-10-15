@@ -211,3 +211,31 @@ test('hides a name from the first page on later pages too', () => {
   for (const word of ['Paul', 'Krüger', 'Lindenstraße']) assert.ok(second.has(word), word);
   assert.ok(!second.has('Seite'));
 });
+
+test('finds your address in more layouts', () => {
+  const cases = {
+    'no title at the top of the page': 'Max Mustermann\nHauptstraße 12\n10115 Berlin\n\nBescheid über Kindergeld',
+    'c/o and flat lines': 'Absender: Jobcenter Berlin\n\nErika Mustermann\nc/o Max Mustermann\nHauptstraße 12\nWohnung 3\n10115 Berlin\n\nEinladung',
+    'comma after the town': 'Herrn\nMax Mustermann\nHauptstraße 12\n10115 Berlin,\n\nBescheid',
+    'empty lines in between': 'Herrn\nMax Mustermann\n\nHauptstraße 12\n\n10115 Berlin\n\nBescheid',
+    'misread postcode': 'Herrn\nMax Mustermann\nHauptstraße l2\n1O115 Berlin\n\nBescheid',
+    'space inside, under the sender line': 'Kreisverwaltung Musterland · Abteilung Wohngeld\nAm Markt 1 · 54321 Musterstadt\n\nErika Mustermann\nc/o Max Mustermann\n\nHauptstraße 12\nWohnung 3\n10115 Berlin,\n\nBescheid über Wohngeld',
+  };
+  for (const [label, text] of Object.entries(cases)) {
+    const { hidden } = check(text);
+    for (const word of ['Mustermann', 'Hauptstraße']) assert.ok(hidden.has(word), `${label}: ${word}`);
+    assert.ok([...hidden].some((word) => /^1[0O]115$/.test(word)), `${label}: postcode`);
+  }
+  const { hidden } = check(cases['c/o and flat lines']);
+  assert.ok(hidden.has('Wohnung'));
+  assert.ok(!hidden.has('Jobcenter'));
+  const spaced = check(cases['space inside, under the sender line']).hidden;
+  for (const word of ['Erika', 'c/o', 'Wohnung']) assert.ok(spaced.has(word), word);
+  for (const word of ['Kreisverwaltung', 'Markt', '54321']) assert.ok(!spaced.has(word), word);
+});
+
+test('keeps the office address at the top when your address follows', () => {
+  const { hidden } = check('Naczelnik Urzędu Skarbowego\nul. Przykładowa 10\n02-123 Warszawa\n\nRahul Przykład\nul. Lipowa 5\n00-123 Warszawa', 'pl');
+  for (const word of ['Naczelnik', 'Przykładowa']) assert.ok(!hidden.has(word), word);
+  for (const word of ['Rahul', 'Lipowa']) assert.ok(hidden.has(word), word);
+});

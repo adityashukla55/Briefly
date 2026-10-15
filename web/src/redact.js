@@ -22,6 +22,12 @@ const POSTCODE_LINE = new RegExp([
   String.raw`^[\p{L}\s.'’\-]+,?\s+[A-Z]{2}\s+[A-Z]\d[A-Z]\s?\d[A-Z]\d$`,
 ].join('|'), 'u');
 
+const OFFICE_ADDRESS = /anschrift|besuch|postfach|öffnungszeit|sprechzeit|address|adresse|dirección|indirizzo|adres|endereço|postbus|skrytka|apartado|casella postale|boîte postale|(?<![\p{L}])(?:p\.? ?o\.? )?box(?![\p{L}])/iu;
+
+const ADDRESS_EXTRA = /^(?:c\/o|z\.? ?hd\.?|bei|chez|a\/c|att(?:n|ention)?\.?)(?![\p{L}])/iu;
+
+const STREET = /\p{L}{3,}.*\d|\d.*\p{L}{3,}/u;
+
 const NAME_LABEL = /^(?:name|vor- und (?:zu|nach)name|vorname|nachname|familienname|geburtsname|name, vorname|nom(?: de naissance| et prénoms?)?|prénoms?|nombre(?: y apellidos)?|apellidos?|nome(?: completo)?|cognome(?: e nome)?|naam|voornamen?|achternaam|imię(?: i nazwisko)?|nazwisko|namn|förnamn|efternamn|navn|fornavn|efternavn|full name|first name|last name|surname|given names?|forenames?|schuldner(?:in)?|versicherte(?:r| person)?|antragsteller(?:in)?|patient(?:in)?|debtor|applicant|steuerpflichtige[r]?)[^\S\n]*:[^\S\n]*(?=\S)/iu;
 
 const BIRTH = /(?<![\p{L}])(?:geboren(?: am)?|geb\.|geburtsdatum|date of birth|birth ?date|d\.?o\.?b\.?|born(?: on)?|née?(?: le)?|date de naissance|fecha de nacimiento|nacid[oa](?: el)?|data di nascita|nat[oa](?: il)?|geboortedatum|geboren op|data urodzenia|urodzon[ya](?: dnia)?|födelsedatum|född|fødselsdato|født(?: den)?|data de nascimento|nascid[oa](?: em)?)(?![\p{L}])[^\S\n]*[:.]?[^\S\n]*/giu;
@@ -165,46 +171,81 @@ function personName(raw, { titled = false } = {}) {
   return names.length ? names.map((word) => word.replace(/\.$/, '')) : null;
 }
 
-function addressRanges(layout, known) {
-  const ranges = [];
-  const byBlock = new Map();
-  for (const [index, line] of layout.lines.entries()) {
-    if (!byBlock.has(line.block)) byBlock.set(line.block, []);
-    byBlock.get(line.block).push(index);
+function postcodeText(text) {
+  return text.trim()
+    .replace(/[\s,.;:|·]+$/u, '')
+    .replace(/^((?:[A-Z]{1,2}-)?)([\dOoIl]{4,5})(?=\s)/u, (match, prefix, code) => ((code.match(/\d/g)?.length ?? 0) >= 3 ? prefix + code.replace(/[Oo]/g, '0').replace(/[Il]/g, '1') : match));
+}
+
+function addressGroups(layout) {
+  const { height } = layout;
+  const order = layout.lines.map((line, index) => ({ segment: line.segment, index })).sort((a, b) => a.segment.y0 - b.segment.y0 || a.segment.x0 - b.segment.x0);
+  const groups = [];
+  for (const item of order) {
+    let best = null;
+    for (const group of groups) {
+      const last = group.at(-1).segment;
+      const gap = item.segment.y0 - last.y1;
+      if (gap < -height * 0.5 || gap > height * 3.2 || Math.abs(item.segment.x0 - last.x0) > height * 2) continue;
+      if (!best || gap < best.gap) best = { group, gap };
+    }
+    if (best) best.group.push(item);
+    else groups.push([item]);
   }
-  for (const [block, indexes] of byBlock) {
+  return groups.map((group) => group.map((item) => item.index));
+}
+
+function addressStart(lines, first, postcode) {
+  for (let index = Math.max(first, postcode - 6); index < postcode; index += 1) {
+    const { rest, titled } = stripTitles(lines[index].text);
+    if (!titled) continue;
+    const own = rest ? personName(rest, { titled: true }) : null;
+    const next = !rest && index + 1 < postcode ? personName(stripTitles(lines[index + 1].text).rest, { titled: true }) : null;
+    if (own ?? next) return { start: index, names: own ?? next, titled: true };
+  }
+  const office = (line) => line.text.includes(':') || ORG.test(line.text) || OFFICE_ADDRESS.test(line.text);
+  for (let index = Math.max(first, postcode - 5); index < postcode; index += 1) {
+    if (lines.slice(index, postcode).some(office)) continue;
+    const names = personName(lines[index].text);
+    if (names) return { start: index, names, titled: false };
+  }
+  for (let index = Math.max(first, postcode - 5); index < postcode; index += 1) {
+    const match = lines[index].text.match(ADDRESS_EXTRA);
+    const names = match && !lines.slice(index, postcode).some(office) ? personName(lines[index].text.slice(match[0].length).trim()) : null;
+    if (names) return { start: index > first && personName(lines[index - 1].text) && !office(lines[index - 1]) ? index - 1 : index, names, titled: false };
+  }
+  const street = lines[postcode - 1];
+  if (postcode - 1 < first || office(street) || !STREET.test(street.text)) return null;
+  let start = postcode - 1;
+  while (start - 1 >= Math.max(first, postcode - 4) && !office(lines[start - 1]) && (/\d/.test(lines[start - 1].text) || ADDRESS_EXTRA.test(lines[start - 1].text))) start -= 1;
+  const above = start - 1 >= first ? lines[start - 1] : null;
+  if (above && office(above)) return null;
+  if (above && !/\d/.test(above.text) && above.text.trim().split(/\s+/).length <= 6) start -= 1;
+  return { start, names: [], titled: false };
+}
+
+function addressRanges(layout, known) {
+  const found = [];
+  for (const indexes of addressGroups(layout)) {
     const lines = indexes.map((index) => layout.lines[index]);
-    const postcode = lines.findIndex((line, index) => index > 0 && POSTCODE_LINE.test(line.text.trim()));
-    if (postcode < 0) continue;
-    let start = -1;
-    let names = null;
-    for (let index = 0; index < postcode; index += 1) {
-      const { rest, titled } = stripTitles(lines[index].text);
-      if (!titled) continue;
-      const own = rest ? personName(rest, { titled: true }) : null;
-      const next = !rest && index + 1 < postcode ? personName(stripTitles(lines[index + 1].text).rest, { titled: true }) : null;
-      names = own ?? next;
-      if (names) {
-        start = index;
-        break;
-      }
-    }
-    if (start < 0 && block > 0) {
-      for (let index = Math.max(0, postcode - 3); index < postcode; index += 1) {
-        if (lines.slice(index, postcode).some((line) => line.text.includes(':'))) continue;
-        names = personName(lines[index].text);
-        if (names) {
-          start = index;
-          break;
-        }
-      }
-    }
-    if (start < 0) continue;
+    let first = 0;
+    lines.forEach((line, postcode) => {
+      if (postcode === 0 || !POSTCODE_LINE.test(postcodeText(line.text))) return;
+      const address = addressStart(lines, first, postcode);
+      first = postcode + 1;
+      if (address) found.push({ ...address, lines: lines.slice(address.start, postcode + 1) });
+    });
+  }
+  const top = Math.min(...found.map((address) => address.lines[0].segment.y0));
+  const ranges = [];
+  for (const { lines, names, titled } of found) {
+    if (!titled && found.length > 1 && lines[0].segment.y0 === top) continue;
     for (const name of names) known.names.add(name);
-    for (const line of lines.slice(start + 1, postcode + 1)) {
-      if (/\d/.test(line.text) && !names.some((name) => line.text.includes(name))) known.strings.set(line.text.trim(), 'address');
+    for (const part of lines.slice(1)) {
+      if (/\d/.test(part.text) && !names.some((name) => part.text.includes(name))) known.strings.set(part.text.trim(), 'address');
     }
-    ranges.push({ start: lines[start].start, end: lines[postcode].end, kind: 'address', whole: true });
+    const parts = lines.map((part) => ({ start: part.start, end: part.end }));
+    ranges.push({ start: Math.min(...parts.map((part) => part.start)), end: Math.max(...parts.map((part) => part.end)), parts, kind: 'address', whole: true });
   }
   return ranges;
 }
@@ -350,7 +391,7 @@ function knownRanges(text, known) {
 function rangeBoxes(layout, range) {
   const byLine = new Map();
   for (const span of layout.spans) {
-    if (span.end <= range.start || span.start >= range.end) continue;
+    if (!(range.parts ?? [range]).some((part) => span.end > part.start && span.start < part.end)) continue;
     const { word } = span;
     const length = span.end - span.start;
     const from = Math.max(range.start, span.start) - span.start;
