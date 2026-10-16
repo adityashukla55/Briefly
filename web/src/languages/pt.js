@@ -58,6 +58,14 @@ export default {
     [/^(?:com os melhores cumprimentos|melhores cumprimentos|cumprimentos|atenciosamente),?$/i, () => 'Kind regards'],
   ],
   rewrite: [],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])deve(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])solicitamos(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])queira(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])por favor(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])agradecemos que(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])fica (?:notificad[oa]|obrigad[oa])(?![\p{L}\p{N}])|(?:^|[.!?]\s+|\n)(?:pague|envie|apresente|compareça)(?![\p{L}\p{N}])/iu,
+    pay: /(?<![\p{L}\p{N}])pag|(?<![\p{L}\p{N}])liquid|(?<![\p{L}\p{N}])regulariz/iu,
+    owed: /(?<![\p{L}\p{N}])(?:valor|montante|quantia|total) a pagar(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])montante em dívida(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])valor em dívida(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])total a pagar(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])importe a pagar(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])até(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])prazo(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])data limite(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])não (?:precisa|tem de|tem que) (?:fazer|pagar) nada(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:débito direto|debitad)/iu,
+  },
   replies: {
     you: { name: '[Nome completo]', street: '[Morada]', city: '[Código postal e localidade]', place: '[Localidade]' },
     officeAddress: '[Morada indicada na carta]',

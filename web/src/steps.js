@@ -32,6 +32,8 @@ export function buildSteps(result) {
     if (text && !steps.some((step) => step.text === text)) steps.push({ text, tone });
   };
 
+  if (result.nothing) add('The letter says you don’t need to do anything. Keep it with your papers.', 'good');
+
   if (type === 'enforcement') {
     add(`Act today. Pay now, or call them today and ask for a payment plan (${country.help.instalments}).`, 'urgent');
     add(`If you can’t pay, get free help from ${country.help.debt}.`);

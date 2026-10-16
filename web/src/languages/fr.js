@@ -60,6 +60,14 @@ export default {
   rewrite: [
     [/\bavant le (\d{1,2}\/\d{1,2}\/\d{2,4})/g, (match, date) => `au plus tard le ${date}`],
   ],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])merci de(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])veuillez(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])nous vous (?:demandons|prions|invitons)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])vous devez(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])vous êtes (?:tenue?|prié)|(?<![\p{L}\p{N}])il vous appartient(?![\p{L}\p{N}])|(?:^|[.!?]\s+|\n)(?:payez|réglez|envoyez|renvoyez|retournez|présentez-vous|contactez)(?![\p{L}\p{N}])/iu,
+    pay: /(?<![\p{L}\p{N}])pa(?:yer|iement)|(?<![\p{L}\p{N}])régl|(?<![\p{L}\p{N}])rembours|(?<![\p{L}\p{N}])vers(?:er|ement)|(?<![\p{L}\p{N}])acquitt/iu,
+    owed: /(?<![\p{L}\p{N}])montant dû(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])reste dû(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])somme due(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])reste à payer(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])montant à payer(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])à régler(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])date limite(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])avant le(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])au plus tard(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])échéance(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])aucune démarche(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])rien à (?:faire|payer)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])vous n['’]avez rien à(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])vous n['’]avez pas à(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:prélèvement|prélevé)/iu,
+  },
   replies: {
     you: { name: '[Vos prénom et nom]', street: '[Votre adresse]', city: '[Code postal et ville]', place: '[Ville]' },
     officeAddress: '[Adresse indiquée dans le courrier]',
