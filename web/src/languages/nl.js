@@ -57,6 +57,14 @@ export default {
     [/^(?:met vriendelijke groet(?:en)?|hoogachtend),?$/i, () => 'Kind regards'],
   ],
   rewrite: [],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])u moet(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])moet u(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])wij verzoeken u(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])(?:we|wij) (?:vragen|verzoeken) u(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])(?:vragen|verzoeken) (?:we|wij) u(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])wilt u(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])graag(?![\p{L}\p{N}])|(?:^|[.!?]\s+|\n)(?:betaal|stuur|maak|neem|stuurt u|betaalt u)(?![\p{L}\p{N}])/iu,
+    pay: /(?<![\p{L}\p{N}])betaal|(?<![\p{L}\p{N}])betalen|(?<![\p{L}\p{N}])overmak|(?<![\p{L}\p{N}])voldoe/iu,
+    owed: /(?<![\p{L}\p{N}])te betalen(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])openstaand bedrag(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])verschuldigd(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])vóór(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])voor \d|(?<![\p{L}\p{N}])uiterlijk(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])betaaltermijn(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])vervaldatum(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])u hoeft niets(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])hoeft u niets(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])geen actie(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])niets te doen(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:automatische incasso|afgeschreven|incasseren wij)/iu,
+  },
   replies: {
     you: { name: '[Uw voornaam en achternaam]', street: '[Uw straat en huisnummer]', city: '[Uw postcode en woonplaats]', place: '[Woonplaats]' },
     officeAddress: '[Adres uit de brief]',

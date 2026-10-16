@@ -12,7 +12,9 @@ Everything runs in your browser. The letter is never uploaded — not to a serve
 - **Knows each country:** the offices (Finanzamt, AMS, Betreibungsamt, CAF, Agencia Tributaria, Agenzia delle Entrate, Belastingdienst, FOD Financiën / SPF Finances, Finanças, Urząd Skarbowy, Skatteverket, Skattestyrelsen, HMRC, Revenue, IRS, CRA…), the kinds of letters, how deadlines are counted, money formats and reference numbers.
 - **Detects the country by itself** from the language, IBAN and office names — and switches if you picked the wrong one.
 - **Finds the important dates**: payment deadlines, appointments, and the last day to object — including deadlines like “within one month after delivery” or “within 10 working days”, estimated with each country’s delivery rule.
-- **Finds the money**: what you must pay, or what you get back, plus IBAN and payment reference with copy buttons. Euros and Swiss francs.
+- **Shows what the letter asks you to do**: the sentences that ask you to pay, reply, sign, send something or come to an appointment, quoted from the letter.
+- **Finds the money**: what you must pay, or what you get back, plus IBAN and payment reference with copy buttons. Every other amount is listed neutrally with the line it came from, so a balance or a salary is never shown as money to pay.
+- **Works with more than official letters**: bills, bank statements, payslips, rent and insurance letters. It says so when a document asks for nothing, for example a bill paid by direct debit.
 - **Tells you what to do** as a checklist, and explains the office words in the letter.
 - **Adds a calendar reminder** (.ics file) for any deadline.
 - **Writes the reply for you**: ready-made letters in the letter’s language to object, ask for more time, pay in instalments, or move an appointment. Print them or save them as a PDF.
@@ -54,6 +56,21 @@ photo / PDF ──► text reader (Tesseract, WebAssembly) ──► country rul
 - **Translation:** [Bergamot](https://browser.mt/) models (the engine behind Firefox Translations) for German, French, Spanish, Portuguese, Italian, Dutch, Polish, Swedish and Danish → English, 20–26 MB each, downloaded only when used. Letters from the UK, Ireland, the United States and Canada are already in English, so they need no translator. Belgian letters can be in Dutch or French; Briefly picks the right language by itself.
 - **My letters:** [`web/src/vault.js`](web/src/vault.js) encrypts with the browser’s Web Crypto, [`web/src/folder.js`](web/src/folder.js) stores the encrypted letters in IndexedDB, and [`web/src/letters.js`](web/src/letters.js) is the screen. The key lives only in memory while the folder is open. The tests run the same code in Node with a small in-memory stand-in for IndexedDB.
 - **No framework, no build step.** Plain HTML, CSS and JavaScript modules.
+
+## How Briefly decides what you must pay
+
+Showing “To pay: €58” on a bank statement is worse than showing nothing. So Briefly only says **To pay** when the letter itself asks for money: a sentence like “Bitte überweisen Sie … bis …”, “Please pay by …” or a label like “Montant à payer”, in each of the 10 languages ([`web/src/requests.js`](web/src/requests.js), `asks` in [`web/src/languages/`](web/src/languages/)). It shows that sentence next to the amount. Letters that say “you don’t need to do anything” or that the money is taken by direct debit never get a “To pay”.
+
+This is measured on 22 made-up documents with known answers ([`test/fixtures/documents.js`](test/fixtures/documents.js)): tax bills and refunds, reminders, fines, bank statements, payslips, direct-debit bills, a rent increase, an appointment, a school letter and a job offer, in 7 languages.
+
+| | “To pay” right | Deadline right | Wrong “To pay” shown | Time per letter |
+|---|---|---|---|---|
+| Earlier rules | 15 / 22 | 20 / 22 | 7 | instant |
+| On-device AI: Qwen3.5 0.8B picking from the amounts and dates Briefly found (Transformers.js, WebGPU) | 11 / 22 | 16 / 22 | 11 | ~13 s, 450 MB download |
+| On-device AI: LFM2.5 350M answering freely | 14 / 22 | 11 / 22 | 5 | ~9 s, 280 MB download |
+| **Current rules** | **22 / 22** | **22 / 22** | **0** | instant |
+
+The current rules were improved with these same documents, so 22 / 22 is the best case: new kinds of documents will show new gaps, and each one becomes a new test document. Small language models that fit in a browser did worse than the rules at deciding what someone must pay, so Briefly uses AI only where it is strong — finding names to hide and translating — and keeps the test documents to check every change.
 
 ## Search pages
 

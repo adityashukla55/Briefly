@@ -1,5 +1,7 @@
 import { countryById, detectCountry, languageOf, resolveLanguage } from './countries/index.js';
 import { addDays, addPeriod, daysBetween, describePeriod, findDates, findPeriods, todayIso } from './dates.js';
+import { askedPayment, findRequests } from './requests.js';
+import { generalKind } from './documents.js';
 
 export function normalize(text) {
   return text
@@ -136,6 +138,7 @@ export function findImportantDates(text, country, today = todayIso()) {
       estimated: false,
       daysLeft: daysBetween(today, date.iso),
       source: date.raw,
+      index: date.index,
     });
   }
 
@@ -158,6 +161,7 @@ export function findImportantDates(text, country, today = todayIso()) {
       period: describePeriod(period),
       daysLeft: iso ? daysBetween(today, iso) : null,
       source: period.raw,
+      index: period.index,
     });
   }
 
@@ -185,7 +189,7 @@ export function amountPattern(country) {
     const thousands = country.thousands ?? (country.decimal === ',' ? '.' : '\'’');
     const group = `[${thousands.replace(/[\]\\^-]/g, '\\$&')}]`;
     const decimal = country.decimal === ',' ? ',' : '\\.';
-    amountCache.set(key, new RegExp(`(?:(${currency})\\s?)?(?<![\\d.,'’])(\\d{1,3}(?:${group}\\d{3})+|\\d+)(?:${decimal}(\\d{2}|-{1,2}|–))?(?!\\d)(?:\\s?(${currency})(?!\\s?\\d))?`, 'gi'));
+    amountCache.set(key, new RegExp(`(?:(${currency})[^\\S\\n]?)?(?<![\\d.,'’])(\\d{1,3}(?:${group}\\d{3})+|\\d+)(?:${decimal}(\\d{2}|-{1,2}|–))?(?!\\d)(?:[^\\S\\n]?(${currency})(?![^\\S\\n]?\\d))?`, 'gi'));
   }
   return amountCache.get(key);
 }
@@ -227,7 +231,7 @@ export function findMoney(text, country, kind = null) {
     const list = unique.filter((item) => item.role === role);
     return list.find((item) => item.total) ?? list.sort((a, b) => b.amount - a.amount)[0] ?? null;
   };
-  return { items: unique, toPay: pick('pay'), toGet: pick('refund') ?? pick('benefit') };
+  return { items: unique, all: items, toPay: pick('pay'), toGet: pick('refund') ?? pick('benefit') };
 }
 
 export function isValidIban(raw, lengths = { DE: 22, AT: 20, CH: 21, FR: 27, ES: 24, IT: 27, LI: 21, NL: 18, PL: 28, BE: 16, GB: 22, IE: 22, PT: 25, SE: 24, DK: 18 }) {
@@ -329,17 +333,31 @@ export function detectCountryId(rawText, preferred = null) {
   return detectCountry(normalize(rawText), preferred).id;
 }
 
+const DEMANDS = ['reminder', 'fine', 'enforcement', 'repayment', 'court-order', 'fee-decision', 'bill', 'utility-bill'];
+
 export function analyze(rawText, { today = todayIso(), country: countryId = null, preferred = 'de' } = {}) {
   const text = normalize(rawText);
   const country = resolveLanguage(countryId ? countryById(countryId) : detectCountry(text, preferred), text);
   const sender = detectSender(text, country);
-  const kind = detectKind(text, country);
-  const { letterDate, dates } = findImportantDates(text, country, today);
+  const kind = generalKind(text) ?? detectKind(text, country);
+  const { letterDate, dates: found } = findImportantDates(text, country, today);
+  const { requests, nothing } = findRequests(text, languageOf(country));
   const money = findMoney(text, country, kind);
+  const asked = askedPayment(requests, money.all, text);
+  const asks = languageOf(country).asks;
+  const automatic = nothing || Boolean(asks?.debit.test(text));
+  const demand = DEMANDS.includes(kind?.type) || requests.some((request) => request.due && asks.pay.test(request.text));
+  const fallback = !asked && !automatic && demand ? money.toPay : null;
+  money.toPay = asked ? { ...asked.item, role: 'pay', asked: asked.request.text } : fallback ? { ...fallback, asked: null } : null;
+  if (money.toGet && money.toPay && money.toGet.amount === money.toPay.amount) money.toGet = null;
+  const pleading = requests.filter((request) => request.ask);
+  const asking = (pleading.length ? pleading : requests.filter((request) => request.owed)).slice(0, 4).map((request) => request.text);
+  const dates = requests.length || money.toPay ? found : found.filter((date) => date.estimated || !['deadline', 'payment'].includes(date.type));
+  const quiet = nothing && !money.toPay && !dates.some((date) => ['deadline', 'payment', 'appointment'].includes(date.type) && !date.estimated);
   const payment = findPayment(text, country);
   const references = findReferences(text, country);
   const terms = findTerms(text, country);
   const objection = objectionTerm(text, country);
-  const urgency = decideUrgency(kind, dates);
-  return { text, today, country, sender, kind, letterDate, dates, money, payment, references, terms, objection, urgency };
+  const urgency = quiet || (!asking.length && !money.toPay && !dates.length) ? 'low' : decideUrgency(kind, dates);
+  return { text, today, country, sender, kind, letterDate, dates, money, asks: asking, nothing: quiet, payment, references, terms, objection, urgency };
 }

@@ -58,6 +58,14 @@ export default {
     [/^(?:z poważaniem|z wyrazami szacunku|pozdrawiam),?$/i, () => 'Kind regards'],
   ],
   rewrite: [],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])prosimy(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])proszę(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])należy(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])wzywa(?:m|my)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])musi pan|(?<![\p{L}\p{N}])musi pani|(?<![\p{L}\p{N}])jest pan(?:i)? zobowiązan|(?<![\p{L}\p{N}])zobowiązuje się/iu,
+    pay: /zapła[tc]|wpła[tc]|dopła[tc]|uregul|przelew|spła[tc]|zwrot/iu,
+    owed: /(?<![\p{L}\p{N}])do (?:za|do)płaty(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])kwota zaległości(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])zaległość(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])należność(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])w terminie(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])do dnia(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])najpóźniej(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])termin płatności(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])nie musi (?:pan|pani) nic(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])nie trzeba nic(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])nie musi pan(?:i)? niczego(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:polecenie zapłaty|zostanie pobran|pobierzemy)/iu,
+  },
   replies: {
     you: { name: '[Imię i nazwisko]', street: '[Ulica i numer domu]', city: '[Kod pocztowy i miejscowość]', place: '[Miejscowość]' },
     officeAddress: '[Adres z pisma]',

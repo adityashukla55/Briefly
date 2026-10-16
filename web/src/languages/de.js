@@ -64,6 +64,14 @@ export default {
     [/§§?\s*/g, () => 'Paragraf '],
     [/\binnert\b/gi, () => 'innerhalb'],
   ],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])bitte(?![\p{L}\p{N}])(?!\s+beachten)|(?<![\p{L}\p{N}])wir bitten(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])ersuchen\s+sie(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])sie müssen(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])müssen sie(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])sind sie verpflichtet|(?<![\p{L}\p{N}])werden sie gebeten|(?<![\p{L}\p{N}])fordern?\s+(?:wir\s+)?sie(?![\p{L}\p{N}])[^.\n]{0,40}(?<![\p{L}\p{N}])auf(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])zahlungsaufforderung(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])aufgefordert(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])aufforderung(?![\p{L}\p{N}])|(?:^|[.!?]\s+|\n)(?:zahlen|überweisen|senden|schicken|reichen|legen|kommen|bringen|unterschreiben|füllen|melden|rufen|beantworten|erscheinen|begleichen|entrichten)\s+sie(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])ist\s+(?:bis|spätestens|innerhalb)[^.\n]{0,60}(?<![\p{L}\p{N}])zu\s+(?:zahlen|entrichten|überweisen|begleichen|leisten|erstatten)(?![\p{L}\p{N}])/iu,
+    pay: /zahl|überweis|begleich|entricht|einzahl|erstatten\s+sie|zurückzahl|ausgleich|befriedig/iu,
+    owed: /(?:ist|sind)(?![\p{L}\p{N}])[^.\n]{0,80}?(?<![\p{L}\p{N}])zu (?:zahlen|entrichten|überweisen|begleichen|erstatten|leisten)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])(?:abgaben)?nachforderung(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])offene forderung(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])gesamtforderung(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])forderungsbetrag(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])strafbetrag(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])verwarnungsgeld(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])bu(?:ß|ss)geld(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])zu zahlen(?:der betrag)?(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])noch zu zahlen(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])offener (?:rechnungs)?betrag(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])zahlbetrag(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])fälliger betrag(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])zahllast(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])noch offen(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])frist(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])fällig (?:am|bis|zum)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])spätestens(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])zahlungsziel(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])zahlbar bis(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])sie müssen nichts(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])müssen sie nichts(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])nichts (?:weiter )?(?:zu )?(?:tun|unternehmen|veranlassen)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])brauchen (?:sie )?nichts(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])keine (?:weiteren )?(?:schritte|maßnahmen) (?:nötig|erforderlich)(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:lastschrift|abgebucht|abbuchung|bankeinzug|buchen[^.\n]{0,60}ab(?![\p{L}\p{N}])|einzugsermächtigung)/iu,
+  },
   replies: {
     you: { name: '[Ihr Vorname Nachname]', street: '[Ihre Straße und Hausnummer]', city: '[Ihre PLZ und Ihr Ort]', place: '[Ihr Ort]' },
     officeAddress: '[Adresse aus dem Brief]',

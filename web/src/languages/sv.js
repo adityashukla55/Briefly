@@ -56,6 +56,14 @@ export default {
     [/^hej\s+(.+?),?$/i, (m) => `Dear ${m[1]},`],
   ],
   rewrite: [],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])vänligen(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])du måste(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])ni måste(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])vi ber dig(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])du behöver(?![\p{L}\p{N}])(?! inte)|(?:^|[.!?]\s+|\n)(?:betala|skicka|kontakta|fyll)(?![\p{L}\p{N}])/iu,
+    pay: /betal/iu,
+    owed: /(?<![\p{L}\p{N}])att betala(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])belopp att betala(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])skuld(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])senast(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])förfallodag(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])förfallodatum(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])du behöver inte (?:göra|betala) något(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])ingen åtgärd(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:autogiro|dras från (?:ditt|ert) konto)/iu,
+  },
   replies: {
     you: { name: '[Ditt för- och efternamn]', street: '[Din adress]', city: '[Postnummer och ort]', place: '[Ort]' },
     officeAddress: '[Adress från brevet]',

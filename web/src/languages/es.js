@@ -57,6 +57,14 @@ export default {
     [/^(?:atentamente|reciba un cordial saludo|un saludo cordial|cordialmente),?$/i, () => 'Kind regards'],
   ],
   rewrite: [],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])le (?:rogamos|solicitamos|requerimos|recordamos que debe)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])deber[áa](?![\p{L}\p{N}])|(?<![\p{L}\p{N}])debe usted(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])por favor(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])tiene que(?![\p{L}\p{N}])|(?:^|[.!?]\s+|\n)(?:ingrese|pague|presente|envíe|aporte|acuda)(?![\p{L}\p{N}])/iu,
+    pay: /(?<![\p{L}\p{N}])pag|(?<![\p{L}\p{N}])ingres|(?<![\p{L}\p{N}])abon|(?<![\p{L}\p{N}])satisf/iu,
+    owed: /(?<![\p{L}\p{N}])importe (?:total )?a (?:ingresar|pagar)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])cantidad a (?:ingresar|pagar)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])importe pendiente(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])deuda pendiente(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])total a pagar(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])fecha (?:de cargo|de pago|límite de pago)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])vencimiento(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])plazo(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])hasta el(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])fecha límite(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])antes del(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])no (?:tiene|necesita) que (?:hacer|pagar) nada(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])no es necesario (?:hacer|pagar)|(?<![\p{L}\p{N}])no debe hacer nada(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:domiciliad|domiciliación|se cargará|cargo en (?:su )?cuenta)/iu,
+  },
   replies: {
     you: { name: '[Su nombre y apellidos]', street: '[Su dirección]', city: '[Código postal y ciudad]', place: '[Ciudad]' },
     officeAddress: '[Dirección que figura en la carta]',

@@ -1034,3 +1034,15 @@ html.ready .boot-warning { display: none; }
   .letters-all { grid-area: letters; }
   .letters-backup { grid-area: backup; }
 }
+
+.summary-nothing { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--good-bg); color: var(--good); font-weight: 650; }
+.asks { margin: 12px 0 4px; padding: 12px 14px; border-radius: 12px; background: var(--info-bg); }
+.asks-title { margin: 0 0 6px; font-weight: 700; }
+.asks-list { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.ask-original { display: block; }
+.ask-english { display: block; color: var(--ink-2); font-size: 15px; margin-top: 2px; }
+.asks-note { margin: 8px 0 0; }
+details.amounts summary { cursor: pointer; font-weight: 650; }
+.amounts-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.amounts-list li { display: grid; grid-template-columns: minmax(90px, auto) 1fr; gap: 12px; align-items: baseline; }
+.amounts-list span { color: var(--ink-2); font-size: 14px; overflow-wrap: anywhere; }

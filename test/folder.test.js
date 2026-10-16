@@ -43,9 +43,15 @@ test('keeps a letter encrypted, never the password', async () => {
   assert.equal(updated, false);
   await folder.update(id, { note: 'Ask Anna about this' });
 
-  const stored = JSON.stringify([...rows(indexedDB, 'meta'), ...rows(indexedDB, 'letters')]);
+  const bytesOf = (value) => (value instanceof ArrayBuffer ? new Uint8Array(value) : ArrayBuffer.isView(value) ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength) : null);
+  const all = [...rows(indexedDB, 'meta'), ...rows(indexedDB, 'letters')];
+  const stored = JSON.stringify(all, (key, value) => (bytesOf(value) ? '[bytes]' : value));
+  const binary = all.flatMap((row) => Object.values(row).map(bytesOf).filter(Boolean));
+  const contains = (bytes, needle) => bytes.some((_, start) => needle.every((byte, offset) => bytes[start + offset] === byte));
   for (const secret of [PASSWORD, 'Finanzamt', 'Steuerbescheid', '412', 'Anna', '214/123/45678', 'de"', '2026-10-15']) {
     assert.ok(!stored.includes(secret), `found ${secret} in storage`);
+    const needle = [...new TextEncoder().encode(secret)];
+    assert.ok(!binary.some((bytes) => contains(bytes, needle)), `found ${secret} in the encrypted bytes`);
   }
   const [record] = rows(indexedDB, 'letters');
   assert.deepEqual(Object.keys(record).sort(), ['data', 'id', 'iv']);

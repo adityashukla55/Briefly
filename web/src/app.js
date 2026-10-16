@@ -73,7 +73,7 @@ function renderCountryPicker() {
 const SCOPE_PREVIEW = 8;
 
 function notFor(className) {
-  return h('p', { class: className }, h('strong', {}, 'Not for: '), 'personal letters, receipts, contracts, ID cards, handwritten notes or letters from other countries.');
+  return h('p', { class: className }, h('strong', {}, 'Not for: '), 'handwritten notes, ID cards or letters from other countries.');
 }
 
 async function renderScope() {
@@ -274,6 +274,49 @@ function dateFact(result, date) {
     calendarButton(result, date));
 }
 
+function shorten(text, length = 140) {
+  return text.length > length ? `${text.slice(0, length - 1).trimEnd()}…` : text;
+}
+
+function lineOf(text, index) {
+  const start = text.lastIndexOf('\n', index - 1) + 1;
+  const stop = text.indexOf('\n', index);
+  return text.slice(start, stop < 0 ? text.length : stop).trim();
+}
+
+function amountsCard(result) {
+  const shown = [result.money.toPay?.amount, result.money.toGet?.amount];
+  const others = result.money.items.filter((item) => !shown.includes(item.amount));
+  if (!others.length) return null;
+  return h('div', { class: 'card amounts-card' },
+    h('details', { class: 'amounts', open: !result.money.toPay && !result.money.toGet && others.length <= 4 ? true : null },
+      h('summary', {}, result.money.toPay || result.money.toGet ? `Other amounts in this document (${others.length})` : `Amounts in this document (${others.length})`),
+      h('p', { class: 'muted small' }, result.money.toPay ? 'Shown so you can check them. They are not extra money to pay.' : 'Shown so you can check them. The letter doesn’t clearly ask you to pay any of them.'),
+      h('ul', { class: 'amounts-list' }, others.slice(0, 12).map((item) => h('li', {},
+        h('strong', {}, formatMoney(item)),
+        h('span', { lang: result.country.language }, shorten(lineOf(result.text, item.index), 110)))))));
+}
+
+function asksBlock(result) {
+  if (!result.asks?.length) return null;
+  const english = languageOf(result.country).id === 'en';
+  const list = h('ul', { class: 'asks-list' }, result.asks.map((sentence) => h('li', {}, h('span', { class: 'ask-original', lang: result.country.language }, `“${shorten(sentence, 220)}”`))));
+  const block = h('div', { class: 'asks' },
+    h('p', { class: 'asks-title' }, 'What the letter asks you to do'),
+    list,
+    english ? null : h('p', { class: 'muted small asks-note' }, `In ${languageOf(result.country).name}, as written in the letter. The English translation is further down.`));
+  if (!english && needsTranslator(result.country)) {
+    isTranslatorCached(result.country).then(async (cached) => {
+      if (!cached) return;
+      const parts = await translateText(result.asks.join('\n\n'), result.country);
+      if (parts.length !== result.asks.length) return;
+      [...list.children].forEach((item, index) => item.append(h('span', { class: 'ask-english' }, parts[index].english)));
+      block.querySelector('.asks-note')?.remove();
+    }).catch(() => {});
+  }
+  return block;
+}
+
 function moneyFacts(result) {
   const facts = [];
   const { toPay, toGet } = result.money;
@@ -281,7 +324,7 @@ function moneyFacts(result) {
     facts.push(h('div', { class: 'card fact money-pay' },
       h('span', { class: 'fact-label' }, 'To pay'),
       h('span', { class: 'fact-value' }, `${formatMoney(toPay)}${toPay.monthly ? ' / month' : ''}`),
-      h('span', { class: 'fact-note' }, `Written in the letter as ${toPay.source.replace(/ /g, '\u00a0')}`)));
+      h('span', { class: 'fact-note' }, toPay.asked ? `Asked in the letter: “${shorten(toPay.asked)}”` : `Written in the letter as ${toPay.source.replace(/ /g, '\u00a0')}`)));
   }
   if (toGet) {
     facts.push(h('div', { class: 'card fact money-get' },
@@ -310,6 +353,8 @@ function summaryCard(result) {
       kind && !kind.local.toLowerCase().startsWith(kind.name.toLowerCase()) ? h('span', { class: 'local' }, ` · ${kind.local}`) : null),
     kind ? h('p', {}, kind.about) : h('p', {}, 'We couldn’t tell exactly what kind of letter this is. The dates, amounts and translation below can still help.'),
     sender ? h('p', { class: 'muted small' }, sender.about) : null,
+    result.nothing ? h('p', { class: 'summary-nothing' }, '✓ The letter says you don’t need to do anything.') : null,
+    asksBlock(result),
     h('span', { class: `badge ${result.urgency}` }, urgencyText(result.urgency)));
 }
 
@@ -560,7 +605,7 @@ async function showResult(text, source, countryId = null, notices = []) {
     switched && !unknown ? h('p', { class: 'notice' }, `This letter looks like it’s from ${result.country.inName ?? result.country.name}, so Briefly used the ${result.country.adjective} rules. Wrong? Change the country below.`) : null,
     summaryCard(result),
     facts.length ? h('div', { class: 'facts' }, facts) : null,
-    resultColumns([stepsCard(result), paymentCard(result), referencesCard(result), termsCard(result)].filter(Boolean)),
+    resultColumns([stepsCard(result), paymentCard(result), amountsCard(result), referencesCard(result), termsCard(result)].filter(Boolean)),
     translationCard(result),
     repliesCard(result),
     current.pages.length ? hideCard(() => { if (location.hash === '#hide') routeHide(); else location.hash = 'hide'; }) : null,

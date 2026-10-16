@@ -56,6 +56,14 @@ export default {
     [/^kære\s+(.+?),?$/i, (m) => `Dear ${m[1]},`],
   ],
   rewrite: [],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])venligst(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])du skal(?![\p{L}\p{N}])(?! ikke)|(?<![\p{L}\p{N}])i skal(?![\p{L}\p{N}])(?! ikke)|(?<![\p{L}\p{N}])vi beder dig(?![\p{L}\p{N}])|(?:^|[.!?]\s+|\n)(?:betal|send|kontakt|udfyld)(?![\p{L}\p{N}])/iu,
+    pay: /betal|indbetal|overfør/iu,
+    owed: /(?<![\p{L}\p{N}])at betale(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])beløb til betaling(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])skyldigt beløb(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])restgæld(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])senest(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])forfaldsdato(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])betalingsfrist(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])du skal ikke (?:gøre|betale) noget(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])du behøver ikke (?:gøre|betale)(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:betalingsservice|trækkes (?:automatisk )?fra)/iu,
+  },
   replies: {
     you: { name: '[Dit fulde navn]', street: '[Din adresse]', city: '[Postnummer og by]', place: '[By]' },
     officeAddress: '[Adresse fra brevet]',

@@ -1,4 +1,4 @@
-const VERSION = '3.8.0';
+const VERSION = '3.9.0';
 const SHELL_CACHE = `briefly-shell-${VERSION}`;
 const VENDOR_CACHE = 'briefly-vendor-2';
 const SHARE_CACHE = 'briefly-share';
@@ -49,6 +49,7 @@ const SHELL = [
   '/src/countries/uk.js',
   '/src/countries/us.js',
   '/src/dates.js',
+  '/src/documents.js',
   '/src/dom.js',
   '/src/errors.js',
   '/src/feedback.js',
@@ -76,6 +77,7 @@ const SHELL = [
   '/src/read.js',
   '/src/redact.js',
   '/src/replies.js',
+  '/src/requests.js',
   '/src/steps.js',
   '/src/translate.js',
   '/src/vault.js',

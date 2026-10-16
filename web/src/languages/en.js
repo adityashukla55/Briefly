@@ -60,6 +60,14 @@ export default {
   greeting: /^(?:dear|to whom it may concern|hello)/i,
   fixedPhrases: [],
   rewrite: [],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])please(?![\p{L}\p{N}])(?!\s+(?:note|read|keep))|(?<![\p{L}\p{N}])you (?:must|need to|have to|should|are required to)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])we ask you(?![\p{L}\p{N}])|(?:^|[.!?]\s+|\n)(?:pay|send|return|reply|respond|call|contact|bring|sign|complete|attend|submit|provide|tell)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])(?:pay|send|return|reply|respond|submit|sign|complete)(?![\p{L}\p{N}])[^.\n]{0,80}(?<![\p{L}\p{N}])by(?![\p{L}\p{N}])/iu,
+    pay: /(?<![\p{L}\p{N}])pay(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])payment(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])repay|(?<![\p{L}\p{N}])remit(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])settle(?![\p{L}\p{N}])/iu,
+    owed: /(?<![\p{L}\p{N}])balance (?:owing|outstanding)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])amount (?:payable|outstanding)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])total payable(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])you owe(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])amount (?:now )?due(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])balance due(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])total due(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])amount owing(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])amount to pay(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])pay by(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])due (?:date|by|on)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])deadline(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])respond by(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])reply by(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])no later than(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])(?:don['’]t|do not|won['’]t|will not) (?:need|have) to (?:do|pay)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])no (?:payment|action) (?:is )?(?:needed|required|necessary)(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])nothing (?:to pay|to do|more to pay)(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:direct debit|will be (?:taken|collected|debited) from your (?:bank )?account|automatic payment|autopay)/iu,
+  },
   replies: {
     you: { name: '[Your full name]', street: '[Your street address]', city: '[City, state or province, postal code]', place: '[City]' },
     officeAddress: '[Address from the letter]',

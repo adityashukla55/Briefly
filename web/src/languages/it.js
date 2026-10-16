@@ -57,6 +57,14 @@ export default {
     [/^(?:distinti saluti|cordiali saluti|con osservanza),?$/i, () => 'Kind regards'],
   ],
   rewrite: [],
+  asks: {
+    ask: /(?<![\p{L}\p{N}])la preghiamo(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])la invitiamo(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])si invita(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])deve(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])è tenut[oa](?![\p{L}\p{N}])|(?<![\p{L}\p{N}])dovrà(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])per favore(?![\p{L}\p{N}])|(?:^|[.!?]\s+|\n)(?:paghi|versi|invii|presenti|si presenti)(?![\p{L}\p{N}])/iu,
+    pay: /(?<![\p{L}\p{N}])pag|(?<![\p{L}\p{N}])vers|(?<![\p{L}\p{N}])sald/iu,
+    owed: /(?<![\p{L}\p{N}])da pagare(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])importo dovuto(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])somma dovuta(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])importo da versare(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])totale da pagare(?![\p{L}\p{N}])/iu,
+    due: /(?<![\p{L}\p{N}])entro(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])scadenza(?![\p{L}\p{N}])/iu,
+    none: /(?<![\p{L}\p{N}])non (?:deve|è necessario) (?:fare|pagare) nulla(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])nessuna azione(?![\p{L}\p{N}])|(?<![\p{L}\p{N}])non deve fare nulla(?![\p{L}\p{N}])/iu,
+    debit: /(?<![\p{L}\p{N}])(?:addebit|domiciliazione|sepa direct debit)/iu,
+  },
   replies: {
     you: { name: '[Nome e cognome]', street: '[Indirizzo]', city: '[CAP e città]', place: '[Città]' },
     officeAddress: '[Indirizzo indicato nella lettera]',
